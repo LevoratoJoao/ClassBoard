@@ -1,0 +1,43 @@
+/* nav {
+    background-color: #103f28;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #103f28;
+}
+
+.navbar {
+    --bs-navbar-brand-color: #103f28;
+} */
+
+#cards-col-1 {
+    min-height: 200px;
+    background-color: #D1495B;
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+#cards-col-2 {
+    min-height: 200px;
+    background-color: #F7E06C;
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+#cards-col-3 {
+    min-height: 200px;
+    background-color: #3A6EA5;
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+#icons {
+    padding-top: 20px;
+    font-size: 64px;
+}
+
+a {
+    color: #212529;
+}
+
+.montserrat-bold {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+}
