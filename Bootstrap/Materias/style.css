@@ -1,12 +1,13 @@
-/* nav {
+nav {
     background-color: #103f28;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    color: #103f28;
+    color: #ffffff;
 }
 
+
 .navbar {
-    --bs-navbar-brand-color: #103f28;
-} */
+    --bs-navbar-brand-color: #212529;
+}
 
 #cards-col-1 {
     min-height: 200px;
@@ -31,13 +32,10 @@
     font-size: 64px;
 }
 
-a {
-    color: #212529;
-}
-
 .montserrat-bold {
     font-family: "Montserrat", sans-serif;
     font-optical-sizing: auto;
     font-weight: 700;
     font-style: normal;
+    color: #212529;
 }
