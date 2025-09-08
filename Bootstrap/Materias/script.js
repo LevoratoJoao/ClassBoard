@@ -1,3 +1,5 @@
+import { buildGraphNotasAvaliacoes } from "../core/math.js";
+
 const params = new URLSearchParams(window.location.search);
 const materia = params.get('materia');
 
@@ -12,3 +14,6 @@ const detalhes = {
 
 document.getElementById('materia-title').textContent = materia || 'Matéria não encontrada';
 document.getElementById('materia-details').textContent = detalhes[materia] || 'Nenhum detalhe disponível.';
+
+const ctx = document.getElementById('myChart');
+new Chart(ctx, buildGraphNotasAvaliacoes());
