@@ -22,8 +22,6 @@ for (const bimestre of bimestres) {
   }
 }
 
-console.log(avaliacoes);
-
 export const getAvaliacoes = () => avaliacoes;
 
 export const getAvaliacoesByMateria = materia =>
