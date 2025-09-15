@@ -15,7 +15,7 @@ let notasPorAlunoChart = new Chart(notasPorAluno, buildChartNotasPorAluno(materi
 
 const aiAnalysis = buildAiAnalysis(materia);
 document.getElementById('ai-summary').textContent = aiAnalysis.summary;
-document.getElementById('ai-comment').textContent = aiAnalysis.comment;
+document.getElementById('ai-comment').innerHTML = aiAnalysis.comment;
 
 window.applyFilters = function () {
     const bimestre = document.querySelector('input[name="bimestre"]:checked').value;
