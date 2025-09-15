@@ -40,47 +40,73 @@
   </nav>
   <div class="container mt-5">
     <h1 id="materia-title" class="mb-4 text-center"></h1>
-    <div id="materia-details" class="text-center"></div>
   </div>
 
   <div class="container mt-4 mb-5">
     <div class="row">
       <div class="col-md-3">
-        <div class="card h-100">
+        <div class="card h-80">
           <div class="card-body">
             <h5 class="card-title text-center
             ">Filtros</h5>
-
+            <hr>
             <div class="d-flex flex-column align-items-start">
               <div class="mb-3 w-100">
-                <label for="bimestreFilter" class="form-label">Bimestre</label>
-                <select id="bimestreFilter" class="form-select">
-                  <option value="All" selected>Todos</option>
-                  <option value="1">1º Bimestre</option>
-                  <option value="2">2º Bimestre</option>
-                  <option value="3">3º Bimestre</option>
-                  <option value="4">4º Bimestre</option>
-                </select>
+                <label class="form-label mb-2">Bimestre</label>
+                <div id="bimestreFilter" class="d-flex flex-column">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="bimestre" id="bimestreAll" value="All" checked>
+                    <label class="form-check-label" for="bimestreAll">Todos</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="bimestre" id="bimestre1" value="1">
+                    <label class="form-check-label" for="bimestre1">1º Bimestre</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="bimestre" id="bimestre2" value="2">
+                    <label class="form-check-label" for="bimestre2">2º Bimestre</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="bimestre" id="bimestre3" value="3">
+                    <label class="form-check-label" for="bimestre3">3º Bimestre</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="bimestre" id="bimestre4" value="4">
+                    <label class="form-check-label" for="bimestre4">4º Bimestre</label>
+                  </div>
+                </div>
               </div>
               <div class="mb-3 w-100">
-                <label for="tipoFilter" class="form-label">Tipo de Avaliação</label>
-                <select id="tipoFilter" class="form-select">
-                  <option value="All" selected>Todos</option>
-                  <option value="Prova">Prova</option>
-                  <option value="Trabalho">Trabalho</option>
-                  <option value="Recuperação">Recuperação</option>
-                </select>
+                <label class="form-label mb-2">Tipo de Avaliação</label>
+                <div id="tipoFilter" class="d-flex flex-column">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipo" id="tipoAll" value="All" checked>
+                    <label class="form-check-label" for="tipoAll">Todos</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipo" id="tipoProva" value="Prova">
+                    <label class="form-check-label" for="tipoProva">Prova</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipo" id="tipoTrabalho" value="Trabalho">
+                    <label class="form-check-label" for="tipoTrabalho">Trabalho</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipo" id="tipoRecuperacao" value="Recuperação">
+                    <label class="form-check-label" for="tipoRecuperacao">Recuperação</label>
+                  </div>
+                </div>
               </div>
-              <button id="applyFilters" class="btn btn-primary w-100 mt-2" onclick="applyFilters()">Aplicar
+              <button id="applyFilters" class="btn w-100 mt-2 applyFilters" onclick="applyFilters()">Aplicar
                 Filtros</button>
-              <button id="clearFilters" class="btn btn-secondary w-100 mt-2" onclick="clearFilters()">Limpar
+              <button id="clearFilters" class="btn w-100 mt-2 clearFilters" onclick="clearFilters()">Limpar
                 Filtros</button>
             </div>
           </div>
         </div>
       </div>
       <div class="col-md-9">
-        <div class="card mb-4" style="max-height: 500px; overflow-y: auto;">
+        <div class="card mb-4" style="max-height: 512px; overflow-y: auto;">
           <div class="card-body">
             <h5 class="card-title text-center">Gráficos</h5>
             <!-- <p class="card-text">Aqui você irá ver gráficos relacionados à matéria.</p> -->
@@ -91,12 +117,12 @@
                 <canvas id="media_notas" width="800" height="400"></canvas>
               </div>
               <div class="mb-4 d-flex flex-column align-items-center">
-                <h6>Distribuição de Notas por avaliação</h6>
-                <canvas id="notas_avaliacoes" width="800" height="400"></canvas>
+                <h6>Evolução das notas</h6>
+                <canvas id="notas_avaliacoes" width="700" height="400"></canvas>
               </div>
               <div class="mb-4 d-flex flex-column align-items-center">
-                <h6>Média por Avaliação</h6>
-                <canvas id="averageByEvaluationChart" width="400" height="200"></canvas>
+                <h6>Notas pela quantidade de alunos</h6>
+                <canvas id="notas_alunos" width="700" height="400"></canvas>
               </div>
             </div>
           </div>
@@ -104,7 +130,6 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Análise da IA</h5>
-            <p class="card-text">Aqui você irá ver a análise gerada pela IA.</p>
             <div id="ai-summary" class="mt-3"></div>
             <div id="ai-comment" class="mt-3"></div>
           </div>

@@ -1,33 +1,26 @@
-import { buildChartMediaNotas, buildChartForEachAvaliacao, buildAiAnalysis } from "./charts.js";
+import { buildChartMediaNotas, buildChartForEachAvaliacao, buildChartNotasPorAluno, buildAiAnalysis } from "./charts.js";
 
 const params = new URLSearchParams(window.location.search);
 const materia = params.get('materia');
 
-const detalhes = {
-    'Portugues': 'Detalhes sobre a matéria de Português.',
-    'Matematica': 'Detalhes sobre a matéria de Matemática.',
-    'Historia': 'Detalhes sobre a matéria de História.',
-    'Geografia': 'Detalhes sobre a matéria de Geografia.',
-    'Ciencias': 'Detalhes sobre a matéria de Ciências.',
-    'Artes': 'Detalhes sobre a matéria de Artes.',
-};
-
 document.getElementById('materia-title').textContent = materia || 'Matéria não encontrada';
-document.getElementById('materia-details').textContent = detalhes[materia] || 'Nenhum detalhe disponível.';
 
-const allNotes = document.getElementById('media_notas').getContext('2d');
-const notesByAvaliacao = document.getElementById('notas_avaliacoes').getContext('2d');
+const mediaNotas = document.getElementById('media_notas').getContext('2d');
+const notasAvaliacoes = document.getElementById('notas_avaliacoes').getContext('2d');
+const notasPorAluno = document.getElementById('notas_alunos').getContext('2d');
 
-let mediaChart = new Chart(allNotes, buildChartMediaNotas(materia, 'ALL_NOTES', "", 0, 'Notas das avaliações'));
-let notasAvaliacoesChart = new Chart(notesByAvaliacao, buildChartForEachAvaliacao(materia, 'ALL_AVALIACAO', "", 0, 'Média da notas por Avaliação'));
+let mediaChart = new Chart(mediaNotas, buildChartMediaNotas(materia, 'ALL_NOTES', "", 0, 'Notas das avaliações'));
+let notasAvaliacoesChart = new Chart(notasAvaliacoes, buildChartForEachAvaliacao(materia, 'ALL_AVALIACAO', "", 0, 'Média da notas por Avaliação'));
+let notasPorAlunoChart = new Chart(notasPorAluno, buildChartNotasPorAluno(materia, 'ALL_NOTES', "", 0, 'Notas por Aluno'));
 
 const aiAnalysis = buildAiAnalysis(materia);
 document.getElementById('ai-summary').textContent = aiAnalysis.summary;
 document.getElementById('ai-comment').textContent = aiAnalysis.comment;
 
 window.applyFilters = function () {
-    const bimestre = document.getElementById('bimestreFilter').value;
-    const tipo = document.getElementById('tipoFilter').value;
+    const bimestre = document.querySelector('input[name="bimestre"]:checked').value;
+    const tipo = document.querySelector('input[name="tipo"]:checked').value;
+
 
     const chartCtx = document.getElementById('media_notas').getContext('2d');
     let chartType, chartTipo = "", chartBimestre = 0, chartLabel;
@@ -58,9 +51,21 @@ window.applyFilters = function () {
 
     notasAvaliacoesChart.destroy();
     notasAvaliacoesChart = new Chart(
-        notesByAvaliacao,
+        notasAvaliacoes,
         buildChartForEachAvaliacao(materia, chartType, chartTipo, chartBimestre, chartLabel)
     );
 
+    notasPorAlunoChart.destroy();
+    notasPorAlunoChart = new Chart(
+        notasPorAluno,
+        buildChartNotasPorAluno(materia, chartType, chartTipo, chartBimestre, chartLabel)
+    );
+
     mediaChart.update();
+}
+
+window.clearFilters = function () {
+    document.querySelector('input[name="bimestre"][value="All"]').checked = true;
+    document.querySelector('input[name="tipo"][value="All"]').checked = true;
+    applyFilters();
 }
