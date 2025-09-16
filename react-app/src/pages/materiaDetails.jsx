@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import FilterPanel from "../components/filters/filterPanel";
 import NotasOverviewChart from "../components/charts/notasOverviewChart";
 import NotasAvaliacoesChart from "../components/charts/notasAvaliacoesChart";
+import NotasPorAlunosChart from "../components/charts/notasPorAlunosChart";
 import { buildAiAnalysis } from "../services/aiService";
 import Navbar from "./navbar";
 
@@ -57,6 +58,12 @@ const MateriaDetails = () => {
                     bimestre={filters.bimestre}
                   />
                   <NotasAvaliacoesChart
+                    materia={materia}
+                    chartType={getChartType(filters.bimestre, filters.tipo)}
+                    tipo={filters.tipo}
+                    bimestre={filters.bimestre}
+                  />
+                  <NotasPorAlunosChart
                     materia={materia}
                     chartType={getChartType(filters.bimestre, filters.tipo)}
                     tipo={filters.tipo}

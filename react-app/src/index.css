@@ -4,6 +4,12 @@
   font-style: normal;
 }
 
+nav {
+  background-color: #103f28;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
 .navbar {
   --bs-navbar-brand-color: #212529;
 }
