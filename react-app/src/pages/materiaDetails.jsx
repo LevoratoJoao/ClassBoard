@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import FilterPanel from "../components/filters/filterPanel";
-import MediaNotasChart from "../components/charts/mediaNotasChart";
+import NotasOverviewChart from "../components/charts/notasOverviewChart";
+import NotasAvaliacoesChart from "../components/charts/notasAvaliacoesChart";
 import { buildAiAnalysis } from "../services/aiService";
 import Navbar from "./navbar";
 
@@ -17,6 +18,13 @@ const MateriaDetails = () => {
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
+  };
+
+  const getChartType = (bimestre, tipo) => {
+    if (bimestre !== "All" && tipo !== "All") return "BY_TYPE_AND_BIMESTER";
+    if (bimestre !== "All" && tipo === "All") return "BY_BIMESTER";
+    if (tipo !== "All" && bimestre === "All") return "BY_TYPE";
+    return "ALL_NOTES";
   };
 
   return (
@@ -42,17 +50,18 @@ const MateriaDetails = () => {
                 <h5 className="card-title text-center">Gráficos</h5>
                 <hr />
                 <div className="d-flex flex-column align-items-center">
-                  <MediaNotasChart
+                  <NotasOverviewChart
                     materia={materia}
-                    chartType={
-                      filters.bimestre === "All" && filters.tipo === "All"
-                        ? "ALL_NOTES"
-                        : "BY_TYPE"
-                    }
+                    chartType={getChartType(filters.bimestre, filters.tipo)}
                     tipo={filters.tipo}
                     bimestre={filters.bimestre}
                   />
-                  {/* Add other charts here */}
+                  <NotasAvaliacoesChart
+                    materia={materia}
+                    chartType={getChartType(filters.bimestre, filters.tipo)}
+                    tipo={filters.tipo}
+                    bimestre={filters.bimestre}
+                  />
                 </div>
               </div>
             </div>

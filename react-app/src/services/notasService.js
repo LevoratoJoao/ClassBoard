@@ -30,7 +30,7 @@ export const getMediaByMateriaAndTipo = (materia, tipo) =>
     calcMedia(getNotasByMateriaAndTipo(materia, tipo));
 
 export const getNotasByMateriaTipoAndBimestre = (materia, tipo, bimestre) =>
-    getNotaValues(filterNotas({ materia, tipo, bimestre }));
+    getNotaValues(filterNotas({ materia, tipo, bimestre: Number(bimestre) }));
 
 export const getMediaByMateriaTipoAndBimestre = (materia, tipo, bimestre) =>
     calcMedia(getNotasByMateriaTipoAndBimestre(materia, tipo, bimestre));

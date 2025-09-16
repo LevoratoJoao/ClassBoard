@@ -20,7 +20,7 @@ const doughnutChartTypes = {
   ],
 };
 
-const MediaNotasChart = ({
+const NotasOverviewChart = ({
   materia,
   chartType = "ALL_NOTES",
   tipo = "",
@@ -46,18 +46,20 @@ const MediaNotasChart = ({
   };
 
   const options = {
-    responsive: false,
-    maintainAspectRatio: false,
+    responsive: true,
+    maintainAspectRatio: true,
+    width: 400,
+    height: 400,
   };
 
   return (
-    <div className="d-flex flex-column align-items-center">
+    <div className="mb-4 d-flex flex-column align-items-center">
       <h6>Notas Gerais</h6>
-      <div style={{ width: "400px", height: "300px" }}>
+      <div style={{ width: "400px", height: "400px" }}>
         <Doughnut data={data} options={options} />
       </div>
     </div>
   );
 };
 
-export default MediaNotasChart;
+export default NotasOverviewChart;
