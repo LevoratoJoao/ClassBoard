@@ -7,7 +7,7 @@ class Avaliacao {
   }
 }
 
-const materias = ['Portugues', 'Matematica', 'Historia', 'Geografia', 'Ciencias', 'Artes'];
+const materias = ['Português', 'Matemática', 'História', 'Geografia', 'Ciências', 'Artes'];
 const tipos = ['Prova', 'Trabalho'];
 const bimestres = [1, 2, 3];
 
