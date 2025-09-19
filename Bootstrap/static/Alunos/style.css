@@ -1,8 +1,9 @@
 .btn-upload {
-  background-color: #f7e06c !important;
-  color: #fff !important;
+  background-color: #f6c358 !important;
+  color: #212529 !important;
   border: none;
 }
+
 nav,
 .navbar,
 .navbar * {
