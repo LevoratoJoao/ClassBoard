@@ -1,25 +1,13 @@
-.card-text {
-  text-decoration: none !important;
+.btn-upload {
+  background-color: #f7e06c !important;
+  color: #fff !important;
+  border: none;
 }
 nav,
 .navbar,
 .navbar * {
   color: #212529 !important;
 }
-/* Fundo com imagem para toda a tela */
-.bg-fundo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  background-image: url("../../src/images/fundo.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 1;
-}
 
 body > *:not(.bg-fundo) {
   position: relative;
@@ -44,18 +32,15 @@ body > *:not(.bg-fundo) {
   position: relative;
   z-index: 1;
 }
+
 nav {
   background-color: #103f28;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #ffffff;
 }
 
-nav a {
-  color: #212529;
-}
-
 h1 {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .navbar {
@@ -90,7 +75,7 @@ h1 {
   font-optical-sizing: auto;
   font-weight: 700;
   font-style: normal;
-  color: #ffffff;
+  color: #212529;
 }
 
 .clearFilters {
