@@ -1,4 +1,5 @@
 import { notas } from "../data/notas.js";
+import { alunos } from "../data/alunos.js";
 
 const allNotas = notas.flatMap(data => data.notas);
 
@@ -88,11 +89,19 @@ export const findNotasAluno = alunoNome =>
         n.aluno === alunoNome
     ) || { aluno: alunoNome, notas: [] };
 
-export const filterNotasByAluno = (notas, criteria = {}) => {
-    return notas.filter(notaObj =>
-        Object.entries(criteria).every(([key, value]) => notaObj[key] === value)
+
+export const filterNotasByAlunoAndAvaliacoes = (alunoNome, criteria = {}) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    if (!notasAluno || !notasAluno.notas) return [];
+    return notasAluno.notas.filter(notaObj =>
+        Object.entries(criteria).every(([key, value]) => notaObj.avaliacao[key] === value)
     );
-}
+};
+
+export const getNotasAlunoValues = alunoNome => {
+    const notasAluno = findNotasAluno(alunoNome);
+    return notasAluno ? notasAluno.notas.map(n => n.nota) : [];
+};
 
 export const getNotasByAluno = alunoNome => {
     const notasAluno = findNotasAluno(alunoNome);
@@ -100,13 +109,12 @@ export const getNotasByAluno = alunoNome => {
 };
 
 export const getMediaByAluno = alunoNome =>
-    calcMedia(getNotasByAluno(alunoNome));
+    calcMedia(getNotasAlunoValues(alunoNome));
 
 export const getNotasByAlunoAndMateria = (alunoNome, materia) => {
     const notasAluno = findNotasAluno(alunoNome);
-    return notasAluno ? filterNotasByAluno(
-        notasAluno.notas,
-        { avaliacao: { materia } }
+    return notasAluno ? (
+        filterNotasByAlunoAndAvaliacoes(alunoNome, { materia })
     ).map(n => n.nota) : [];
 };
 
@@ -115,20 +123,16 @@ export const getMediaByAlunoAndMateria = (alunoNome, materia) =>
 
 export const getNotasByAlunoMateriaAndBimestre = (alunoNome, materia, bimestre) => {
     const notasAluno = findNotasAluno(alunoNome);
-    return notasAluno ? filterNotasByAluno(
-        notasAluno.notas,
-        { avaliacao: { materia, bimestre: Number(bimestre) } }
-    ).map(n => n.nota) : [];
-};
+    const result = filterNotasByAlunoAndAvaliacoes(alunoNome, { materia, bimestre: Number(bimestre) });
+    return notasAluno ? result.map(n => n.nota) : [];
+}
 
 export const getMediaByAlunoMateriaAndBimestre = (alunoNome, materia, bimestre) =>
     calcMedia(getNotasByAlunoMateriaAndBimestre(alunoNome, materia, bimestre));
 
 export const getNotasByAlunoMateriaAndTipo = (alunoNome, materia, tipo) => {
     const notasAluno = findNotasAluno(alunoNome);
-    return notasAluno ? filterNotasByAluno(
-        notasAluno.notas,
-        { avaliacao: { materia, tipo } }
+    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { materia, tipo }
     ).map(n => n.nota) : [];
 };
 
@@ -137,9 +141,7 @@ export const getMediaByAlunoMateriaAndTipo = (alunoNome, materia, tipo) =>
 
 export const getNotasByAlunoMateriaTipoAndBimestre = (alunoNome, materia, tipo, bimestre) => {
     const notasAluno = findNotasAluno(alunoNome);
-    return notasAluno ? filterNotasByAluno(
-        notasAluno.notas,
-        { avaliacao: { materia, tipo, bimestre: Number(bimestre) } }
+    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { materia, tipo, bimestre }
     ).map(n => n.nota) : [];
 };
 
@@ -155,3 +157,19 @@ export const getMediaByAlunoForEachMateria = alunoNome => {
     return result;
 }
 
+export const getMediaForEachAluno = () => {
+    const medias = alunos.map(aluno => {
+        const media = getMediaByAluno(aluno.nome);
+        return { aluno: aluno.nome, media };
+    });
+    return medias;
+}
+
+
+export const getNotasByAlunoAndMateriaForEachBimestre = (alunoNome, materia) => {
+    const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { materia });
+    const grouped = groupBy(filtered, n => n.avaliacao.bimestre);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+};

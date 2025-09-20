@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function renderComparacaoTurmaChart() {
-  const comparacaoChart = new Chart(
+  new Chart(
     document.getElementById("comparacao-turma-chart").getContext("2d"),
     {
       type: "bar",
@@ -135,7 +135,6 @@ function renderTabelaAprovacao() {
         </thead>
         <tbody>`;
   Object.entries(mediasMaterias).forEach(([materia, media]) => {
-    console.log(materia, media);
     const aprovado = media >= 6;
     html += `<tr>
             <td>${materia}</td>
@@ -165,12 +164,13 @@ function renderEvolucaoNotasChart() {
   ];
   const datasets = materias.map((materia, idx) => {
 
-    const notasPorBimestre = bimestres.map((bim) => {
-      const notaObj = notasAluno?.notas.find(
-        (n) => n.avaliacao.materia === materia && n.avaliacao.bimestre == bim
-      );
-      return notaObj ? notaObj.nota : null;
+    const rawNotasPorBimestre = getNotasByAlunoAndMateriaForEachBimestre(alunoNome, materia);
+
+    const notasPorBimestre = {};
+    Object.entries(rawNotasPorBimestre).forEach(([bimestre, nota]) => {
+      notasPorBimestre[`Bimestre ${bimestre}`] = nota;
     });
+
     return {
       label: materia,
       data: notasPorBimestre,
@@ -184,7 +184,7 @@ function renderEvolucaoNotasChart() {
   new Chart(ctx, {
     type: "line",
     data: {
-      labels: bimestres.map((b) => `${b}º Bimestre`),
+      labels: datasets.length ? Object.keys(datasets[0].data) : [],
       datasets: datasets,
     },
     options: {
@@ -205,13 +205,7 @@ function renderEvolucaoNotasChart() {
 renderEvolucaoNotasChart();
 
 function calcularRankingAluno() {
-  const mediasAlunos = notas.map((n) => {
-    const todasNotas = n.notas.map((obj) => obj.nota);
-    const media = todasNotas.length
-      ? todasNotas.reduce((a, b) => a + b, 0) / todasNotas.length
-      : 0;
-    return { aluno: n.aluno, media };
-  });
+  const mediasAlunos = getMediaForEachAluno();
   mediasAlunos.sort((a, b) => b.media - a.media);
 
   function normalize(str) {
