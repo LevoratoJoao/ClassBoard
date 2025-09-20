@@ -1,4 +1,5 @@
-import { buildChartMediaNotas, buildChartForEachAvaliacao, buildChartNotasPorAluno, buildAiAnalysis } from "./charts.js";
+import { buildChartMediaNotas, buildChartForEachAvaliacao, buildChartNotasPorAluno } from "./charts.js";
+import { buildMateriaAiAnalysis } from "./aiAnalysis.js";
 
 const params = new URLSearchParams(window.location.search);
 const materia = params.get('materia');
@@ -13,7 +14,7 @@ let mediaChart = new Chart(mediaNotas, buildChartMediaNotas(materia, 'ALL_NOTES'
 let notasAvaliacoesChart = new Chart(notasAvaliacoes, buildChartForEachAvaliacao(materia, 'ALL_AVALIACAO', "", 0, 'Média da notas por Avaliação'));
 let notasPorAlunoChart = new Chart(notasPorAluno, buildChartNotasPorAluno(materia, 'ALL_NOTES', "", 0, 'Notas por Aluno'));
 
-const aiAnalysis = buildAiAnalysis(materia);
+const aiAnalysis = buildMateriaAiAnalysis(materia);
 document.getElementById('ai-summary').textContent = aiAnalysis.summary;
 document.getElementById('ai-comment').innerHTML = aiAnalysis.comment;
 

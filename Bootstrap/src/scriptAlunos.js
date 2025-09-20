@@ -1,13 +1,14 @@
 import { alunos } from "./data/alunos.js";
 import { notas } from "./data/notas.js";
-import { buildAiAnalysis } from "./charts.js";
+import { getAlunoByName } from "./services/alunosService.js";
+import { getNotasByAluno, getMediaByAlunoForEachMateria, getMediaAvaliacaoForEachMateria, getAllNotas } from "./services/notasService.js";
 
 function getAlunoFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("aluno");
 }
 const alunoNome = getAlunoFromUrl();
-const alunoObj = alunos.find((a) => a.nome === alunoNome);
+const alunoObj = getAlunoByName(alunoNome);
 const title = document.getElementById("aluno-title");
 if (alunoObj) {
   title.textContent = alunoObj.nome;
@@ -18,98 +19,18 @@ if (alunoObj) {
 const faltasTotais = Math.floor(Math.random() * 20);
 document.getElementById("faltas-totais").textContent = faltasTotais + " faltas";
 
-const notasAluno = notas.find((n) => n.aluno === alunoObj?.nome || alunoNome);
-const mediasMaterias = {};
-
-notasAluno?.notas.forEach((notaObj) => {
-  if (!mediasMaterias[notaObj.avaliacao.materia])
-    mediasMaterias[notaObj.avaliacao.materia] = [];
-  mediasMaterias[notaObj.avaliacao.materia].push(notaObj.nota);
-});
+const notasAluno = getNotasByAluno(alunoObj?.nome || alunoNome);
+const mediasMaterias = getMediaByAlunoForEachMateria(alunoObj?.nome || alunoNome);
 const mediasList = document.getElementById("medias-materias-list");
-Object.entries(mediasMaterias).forEach(([materia, notasArr]) => {
-  const media = (notasArr.reduce((a, b) => a + b, 0) / notasArr.length).toFixed(
-    2
-  );
+Object.entries(mediasMaterias).forEach(([materia, media]) => {
   const li = document.createElement("li");
   li.className = "list-group-item";
   li.textContent = `${materia}: ${media}`;
   mediasList.appendChild(li);
 });
 
-const mediasTurma = {};
-notas.forEach((n) => {
-  n.notas.forEach((notaObj) => {
-    if (!mediasTurma[notaObj.avaliacao.materia])
-      mediasTurma[notaObj.avaliacao.materia] = [];
-    mediasTurma[notaObj.avaliacao.materia].push(notaObj.nota);
-  });
-});
 const materias = Object.keys(mediasMaterias);
-const alunoMedias = materias.map((m) =>
-  (
-    mediasMaterias[m].reduce((a, b) => a + b, 0) / mediasMaterias[m].length
-  ).toFixed(2)
-);
-const turmaMedias = materias.map((m) =>
-  (mediasTurma[m].reduce((a, b) => a + b, 0) / mediasTurma[m].length).toFixed(2)
-);
 const mediaAprovacao = 6;
-const comparacaoChart = new Chart(
-  document.getElementById("comparacao-turma-chart").getContext("2d"),
-  {
-    type: "bar",
-    data: {
-      labels: materias,
-      datasets: [
-        {
-          label: "Aluno",
-          data: alunoMedias,
-          backgroundColor: "rgba(54, 162, 235, 0.7)",
-        },
-        {
-          label: "Turma",
-          data: turmaMedias,
-          backgroundColor: "rgba(255, 99, 132, 0.7)",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "top" },
-        title: { display: false },
-      },
-      layout: {
-        padding: {
-          left: 1,
-          right: 1,
-        },
-      },
-    },
-    plugins: [
-      {
-        id: "linhaAprovacao",
-        afterDraw: (chart) => {
-          const ctx = chart.ctx;
-          const yScale = chart.scales["y"];
-          const xScale = chart.scales["x"];
-          if (!yScale || !xScale) return;
-          const y = yScale.getPixelForValue(mediaAprovacao);
-          ctx.save();
-          ctx.beginPath();
-          ctx.setLineDash([10, 5]);
-          ctx.strokeStyle = "#1976d2";
-          ctx.lineWidth = 3;
-          ctx.moveTo(xScale.left, y);
-          ctx.lineTo(xScale.right, y);
-          ctx.stroke();
-          ctx.restore();
-        },
-      },
-    ],
-  }
-);
 
 document.addEventListener("DOMContentLoaded", () => {
   const filtroMateria = document.getElementById("filtro-materia");
@@ -122,10 +43,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
   calcularRankingAluno();
 
-  function renderTabelaAprovacao() {
-    const container = document.getElementById("tabela-aprovacao-anual");
-    if (!container) return;
-    let html = `<table class="table table-bordered table-sm" style="margin-top:12px;">
+  renderTabelaAprovacao();
+
+  renderComparacaoTurmaChart();
+
+  const aiSummary = document.getElementById("ai-summary");
+  const aiComment = document.getElementById("ai-comment");
+  // if (aiSummary && aiComment && alunoObj) {
+  //   const aiAnalysis = buildAiAnalysis(alunoObj.nome);
+  //   aiSummary.textContent = aiAnalysis.summary;
+  //   aiComment.innerHTML = aiAnalysis.comment;
+  // }
+});
+
+function renderComparacaoTurmaChart() {
+  const comparacaoChart = new Chart(
+    document.getElementById("comparacao-turma-chart").getContext("2d"),
+    {
+      type: "bar",
+      data: {
+        labels: materias,
+        datasets: [
+          {
+            label: "Aluno",
+            data: mediasMaterias,
+            backgroundColor: "rgba(54, 162, 235, 0.7)",
+          },
+          {
+            label: "Turma",
+            data: getMediaAvaliacaoForEachMateria(),
+            backgroundColor: "rgba(255, 99, 132, 0.7)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+          title: { display: false },
+        },
+        layout: {
+          padding: {
+            left: 1,
+            right: 1,
+          },
+        },
+      },
+      plugins: [
+        {
+          id: "linhaAprovacao",
+          afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            const yScale = chart.scales["y"];
+            const xScale = chart.scales["x"];
+            if (!yScale || !xScale) return;
+            const y = yScale.getPixelForValue(mediaAprovacao);
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([10, 5]);
+            ctx.strokeStyle = "#1976d2";
+            ctx.lineWidth = 3;
+            ctx.moveTo(xScale.left, y);
+            ctx.lineTo(xScale.right, y);
+            ctx.stroke();
+            ctx.restore();
+          },
+        },
+      ],
+    }
+  );
+}
+
+function renderTabelaAprovacao() {
+  const container = document.getElementById("tabela-aprovacao-anual");
+  if (!container) return;
+  let html = `<table class="table table-bordered table-sm" style="margin-top:12px;">
         <thead>
             <tr>
                 <th class="montserrat" style="font-weight:500;">Matéria</th>
@@ -134,49 +126,19 @@ document.addEventListener("DOMContentLoaded", () => {
             </tr>
         </thead>
         <tbody>`;
-    Object.entries(mediasMaterias).forEach(([materia, notasArr]) => {
-      const media = notasArr.length
-        ? notasArr.reduce((a, b) => a + b, 0) / notasArr.length
-        : 0;
-      const aprovado = media >= 6;
-      html += `<tr>
+  Object.entries(mediasMaterias).forEach(([materia, media]) => {
+    console.log(materia, media);
+    const aprovado = media >= 6;
+    html += `<tr>
             <td>${materia}</td>
-            <td>${media.toFixed(2)}</td>
-            <td style="color:${
-              aprovado ? "#1976d2" : "#d32f2f"
-            };font-weight:bold;">${aprovado ? "Aprovado" : "Reprovado"}</td>
+            <td>${media}</td>
+            <td style="color:${aprovado ? "#1976d2" : "#d32f2f"
+      };font-weight:bold;">${aprovado ? "Aprovado" : "Reprovado"}</td>
         </tr>`;
-    });
-    html += "</tbody></table>";
-    container.innerHTML = html;
-  }
-
-  renderTabelaAprovacao();
-
-  if (
-    document.getElementById("evolucao-notas-chart") &&
-    notasAluno &&
-    Object.keys(mediasMaterias).length > 0
-  ) {
-    renderEvolucaoNotasChart();
-  }
-
-  if (
-    document.getElementById("distribuicao-notas-chart") &&
-    notasAluno &&
-    notasAluno.notas.length > 0
-  ) {
-    renderDistribuicaoNotasChart();
-  }
-
-  const aiSummary = document.getElementById("ai-summary");
-  const aiComment = document.getElementById("ai-comment");
-  if (aiSummary && aiComment && alunoObj) {
-    const aiAnalysis = buildAiAnalysis(alunoObj.nome);
-    aiSummary.textContent = aiAnalysis.summary;
-    aiComment.innerHTML = aiAnalysis.comment;
-  }
-});
+  });
+  html += "</tbody></table>";
+  container.innerHTML = html;
+}
 
 function renderEvolucaoNotasChart() {
   // Agrupa notas por matéria e ordena por bimestre
@@ -244,10 +206,6 @@ function calcularRankingAluno() {
       : 0;
     return { aluno: n.aluno, media };
   });
-  //    consoleeeeeee
-  mediasAlunos.forEach(({ aluno, media }) => {
-    console.log(`Aluno: ${aluno} | Média: ${media.toFixed(2)}`);
-  });
   mediasAlunos.sort((a, b) => b.media - a.media);
 
   function normalize(str) {
@@ -269,40 +227,46 @@ function calcularRankingAluno() {
   }
 }
 
-const todasNotas = notasAluno.notas.map((obj) => obj.nota);
+function renderDistribuicaoNotasChart() {
 
-const bins = Array(11).fill(0);
-todasNotas.forEach((nota) => {
-  if (typeof nota === "number" && nota >= 0 && nota <= 10) {
-    bins[Math.round(nota)]++;
-  }
-});
-const ctx = document
-  .getElementById("distribuicao-notas-chart")
-  .getContext("2d");
+  const todasNotas = notasAluno.notas.map((obj) => obj.nota);
 
-const baseColor = "31, 118, 210"; // RGB do #1976d2
-const gradientColors = Array.from(
-  { length: 11 },
-  (_, i) => `rgba(${baseColor}, ${1 - i * 0.08})`
-);
-new Chart(ctx, {
-  type: "doughnut",
-  data: {
-    labels: bins.map((_, i) => i.toString()),
-    datasets: [
-      {
-        label: "Frequência das notas",
-        data: bins,
-        backgroundColor: gradientColors,
-      },
-    ],
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { position: "top" },
-      title: { display: false },
+  const bins = Array(11).fill(0);
+  todasNotas.forEach((nota) => {
+    if (typeof nota === "number" && nota >= 0 && nota <= 10) {
+      bins[Math.round(nota)]++;
+    }
+  });
+
+  const ctx = document
+    .getElementById("distribuicao-notas-chart")
+    .getContext("2d");
+
+  const baseColor = "31, 118, 210"; // RGB do #1976d2
+  const gradientColors = Array.from(
+    { length: 11 },
+    (_, i) => `rgba(${baseColor}, ${1 - i * 0.08})`
+  );
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: bins.map((_, i) => i.toString()),
+      datasets: [
+        {
+          label: "Frequência das notas",
+          data: bins,
+          backgroundColor: gradientColors,
+        },
+      ],
     },
-  },
-});
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        title: { display: false },
+      },
+    },
+  });
+}
+
+renderDistribuicaoNotasChart();
