@@ -1,7 +1,15 @@
 import { alunos } from "./data/alunos.js";
 import { notas } from "./data/notas.js";
 import { getAlunoByName } from "./services/alunosService.js";
-import { getNotasByAluno, getMediaByAlunoForEachMateria, getMediaAvaliacaoForEachMateria, getAllNotas } from "./services/notasService.js";
+import {
+  getNotasByAluno,
+  getMediaByAlunoForEachMateria,
+  getMediaAvaliacaoForEachMateria,
+  getMediaForEachAluno,
+  getNotasByAlunoAndMateriaForEachBimestre
+} from "./services/notasService.js";
+import { buildAlunoAiAnalysis } from "./aiAnalysis.js";
+
 
 function getAlunoFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -11,7 +19,7 @@ const alunoNome = getAlunoFromUrl();
 const alunoObj = getAlunoByName(alunoNome);
 const title = document.getElementById("aluno-title");
 if (alunoObj) {
-  title.textContent = alunoObj.nome;
+  title.textContent = alunoObj;
 } else {
   title.textContent = "Aluno não encontrado";
 }
@@ -49,11 +57,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const aiSummary = document.getElementById("ai-summary");
   const aiComment = document.getElementById("ai-comment");
-  // if (aiSummary && aiComment && alunoObj) {
-  //   const aiAnalysis = buildAiAnalysis(alunoObj.nome);
-  //   aiSummary.textContent = aiAnalysis.summary;
-  //   aiComment.innerHTML = aiAnalysis.comment;
-  // }
+  if (aiSummary && aiComment && alunoObj) {
+    const aiAnalysis = buildAlunoAiAnalysis(alunoNome);
+    aiSummary.textContent = aiAnalysis.summary;
+    aiComment.innerHTML = aiAnalysis.comment;
+  }
 });
 
 function renderComparacaoTurmaChart() {
