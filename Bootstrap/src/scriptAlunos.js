@@ -141,9 +141,7 @@ function renderTabelaAprovacao() {
 }
 
 function renderEvolucaoNotasChart() {
-  // Agrupa notas por matéria e ordena por bimestre
   const materias = Object.keys(mediasMaterias);
-  // Descobre todos os bimestres presentes nas notas
   const bimestresSet = new Set();
   notasAluno?.notas.forEach((notaObj) => {
     bimestresSet.add(notaObj.avaliacao.bimestre);
@@ -158,7 +156,7 @@ function renderEvolucaoNotasChart() {
     "rgba(255, 159, 64, 1)",
   ];
   const datasets = materias.map((materia, idx) => {
-    // Para cada bimestre, pega a nota da matéria
+
     const notasPorBimestre = bimestres.map((bim) => {
       const notaObj = notasAluno?.notas.find(
         (n) => n.avaliacao.materia === materia && n.avaliacao.bimestre == bim
