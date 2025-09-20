@@ -1,6 +1,6 @@
 import { alunos } from "./data/alunos.js";
 import { notas } from "./data/notas.js";
-import { buildAiAnalysis } from "./charts.js";
+import { buildAiAnalysis2 } from "./charts.js";
 
 function getAlunoFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -169,19 +169,17 @@ document.addEventListener("DOMContentLoaded", () => {
     renderDistribuicaoNotasChart();
   }
 
+  const aiAnalysis = buildAiAnalysis2(alunoObj.nome);
   const aiSummary = document.getElementById("ai-summary");
   const aiComment = document.getElementById("ai-comment");
   if (aiSummary && aiComment && alunoObj) {
-    const aiAnalysis = buildAiAnalysis(alunoObj.nome);
     aiSummary.textContent = aiAnalysis.summary;
     aiComment.innerHTML = aiAnalysis.comment;
   }
 });
 
 function renderEvolucaoNotasChart() {
-  // Agrupa notas por matéria e ordena por bimestre
   const materias = Object.keys(mediasMaterias);
-  // Descobre todos os bimestres presentes nas notas
   const bimestresSet = new Set();
   notasAluno?.notas.forEach((notaObj) => {
     bimestresSet.add(notaObj.avaliacao.bimestre);
@@ -196,7 +194,7 @@ function renderEvolucaoNotasChart() {
     "rgba(255, 159, 64, 1)",
   ];
   const datasets = materias.map((materia, idx) => {
-    // Para cada bimestre, pega a nota da matéria
+
     const notasPorBimestre = bimestres.map((bim) => {
       const notaObj = notasAluno?.notas.find(
         (n) => n.avaliacao.materia === materia && n.avaliacao.bimestre == bim
@@ -281,7 +279,7 @@ const ctx = document
   .getElementById("distribuicao-notas-chart")
   .getContext("2d");
 
-const baseColor = "31, 118, 210"; // RGB do #1976d2
+const baseColor = "31, 118, 210"; 
 const gradientColors = Array.from(
   { length: 11 },
   (_, i) => `rgba(${baseColor}, ${1 - i * 0.08})`

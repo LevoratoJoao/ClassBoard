@@ -1,4 +1,11 @@
 import {
+    getNotasByAluno,
+    getMediaByAluno,
+    getMediaByAlunoAndBimestre,
+    getMediaAvaliacaoByAlunoForEachAvaliacao,
+} from "./services/alunoService.js";
+
+import {
     getNotasByMateria, getMediaByMateria, getNotasByMateriaAndBimestre,
     getMediaByMateriaAndBimestre, getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTypeAndBimestre, getNotasByMateriaTipoAndBimestre,
     getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachType, getMediaAvaliacaoByMateriaForEachBimestre
@@ -225,6 +232,74 @@ export const buildAiAnalysis = (materia) => {
 
     return {
         summary: `Análise de desempenho para ${materia}: ${classificacao}.`,
+        comment
+    };
+};
+
+export const buildAiAnalysis2 = (aluno) => {
+    const mediaGeral = getMediaByAluno(aluno);
+    const todasNotas = getNotasByAluno(aluno);
+
+    const mediaB1 = getMediaByAlunoAndBimestre(aluno, 1);
+    const mediaB2 = getMediaByAlunoAndBimestre(aluno, 2);
+    const mediaB3 = getMediaByAlunoAndBimestre(aluno, 3);
+
+    const mediasAvaliacoes = getMediaAvaliacaoByAlunoForEachAvaliacao(aluno);
+
+    const totalAvaliacoes = todasNotas.length;
+    const avaliacoesAprovadas = todasNotas.filter(nota => nota >= 6).length;
+    const avaliacoesReprovadas = todasNotas.filter(nota => nota < 6).length;
+    const percentualAprovacao = ((avaliacoesAprovadas / totalAvaliacoes) * 100).toFixed(1);
+
+    const bimestres = [
+        { nome: '1º Bimestre', media: parseFloat(mediaB1) },
+        { nome: '2º Bimestre', media: parseFloat(mediaB2) },
+        { nome: '3º Bimestre', media: parseFloat(mediaB3) }
+    ].filter(b => !isNaN(b.media) && b.media > 0);
+
+    const melhorBimestre = bimestres.reduce((prev, current) =>
+        prev.media > current.media ? prev : current, bimestres[0]);
+
+    const piorBimestre = bimestres.reduce((prev, current) =>
+        prev.media < current.media ? prev : current, bimestres[0]);
+
+    const avaliacoes = Object.entries(mediasAvaliacoes);
+    const melhorAvaliacao = avaliacoes.reduce((prev, current) =>
+        parseFloat(prev[1]) > parseFloat(current[1]) ? prev : current, avaliacoes[0]);
+
+    let tendencia = "estável";
+    if (bimestres.length >= 2) {
+        const ultimosBimestres = bimestres.slice(-2);
+        const diferenca = ultimosBimestres[1].media - ultimosBimestres[0].media;
+        if (diferenca > 0.5) tendencia = "crescente";
+        else if (diferenca < -0.5) tendencia = "decrescente";
+    }
+
+    let comment = `Média geral: ${mediaGeral}.<br>`;
+    comment += `<br>${percentualAprovacao}% das avaliações estão acima de 6 (${avaliacoesAprovadas}/${totalAvaliacoes}).<br>`;
+
+    if (bimestres.length > 0) {
+        comment += `<br>Melhor desempenho: ${melhorBimestre.nome} (${melhorBimestre.media.toFixed(2)}).<br>`;
+        if (bimestres.length > 1) {
+            comment += `<br>Pior desempenho: ${piorBimestre.nome} (${piorBimestre.media.toFixed(2)}).<br>`;
+        }
+    }
+
+    if (melhorAvaliacao) {
+        comment += `<br>Melhor tipo de avaliação: ${melhorAvaliacao[0]} (${parseFloat(melhorAvaliacao[1]).toFixed(2)}).<br>`;
+    }
+
+    comment += `<br>Tendência: ${tendencia}.<br>`;
+
+    // Performance classification
+    let classificacao = "Regular";
+    if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
+    else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";
+    else if (parseFloat(mediaGeral) >= 6) classificacao = "Satisfatório";
+    else if (parseFloat(mediaGeral) < 5) classificacao = "Necessita Atenção";
+
+    return {
+        summary: `Análise de desempenho para ${aluno}: ${classificacao}.`,
         comment
     };
 };
