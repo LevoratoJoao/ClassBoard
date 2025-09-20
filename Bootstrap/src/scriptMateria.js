@@ -1,4 +1,4 @@
-import { buildChartMediaNotas, buildChartForEachAvaliacao, buildChartNotasPorAluno } from "./charts.js";
+import { renderChartMediaNotas, renderChartForEachAvaliacao, renderChartNotasPorAluno } from "./charts.js";
 import { buildMateriaAiAnalysis } from "./aiAnalysis.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -10,9 +10,9 @@ const mediaNotas = document.getElementById('media_notas').getContext('2d');
 const notasAvaliacoes = document.getElementById('notas_avaliacoes').getContext('2d');
 const notasPorAluno = document.getElementById('notas_alunos').getContext('2d');
 
-let mediaChart = new Chart(mediaNotas, buildChartMediaNotas(materia, 'ALL_NOTES', "", 0, 'Notas das avaliações'));
-let notasAvaliacoesChart = new Chart(notasAvaliacoes, buildChartForEachAvaliacao(materia, 'ALL_AVALIACAO', "", 0, 'Média da notas por Avaliação'));
-let notasPorAlunoChart = new Chart(notasPorAluno, buildChartNotasPorAluno(materia, 'ALL_NOTES', "", 0, 'Notas por Aluno'));
+let mediaChart = new Chart(mediaNotas, renderChartMediaNotas(materia, 'ALL_NOTES', "", 0, 'Notas das avaliações'));
+let notasAvaliacoesChart = new Chart(notasAvaliacoes, renderChartForEachAvaliacao(materia, 'ALL_AVALIACAO', "", 0, 'Média da notas por Avaliação'));
+let notasPorAlunoChart = new Chart(notasPorAluno, renderChartNotasPorAluno(materia, 'ALL_NOTES', "", 0, 'Notas por Aluno'));
 
 const aiAnalysis = buildMateriaAiAnalysis(materia);
 document.getElementById('ai-summary').textContent = aiAnalysis.summary;
@@ -47,19 +47,19 @@ window.applyFilters = function () {
     mediaChart.destroy();
     mediaChart = new Chart(
         chartCtx,
-        buildChartMediaNotas(materia, chartType, chartTipo, chartBimestre, chartLabel)
+        renderChartMediaNotas(materia, chartType, chartTipo, chartBimestre, chartLabel)
     );
 
     notasAvaliacoesChart.destroy();
     notasAvaliacoesChart = new Chart(
         notasAvaliacoes,
-        buildChartForEachAvaliacao(materia, chartType, chartTipo, chartBimestre, chartLabel)
+        renderChartForEachAvaliacao(materia, chartType, chartTipo, chartBimestre, chartLabel)
     );
 
     notasPorAlunoChart.destroy();
     notasPorAlunoChart = new Chart(
         notasPorAluno,
-        buildChartNotasPorAluno(materia, chartType, chartTipo, chartBimestre, chartLabel)
+        renderChartNotasPorAluno(materia, chartType, chartTipo, chartBimestre, chartLabel)
     );
 
     mediaChart.update();

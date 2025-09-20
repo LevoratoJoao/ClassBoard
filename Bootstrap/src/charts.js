@@ -1,6 +1,6 @@
 import {
-    getNotasByMateria, getMediaByMateria, getNotasByMateriaAndBimestre,
-    getMediaByMateriaAndBimestre, getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTipoAndBimestre, getNotasByMateriaTipoAndBimestre,
+    getNotasByMateria, getNotasByMateriaAndBimestre,
+    getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTipoAndBimestre, getNotasByMateriaTipoAndBimestre,
     getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachTipo, getMediaAvaliacaoByMateriaForEachBimestre
 } from "./services/notasService.js";
 
@@ -22,7 +22,7 @@ function getArgs(argNames, params) {
     return argNames.map(name => params[name]);
 }
 
-export const buildChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Notas das avaliações') => {
+export const renderChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Notas das avaliações') => {
     const [fn, argNames] = doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
     const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
@@ -52,7 +52,7 @@ export const buildChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = ""
     };
 };
 
-export const buildChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
+export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
     const [fn, argNames] = barChartTypes[chartType] || barChartTypes.ALL_NOTES;
     const medias = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
@@ -105,7 +105,7 @@ export const buildChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tip
     };
 };
 
-export const buildChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Distribuição de Frequência das Notas') => {
+export const renderChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Distribuição de Frequência das Notas') => {
     const [fn, argNames] = doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
     const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
