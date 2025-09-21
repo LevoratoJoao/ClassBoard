@@ -2,9 +2,6 @@ import {
     getNotasByMateria, getNotasByMateriaAndBimestre,
     getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTipoAndBimestre, getNotasByMateriaTipoAndBimestre,
     getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachTipo, getMediaAvaliacaoByMateriaForEachBimestre,
-    getMediaAvaliacaoForEachMateria,
-    getNotasByAlunoAndMateriaForEachBimestre,
-    getNotasByAluno
 } from "./services/notasService.js";
 
 const doughnutChartTypes = {
@@ -30,16 +27,17 @@ export const renderChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "
     const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
     const data = {
-        labels: ['< 3', '3-5', '5-8', '> 8'],
+        labels: ['0-2', '3-4', '5-6', '7-8', '9-10'],
         datasets: [{
             label,
             data: [
-                notas.filter(nota => nota < 3).length,
-                notas.filter(nota => nota >= 3 && nota < 5).length,
-                notas.filter(nota => nota >= 5 && nota < 8).length,
-                notas.filter(nota => nota >= 8).length
+                notas.filter(n => n >= 0 && n <= 2).length,
+                notas.filter(n => n >= 3 && n <= 4).length,
+                notas.filter(n => n >= 5 && n <= 6).length,
+                notas.filter(n => n >= 7 && n <= 8).length,
+                notas.filter(n => n >= 9 && n <= 10).length
             ],
-            backgroundColor: ['#D1495B', '#F7E06C', '#4bc0c0ff', '#3A6EA5'],
+            backgroundColor: ['#D1495B', '#F7931E', '#F7E06C', '#4bc0c0ff', '#3A6EA5'],
             hoverOffset: 3
         }]
     };
@@ -55,24 +53,36 @@ export const renderChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "
     };
 };
 
-export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
-    const [fn, argNames] = barChartTypes[chartType] || barChartTypes.ALL_NOTES;
-    const medias = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', _tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
+    const tipos = ['Prova', 'Trabalho'];
+    const mediasPorTipo = tipos.map(tipo => {
+        const [fn, argNames] = barChartTypes['BY_TYPE'] || barChartTypes.ALL_NOTES;
+        return {
+            tipo,
+            medias: fn(materia, ...getArgs(argNames, { tipo, bimestre }))
+        };
+    });
+
+    const allLabels = Array.from(new Set(
+        mediasPorTipo.flatMap(tp => Object.keys(tp.medias))
+    ));
+
+    const datasets = mediasPorTipo.map((tp, idx) => ({
+        label: tp.tipo,
+        data: allLabels.map(label => tp.medias[label] ?? null),
+        borderColor: idx === 0 ? '#3A6EA5' : '#F7931E',
+        borderWidth: 2,
+        tension: 0.4,
+        pointBackgroundColor: idx === 0 ? '#3A6EA5' : '#F7931E',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8
+    }));
 
     const data = {
-        labels: Object.keys(medias),
-        datasets: [{
-            label,
-            data: Object.values(medias),
-            borderColor: '#3A6EA5',
-            borderWidth: 2,
-            tension: 0.4,
-            pointBackgroundColor: '#3A6EA5',
-            pointBorderColor: '#ffffff',
-            pointBorderWidth: 2,
-            pointRadius: 6,
-            pointHoverRadius: 8
-        }]
+        labels: allLabels,
+        datasets
     };
 
     return {
@@ -98,7 +108,7 @@ export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', ti
                 x: {
                     title: {
                         display: true,
-                        text: 'Avaliações'
+                        text: 'Bimestres'
                     }
                 }
             },
@@ -108,31 +118,34 @@ export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', ti
     };
 };
 
-export const renderChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Distribuição de Frequência das Notas') => {
-    const [fn, argNames] = doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
-    const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+export const renderChartNotasPorAluno = (
+    materia,
+    chartType = 'ALL_NOTES',
+    _tipo = "",
+    _bimestre = 0,
+    label = 'Média das Notas por Bimestre e Tipo'
+) => {
+    const bimestres = [1, 2, 3];
+    const tipos = ['Prova', 'Trabalho'];
 
-    const faixas = [
-        { range: '0-2', min: 0, max: 2, color: '#D1495B' },
-        { range: '3-4', min: 3, max: 4, color: '#F7931E' },
-        { range: '5-6', min: 5, max: 6, color: '#F7E06C' },
-        { range: '7-8', min: 7, max: 8, color: '#4bc0c0ff' },
-        { range: '9-10', min: 9, max: 10, color: '#3A6EA5' }
-    ];
-
-    const frequencias = faixas.map(faixa => {
-        return notas.filter(nota => nota >= faixa.min && nota <= faixa.max).length;
+    const datasets = tipos.map((tipo, idx) => {
+        const data = bimestres.map(bimestre => {
+            const [fn, argNames] = doughnutChartTypes['BY_TYPE_AND_BIMESTER'];
+            const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+            if (!notas.length) return null;
+            const media = notas.reduce((a, b) => a + b, 0) / notas.length;
+            return Number(media.toFixed(2));
+        });
+        return {
+            label: tipo,
+            data,
+            backgroundColor: idx === 0 ? "rgba(54, 162, 235, 0.7)" : "rgba(255, 99, 132, 0.7)",
+        };
     });
 
     const data = {
-        labels: faixas.map(f => f.range),
-        datasets: [{
-            label: `Quantidade de notas - ${materia}`,
-            data: frequencias,
-            backgroundColor: faixas.map(f => f.color),
-            borderColor: faixas.map(f => f.color),
-            borderWidth: 1
-        }]
+        labels: bimestres.map(b => `Bimestre ${b}`),
+        datasets
     };
 
     return {
@@ -143,19 +156,23 @@ export const renderChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo 
             plugins: {
                 title: {
                     display: true,
-                    text: `${label} - ${materia}`
+                    text: label + ` - ${materia}`
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
                 }
             },
             scales: {
                 x: {
-                    title: { display: true, text: 'Faixas de Notas' }
+                    title: { display: true, text: 'Bimestres' },
+                    stacked: false
                 },
                 y: {
-                    title: { display: true, text: 'Quantidade de Alunos' },
+                    title: { display: true, text: 'Média das Notas' },
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
+                    max: 10,
+                    ticks: { stepSize: 1 }
                 }
             },
             width: 800,

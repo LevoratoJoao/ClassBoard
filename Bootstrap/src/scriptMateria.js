@@ -1,5 +1,7 @@
 import { renderChartMediaNotas, renderChartForEachAvaliacao, renderChartNotasPorAluno } from "./charts.js";
 import { buildMateriaAiAnalysis } from "./aiAnalysis.js";
+import { getMediaForEachMateria } from "./services/notasService.js";
+import { getAvaliacoesByMateria } from "./services/avaliacoesService.js";
 
 const params = new URLSearchParams(window.location.search);
 const materia = params.get('materia');
@@ -70,3 +72,26 @@ window.clearFilters = function () {
     document.querySelector('input[name="tipo"][value="All"]').checked = true;
     applyFilters();
 }
+
+const calcularRankingMateria = () => {
+    const mediasMaterias = getMediaForEachMateria();
+    mediasMaterias.sort((a, b) => b.media - a.media);
+    const ranking = mediasMaterias.map((item, index) => ({
+        ...item,
+        rank: index + 1
+    }));
+    return ranking;
+};
+const ranking = calcularRankingMateria();
+document.getElementById('ranking-materia').textContent = `${ranking.find(r => r.materia === materia)?.rank || 'N/A'}º de ${ranking.length}`;
+
+const mediaTotalMateria = ranking.find(r => r.materia === materia)?.media || 0;
+document.getElementById('media-total').textContent = `${mediaTotalMateria} de 10`;
+
+const avaliacoesMateria = getAvaliacoesByMateria(materia);
+const ul = document.getElementById('avaliacoes-list');
+avaliacoesMateria.forEach(notaObj => {
+    ul.innerHTML += `<li class="list-group-item">
+        <strong>${notaObj.tipo}</strong> - ${notaObj.bimestre}º Bimestre</strong>
+    </li>`;
+});
