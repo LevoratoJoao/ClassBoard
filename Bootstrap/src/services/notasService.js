@@ -84,6 +84,38 @@ export const getMediaAvaliacaoForEachMateria = () => {
     return result;
 }
 
+export const getMediaAvaliacaoByBimestreForEachMateria = (bimestre) => {
+    const filtered = filterNotasByAvaliacoes({ bimestre: Number(bimestre) });
+    const grouped = groupBy(filtered, n => n.avaliacao.materia);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+}
+
+export const getMediaAvaliacaoByTipoForEachMateria = (tipo) => {
+    const filtered = filterNotasByAvaliacoes({ tipo });
+    const grouped = groupBy(filtered, n => n.avaliacao.materia);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+}
+
+export const getMediaAvaliacaoByTipoAndBimestreForEachMateria = (tipo, bimestre) => {
+    const filtered = filterNotasByAvaliacoes({ tipo, bimestre: Number(bimestre) });
+    const grouped = groupBy(filtered, n => n.avaliacao.materia);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+}
+
+export const getMediaAvaliacaoByMateriaAndTipoForEachBimestre = (materia, tipo) => {
+    const filtered = filterNotasByAvaliacoes({ materia, tipo });
+    const grouped = groupBy(filtered, n => n.avaliacao.bimestre);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+}
+
 export const findNotasAluno = alunoNome =>
     notas.find(n =>
         n.aluno === alunoNome
@@ -165,6 +197,93 @@ export const getMediaForEachAluno = () => {
     return medias;
 }
 
+export const getMediaByAlunoForEachMateriaAndBimestre = (alunoNome) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    if (!notasAluno) return [];
+    const grouped = groupBy(notasAluno.notas, n => `${n.avaliacao.materia}|${n.avaliacao.bimestre}`);
+    const materias = {};
+
+    Object.keys(grouped).forEach(key => {
+        const [materia, bimestre] = key.split('|');
+        if (!materias[materia]) materias[materia] = {};
+        materias[materia][bimestre] = calcMedia(grouped[key]);
+    });
+
+    console.log(materias);
+
+    return Object.entries(materias).map(([materia, notas]) => ({
+        materia,
+        notas
+    }));
+};
+
+export const getMediaByAlunoAndTipoForEachMateriaAndBimestre = (alunoNome, tipo) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    if (!notasAluno) return [];
+    const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { tipo });
+    const grouped = groupBy(filtered, n => `${n.avaliacao.materia}|${n.avaliacao.bimestre}`);
+    const materias = {};
+
+    Object.keys(grouped).forEach(key => {
+        const [materia, bimestre] = key.split('|');
+        if (!materias[materia]) materias[materia] = {};
+        materias[materia][bimestre] = calcMedia(grouped[key]);
+    });
+
+    console.log(materias);
+
+    return Object.entries(materias).map(([materia, notas]) => ({
+        materia,
+        notas
+    }));
+};
+
+export const getMediaByAlunoAndMateriaForEachBimestre = (alunoNome, materia) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    if (!notasAluno) return [];
+    const grouped = groupBy(notasAluno.notas, n => `${n.avaliacao.materia}|${n.avaliacao.bimestre}`);
+    const materias = {};
+
+    Object.keys(grouped).forEach(key => {
+        const [mat, bimestre] = key.split('|');
+        if (mat === materia) {
+            if (!materias[mat]) materias[mat] = {};
+            materias[mat][bimestre] = calcMedia(grouped[key]);
+        }
+    });
+
+    console.log(materias);
+
+    return Object.entries(materias).map(([materia, notas]) => ({
+        materia,
+        notas
+    }));
+}
+
+export const getMediaByAlunoTipoAndMateriaForEachBimestre = (alunoNome, materia, tipo) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    if (!notasAluno) return [];
+    const grouped = groupBy(notasAluno.notas, n => `${n.avaliacao.materia}|${n.avaliacao.bimestre}`);
+    const materias = {};
+
+    Object.keys(grouped).forEach(key => {
+        const [mat, bimestre] = key.split('|');
+        if (mat === materia) {
+            const notasFilteredByTipo = grouped[key].filter((_, index) => notasAluno.notas[index].avaliacao.tipo === tipo);
+            if (notasFilteredByTipo.length > 0) {
+                if (!materias[mat]) materias[mat] = {};
+                materias[mat][bimestre] = calcMedia(notasFilteredByTipo);
+            }
+        }
+    });
+
+    console.log(materias);
+
+    return Object.entries(materias).map(([materia, notas]) => ({
+        materia,
+        notas
+    }));
+}
 
 export const getNotasByAlunoAndMateriaForEachBimestre = (alunoNome, materia) => {
     const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { materia });
@@ -173,3 +292,35 @@ export const getNotasByAlunoAndMateriaForEachBimestre = (alunoNome, materia) => 
     for (const key in grouped) result[key] = calcMedia(grouped[key]);
     return result;
 };
+
+export const getMediaByAlunoAndTipoForEachMateria = (alunoNome, tipo) => {
+    const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { tipo });
+    const grouped = groupBy(filtered, n => n.avaliacao.materia);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+};
+
+export const getMediaByAlunoBimestreForEachMateria = (alunoNome, bimestre) => {
+    const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { bimestre: Number(bimestre) });
+    const grouped = groupBy(filtered, n => n.avaliacao.materia);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+};
+
+export const getMediaByAlunoBimestreAndTipoForEachMateria = (alunoNome, bimestre, tipo) => {
+    const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { bimestre: Number(bimestre), tipo });
+    const grouped = groupBy(filtered, n => n.avaliacao.materia);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+};
+
+export const getMediaByAlunoMateriaAndTipoForEachBimestre = (alunoNome, materia, tipo) => {
+    const filtered = filterNotasByAlunoAndAvaliacoes(alunoNome, { materia, tipo });
+    const grouped = groupBy(filtered, n => n.avaliacao.bimestre);
+    const result = {};
+    for (const key in grouped) result[key] = calcMedia(grouped[key]);
+    return result;
+}
