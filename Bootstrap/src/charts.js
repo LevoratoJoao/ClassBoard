@@ -269,3 +269,42 @@ export const renderEvolucaoNotasChart = (notas) => {
         },
     });
 }
+
+export const renderDistribuicaoNotasChart = (notasAluno) => {
+    const bins = Array(11).fill(0);
+    notasAluno.forEach((nota) => {
+        if (typeof nota === "number" && nota >= 0 && nota <= 10) {
+            bins[Math.round(nota)]++;
+        }
+    });
+
+    const ctx = document
+        .getElementById("distribuicao-notas-chart")
+        .getContext("2d");
+
+    const baseColor = "31, 118, 210"; // RGB do #1976d2
+    const gradientColors = Array.from(
+        { length: 11 },
+        (_, i) => `rgba(${baseColor}, ${1 - i * 0.08})`
+    );
+    return new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: bins.map((_, i) => i.toString()),
+            datasets: [
+                {
+                    label: "Frequência das notas",
+                    data: bins,
+                    backgroundColor: gradientColors,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "top" },
+                title: { display: false },
+            },
+        },
+    });
+}

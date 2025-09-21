@@ -108,14 +108,6 @@ export const getMediaAvaliacaoByTipoAndBimestreForEachMateria = (tipo, bimestre)
     return result;
 }
 
-export const getMediaAvaliacaoByMateriaAndTipoForEachBimestre = (materia, tipo) => {
-    const filtered = filterNotasByAvaliacoes({ materia, tipo });
-    const grouped = groupBy(filtered, n => n.avaliacao.bimestre);
-    const result = {};
-    for (const key in grouped) result[key] = calcMedia(grouped[key]);
-    return result;
-}
-
 export const findNotasAluno = alunoNome =>
     notas.find(n =>
         n.aluno === alunoNome
@@ -149,6 +141,33 @@ export const getNotasByAlunoAndMateria = (alunoNome, materia) => {
         filterNotasByAlunoAndAvaliacoes(alunoNome, { materia })
     ).map(n => n.nota) : [];
 };
+
+export const getNotasByAlunoBimestreAndTipo = (alunoNome, bimestre, tipo) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { bimestre: Number(bimestre), tipo }
+    ).map(n => n.nota) : [];
+};
+
+export const getMediaByAlunoBimestreAndTipo = (alunoNome, bimestre, tipo) =>
+    calcMedia(getNotasByAlunoBimestreAndTipo(alunoNome, bimestre, tipo));
+
+export const getNotasByAlunoAndBimestre = (alunoNome, bimestre) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { bimestre: Number(bimestre) }
+    ).map(n => n.nota) : [];
+};
+
+export const getMediaByAlunoAndBimestre = (alunoNome, bimestre) =>
+    calcMedia(getNotasByAlunoAndBimestre(alunoNome, bimestre));
+
+export const getNotasByAlunoAndTipo = (alunoNome, tipo) => {
+    const notasAluno = findNotasAluno(alunoNome);
+    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { tipo }
+    ).map(n => n.nota) : [];
+};
+
+export const getMediaByAlunoAndTipo = (alunoNome, tipo) =>
+    calcMedia(getNotasByAlunoAndTipo(alunoNome, tipo));
 
 export const getMediaByAlunoAndMateria = (alunoNome, materia) =>
     calcMedia(getNotasByAlunoAndMateria(alunoNome, materia));
@@ -209,8 +228,6 @@ export const getMediaByAlunoForEachMateriaAndBimestre = (alunoNome) => {
         materias[materia][bimestre] = calcMedia(grouped[key]);
     });
 
-    console.log(materias);
-
     return Object.entries(materias).map(([materia, notas]) => ({
         materia,
         notas
@@ -229,8 +246,6 @@ export const getMediaByAlunoAndTipoForEachMateriaAndBimestre = (alunoNome, tipo)
         if (!materias[materia]) materias[materia] = {};
         materias[materia][bimestre] = calcMedia(grouped[key]);
     });
-
-    console.log(materias);
 
     return Object.entries(materias).map(([materia, notas]) => ({
         materia,
@@ -251,8 +266,6 @@ export const getMediaByAlunoAndMateriaForEachBimestre = (alunoNome, materia) => 
             materias[mat][bimestre] = calcMedia(grouped[key]);
         }
     });
-
-    console.log(materias);
 
     return Object.entries(materias).map(([materia, notas]) => ({
         materia,
@@ -276,8 +289,6 @@ export const getMediaByAlunoTipoAndMateriaForEachBimestre = (alunoNome, materia,
             }
         }
     });
-
-    console.log(materias);
 
     return Object.entries(materias).map(([materia, notas]) => ({
         materia,

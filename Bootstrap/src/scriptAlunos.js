@@ -12,12 +12,18 @@ import {
   getMediaByAlunoTipoAndMateriaForEachBimestre,
   getMediaAvaliacaoByTipoAndBimestreForEachMateria,
   getMediaAvaliacaoByBimestreForEachMateria,
-  getMediaAvaliacaoByMateriaAndTipoForEachBimestre,
   getMediaAvaliacaoForEachMateria,
-  getMediaAvaliacaoByTipoForEachMateria
+  getMediaAvaliacaoByTipoForEachMateria,
+  getNotasByAlunoMateriaAndBimestre,
+  getNotasByAlunoMateriaAndTipo,
+  getNotasByAlunoMateriaTipoAndBimestre,
+  getNotasByAlunoBimestreAndTipo,
+  getNotasByAlunoAndBimestre,
+  getNotasByAlunoAndTipo,
+  getNotasByAlunoAndMateria
 } from "./services/notasService.js";
 import { buildAlunoAiAnalysis } from "./aiAnalysis.js";
-import { renderComparacaoTurmaChart, renderEvolucaoNotasChart } from "./charts.js";
+import { renderComparacaoTurmaChart, renderEvolucaoNotasChart, renderDistribuicaoNotasChart } from "./charts.js";
 
 
 function getAlunoFromUrl() {
@@ -36,7 +42,6 @@ if (alunoObj) {
 const faltasTotais = Math.floor(Math.random() * 20);
 document.getElementById("faltas-totais").textContent = faltasTotais + " faltas";
 
-const notasAluno = getNotasByAluno(alunoObj?.nome || alunoNome);
 const mediasMaterias = getMediaByAlunoForEachMateria(alunoObj?.nome || alunoNome);
 const mediasList = document.getElementById("medias-materias-list");
 Object.entries(mediasMaterias).forEach(([materia, media]) => {
@@ -51,6 +56,11 @@ let comparacaoTurmaChart = renderComparacaoTurmaChart(mediasMaterias, mediaTurma
 
 const evolucaoNotasData = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
 let evolucaoNotasChart = renderEvolucaoNotasChart(evolucaoNotasData);
+
+const notasAluno = getNotasByAluno(alunoObj?.nome || alunoNome);
+const notasValues = notasAluno.notas.map((obj) => obj.nota);
+
+let distribuicaoNotasChart = renderDistribuicaoNotasChart(notasValues);
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -76,7 +86,6 @@ window.applyFilters = function () {
 
   let [notasFiltradas, notasTurma] = filterNotasForComparacaoTurma(materia, bimestre, tipo);
 
-  console.log(notasFiltradas);
   comparacaoTurmaChart.destroy();
   comparacaoTurmaChart = renderComparacaoTurmaChart(notasFiltradas, notasTurma);
 
@@ -84,6 +93,10 @@ window.applyFilters = function () {
 
   evolucaoNotasChart.destroy();
   evolucaoNotasChart = renderEvolucaoNotasChart(notasEvolucaoFiltradas);
+
+  let notasDistribuicaoFiltradas = filterNotasForDistribuicaoNotas(materia, bimestre, tipo);
+  distribuicaoNotasChart.destroy();
+  distribuicaoNotasChart = renderDistribuicaoNotasChart(notasDistribuicaoFiltradas);
 
 };
 
@@ -151,6 +164,51 @@ const filterNotasForEvolucaoNotas = (materia, tipo) => {
   return notasFiltradas;
 }
 
+const filterNotasForDistribuicaoNotas = (materia, bimestre, tipo) => {
+  let notasFiltradas = notasAluno?.notas || [];
+
+  const filters = [
+    {
+      condicion: () => materia !== "All" && bimestre !== "All" && tipo !== "All",
+      fn: () => getNotasByAlunoMateriaTipoAndBimestre(alunoNome, materia, tipo, Number(bimestre)),
+    },
+    {
+      condicion: () => materia !== "All" && bimestre !== "All" && tipo === "All",
+      fn: () => getNotasByAlunoMateriaAndBimestre(alunoNome, materia, Number(bimestre)),
+    },
+    {
+      condicion: () => materia !== "All" && bimestre === "All" && tipo !== "All",
+      fn: () => getNotasByAlunoMateriaAndTipo(alunoNome, materia, tipo),
+    },
+    {
+      condicion: () => materia !== "All" && bimestre === "All" && tipo === "All",
+      fn: () => getNotasByAlunoAndMateria(alunoNome, materia),
+    },
+    {
+      condicion: () => materia === "All" && bimestre !== "All" && tipo !== "All",
+      fn: () => getNotasByAlunoBimestreAndTipo(alunoNome, Number(bimestre), tipo),
+    },
+    {
+      condicion: () => materia === "All" && bimestre !== "All" && tipo === "All",
+      fn: () => getNotasByAlunoAndBimestre(alunoNome, Number(bimestre)),
+    },
+    {
+      condicion: () => materia === "All" && bimestre === "All" && tipo !== "All",
+      fn: () => getNotasByAlunoAndTipo(alunoNome, tipo),
+    }
+  ];
+
+  for (const { condicion, fn } of filters) {
+    if (condicion()) {
+      notasFiltradas = fn();
+      break;
+    } else {
+      return notasValues;
+    }
+  }
+  return notasFiltradas;
+};
+
 function renderTabelaAprovacao() {
   const container = document.getElementById("tabela-aprovacao-anual");
   if (!container) return;
@@ -198,47 +256,3 @@ function calcularRankingAluno() {
     }
   }
 }
-
-function renderDistribuicaoNotasChart() {
-
-  const todasNotas = notasAluno.notas.map((obj) => obj.nota);
-
-  const bins = Array(11).fill(0);
-  todasNotas.forEach((nota) => {
-    if (typeof nota === "number" && nota >= 0 && nota <= 10) {
-      bins[Math.round(nota)]++;
-    }
-  });
-
-  const ctx = document
-    .getElementById("distribuicao-notas-chart")
-    .getContext("2d");
-
-  const baseColor = "31, 118, 210"; // RGB do #1976d2
-  const gradientColors = Array.from(
-    { length: 11 },
-    (_, i) => `rgba(${baseColor}, ${1 - i * 0.08})`
-  );
-  new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: bins.map((_, i) => i.toString()),
-      datasets: [
-        {
-          label: "Frequência das notas",
-          data: bins,
-          backgroundColor: gradientColors,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "top" },
-        title: { display: false },
-      },
-    },
-  });
-}
-
-renderDistribuicaoNotasChart();
