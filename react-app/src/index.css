@@ -1,0 +1,80 @@
+.montserrat-bold {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+nav {
+  background-color: #103f28;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
+.navbar {
+  --bs-navbar-brand-color: #212529;
+}
+
+#cards-col-1 {
+  min-height: 200px;
+  background-color: #D1495B;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+#cards-col-2 {
+  min-height: 200px;
+  background-color: #F7E06C;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+#cards-col-3 {
+  min-height: 200px;
+  background-color: #3A6EA5;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+#cards-col-1:hover,
+#cards-col-2:hover,
+#cards-col-3:hover {
+  transform: translateY(-5px);
+}
+
+#icons {
+  padding-top: 20px;
+  font-size: 4rem !important;
+}
+
+.card a {
+  color: #212529 !important;
+  text-decoration: none !important;
+}
+
+.card a:hover {
+  color: #212529 !important;
+}
+
+.clearFilters {
+  background-color: #D1495B;
+  color: #ffffff;
+  border: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.clearFilters:hover {
+  background-color: #A8323B;
+  color: #ffffff;
+}
+
+.applyFilters {
+  background-color: #3A6EA5;
+  color: #ffffff;
+  border: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.applyFilters:hover {
+  background-color: #2c5f8f;
+  color: #ffffff;
+}

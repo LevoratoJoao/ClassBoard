@@ -1,7 +1,10 @@
 import {
-    getNotasByMateria, getMediaByMateria, getNotasByMateriaAndBimestre,
-    getMediaByMateriaAndBimestre, getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTypeAndBimestre, getNotasByMateriaTipoAndBimestre,
-    getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachType, getMediaAvaliacaoByMateriaForEachBimestre
+    getNotasByMateria, getNotasByMateriaAndBimestre,
+    getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTipoAndBimestre, getNotasByMateriaTipoAndBimestre,
+    getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachTipo, getMediaAvaliacaoByMateriaForEachBimestre,
+    getMediaAvaliacaoForEachMateria,
+    getNotasByAlunoAndMateriaForEachBimestre,
+    getNotasByAluno
 } from "./services/notasService.js";
 
 const doughnutChartTypes = {
@@ -13,16 +16,16 @@ const doughnutChartTypes = {
 
 const barChartTypes = {
     ALL_NOTES: [getMediaAvaliacaoByMateriaForEachAvaliacao, []],
-    BY_TYPE: [getMediaAvaliacaoByMateriaForEachType, ['tipo']],
+    BY_TYPE: [getMediaAvaliacaoByMateriaForEachTipo, ['tipo']],
     BY_BIMESTER: [getMediaAvaliacaoByMateriaForEachBimestre, ['bimestre']],
-    BY_TYPE_AND_BIMESTER: [getMediaAvaliacaoByMateriaForEachTypeAndBimestre, ['tipo', 'bimestre']]
+    BY_TYPE_AND_BIMESTER: [getMediaAvaliacaoByMateriaForEachTipoAndBimestre, ['tipo', 'bimestre']]
 };
 
 function getArgs(argNames, params) {
     return argNames.map(name => params[name]);
 }
 
-export const buildChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Notas das avaliações') => {
+export const renderChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Notas das avaliações') => {
     const [fn, argNames] = doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
     const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
@@ -52,7 +55,7 @@ export const buildChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = ""
     };
 };
 
-export const buildChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
+export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
     const [fn, argNames] = barChartTypes[chartType] || barChartTypes.ALL_NOTES;
     const medias = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
@@ -105,7 +108,7 @@ export const buildChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tip
     };
 };
 
-export const buildChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Distribuição de Frequência das Notas') => {
+export const renderChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Distribuição de Frequência das Notas') => {
     const [fn, argNames] = doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
     const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
@@ -161,70 +164,147 @@ export const buildChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo =
     };
 };
 
-export const buildAiAnalysis = (materia) => {
-    const mediaGeral = getMediaByMateria(materia);
-    const todasNotas = getNotasByMateria(materia);
+const mediaAprovacao = 6;
 
-    const mediaB1 = getMediaByMateriaAndBimestre(materia, 1);
-    const mediaB2 = getMediaByMateriaAndBimestre(materia, 2);
-    const mediaB3 = getMediaByMateriaAndBimestre(materia, 3);
-
-    const mediasAvaliacoes = getMediaAvaliacaoByMateriaForEachAvaliacao(materia);
-
-    const totalAlunos = todasNotas.length;
-    const alunosAprovados = todasNotas.filter(nota => nota >= 6).length;
-    const alunosReprovados = todasNotas.filter(nota => nota < 6).length;
-    const percentualAprovacao = ((alunosAprovados / totalAlunos) * 100).toFixed(1);
-
-    const bimestres = [
-        { nome: '1º Bimestre', media: parseFloat(mediaB1) },
-        { nome: '2º Bimestre', media: parseFloat(mediaB2) },
-        { nome: '3º Bimestre', media: parseFloat(mediaB3) }
-    ].filter(b => !isNaN(b.media) && b.media > 0);
-
-    const melhorBimestre = bimestres.reduce((prev, current) =>
-        prev.media > current.media ? prev : current, bimestres[0]);
-
-    const piorBimestre = bimestres.reduce((prev, current) =>
-        prev.media < current.media ? prev : current, bimestres[0]);
-
-    const avaliacoes = Object.entries(mediasAvaliacoes);
-    const melhorAvaliacao = avaliacoes.reduce((prev, current) =>
-        parseFloat(prev[1]) > parseFloat(current[1]) ? prev : current, avaliacoes[0]);
-
-    let tendencia = "estável";
-    if (bimestres.length >= 2) {
-        const ultimosBimestres = bimestres.slice(-2);
-        const diferenca = ultimosBimestres[1].media - ultimosBimestres[0].media;
-        if (diferenca > 0.5) tendencia = "crescente";
-        else if (diferenca < -0.5) tendencia = "decrescente";
-    }
-
-    let comment = `Média geral: ${mediaGeral}.<br>`;
-    comment += `<br>${percentualAprovacao}% dos alunos estão aprovados (${alunosAprovados}/${totalAlunos}).<br>`;
-
-    if (bimestres.length > 0) {
-        comment += `<br>Melhor desempenho: ${melhorBimestre.nome} (${melhorBimestre.media.toFixed(2)}).<br>`;
-        if (bimestres.length > 1) {
-            comment += `<br>Pior desempenho: ${piorBimestre.nome} (${piorBimestre.media.toFixed(2)}).<br>`;
+export const renderComparacaoTurmaChart = (mediasMaterias, mediasTurma) => {
+    return new Chart(
+        document.getElementById("comparacao-turma-chart").getContext("2d"),
+        {
+            type: "bar",
+            data: {
+                labels: Object.keys(mediasMaterias),
+                datasets: [
+                    {
+                        label: "Aluno",
+                        data: mediasMaterias,
+                        backgroundColor: "rgba(54, 162, 235, 0.7)",
+                    },
+                    {
+                        label: "Turma",
+                        data: mediasTurma,
+                        backgroundColor: "rgba(255, 99, 132, 0.7)",
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    title: { display: false },
+                },
+                layout: {
+                    padding: {
+                        left: 1,
+                        right: 1,
+                    },
+                },
+            },
+            plugins: [
+                {
+                    id: "linhaAprovacao",
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const yScale = chart.scales["y"];
+                        const xScale = chart.scales["x"];
+                        if (!yScale || !xScale) return;
+                        const y = yScale.getPixelForValue(mediaAprovacao);
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.setLineDash([10, 5]);
+                        ctx.strokeStyle = "#1976d2";
+                        ctx.lineWidth = 3;
+                        ctx.moveTo(xScale.left, y);
+                        ctx.lineTo(xScale.right, y);
+                        ctx.stroke();
+                        ctx.restore();
+                    },
+                },
+            ],
         }
-    }
+    );
+}
 
-    if (melhorAvaliacao) {
-        comment += `<br>Melhor tipo de avaliação: ${melhorAvaliacao[0]} (${parseFloat(melhorAvaliacao[1]).toFixed(2)}).<br>`;
-    }
+export const renderEvolucaoNotasChart = (notas) => {
+    const colors = [
+        "rgba(54, 162, 235, 1)",
+        "rgba(255, 99, 132, 1)",
+        "rgba(255, 206, 86, 1)",
+        "rgba(75, 192, 192, 1)",
+        "rgba(153, 102, 255, 1)",
+        "rgba(255, 159, 64, 1)",
+    ];
 
-    comment += `<br>Tendência: ${tendencia}.<br>`;
+    const datasets = notas.map((n, idx) => ({
+        label: n.materia,
+        data: Object.fromEntries(
+            Object.entries(n.notas).map(([bimestre, media]) => [
+                `Bimestre ${bimestre}`,
+                media
+            ])
+        ),
+        borderColor: colors[idx % colors.length],
+        backgroundColor: colors[idx % colors.length],
+        fill: false,
+        tension: 0.2,
+    }));
+    const ctx = document.getElementById("evolucao-notas-chart").getContext("2d");
+    return new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: datasets.length ? Object.keys(datasets[0].data) : [],
+            datasets: datasets,
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "top" },
+                title: { display: false },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10,
+                },
+            },
+        },
+    });
+}
 
-    // Performance classification
-    let classificacao = "Regular";
-    if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
-    else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";
-    else if (parseFloat(mediaGeral) >= 6) classificacao = "Satisfatório";
-    else if (parseFloat(mediaGeral) < 5) classificacao = "Necessita Atenção";
+export const renderDistribuicaoNotasChart = (notasAluno) => {
+    const bins = Array(11).fill(0);
+    notasAluno.forEach((nota) => {
+        if (typeof nota === "number" && nota >= 0 && nota <= 10) {
+            bins[Math.round(nota)]++;
+        }
+    });
 
-    return {
-        summary: `Análise de desempenho para ${materia}: ${classificacao}.`,
-        comment
-    };
-};
+    const ctx = document
+        .getElementById("distribuicao-notas-chart")
+        .getContext("2d");
+
+    const baseColor = "31, 118, 210"; // RGB do #1976d2
+    const gradientColors = Array.from(
+        { length: 11 },
+        (_, i) => `rgba(${baseColor}, ${1 - i * 0.08})`
+    );
+    return new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: bins.map((_, i) => i.toString()),
+            datasets: [
+                {
+                    label: "Frequência das notas",
+                    data: bins,
+                    backgroundColor: gradientColors,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "top" },
+                title: { display: false },
+            },
+        },
+    });
+}
