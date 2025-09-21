@@ -1,7 +1,10 @@
 import {
     getNotasByMateria, getNotasByMateriaAndBimestre,
     getNotasByMateriaAndTipo, getMediaAvaliacaoByMateriaForEachTipoAndBimestre, getNotasByMateriaTipoAndBimestre,
-    getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachTipo, getMediaAvaliacaoByMateriaForEachBimestre
+    getMediaAvaliacaoByMateriaForEachAvaliacao, getMediaAvaliacaoByMateriaForEachTipo, getMediaAvaliacaoByMateriaForEachBimestre,
+    getMediaAvaliacaoForEachMateria,
+    getNotasByAlunoAndMateriaForEachBimestre,
+    getNotasByAluno
 } from "./services/notasService.js";
 
 const doughnutChartTypes = {
@@ -160,3 +163,109 @@ export const renderChartNotasPorAluno = (materia, chartType = 'ALL_NOTES', tipo 
         }
     };
 };
+
+const mediaAprovacao = 6;
+
+export const renderComparacaoTurmaChart = (mediasMaterias, mediasTurma) => {
+    return new Chart(
+        document.getElementById("comparacao-turma-chart").getContext("2d"),
+        {
+            type: "bar",
+            data: {
+                labels: Object.keys(mediasMaterias),
+                datasets: [
+                    {
+                        label: "Aluno",
+                        data: mediasMaterias,
+                        backgroundColor: "rgba(54, 162, 235, 0.7)",
+                    },
+                    {
+                        label: "Turma",
+                        data: mediasTurma,
+                        backgroundColor: "rgba(255, 99, 132, 0.7)",
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    title: { display: false },
+                },
+                layout: {
+                    padding: {
+                        left: 1,
+                        right: 1,
+                    },
+                },
+            },
+            plugins: [
+                {
+                    id: "linhaAprovacao",
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const yScale = chart.scales["y"];
+                        const xScale = chart.scales["x"];
+                        if (!yScale || !xScale) return;
+                        const y = yScale.getPixelForValue(mediaAprovacao);
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.setLineDash([10, 5]);
+                        ctx.strokeStyle = "#1976d2";
+                        ctx.lineWidth = 3;
+                        ctx.moveTo(xScale.left, y);
+                        ctx.lineTo(xScale.right, y);
+                        ctx.stroke();
+                        ctx.restore();
+                    },
+                },
+            ],
+        }
+    );
+}
+
+export const renderEvolucaoNotasChart = (notas) => {
+    const colors = [
+        "rgba(54, 162, 235, 1)",
+        "rgba(255, 99, 132, 1)",
+        "rgba(255, 206, 86, 1)",
+        "rgba(75, 192, 192, 1)",
+        "rgba(153, 102, 255, 1)",
+        "rgba(255, 159, 64, 1)",
+    ];
+
+    const datasets = notas.map((n, idx) => ({
+        label: n.materia,
+        data: Object.fromEntries(
+            Object.entries(n.notas).map(([bimestre, media]) => [
+                `Bimestre ${bimestre}`,
+                media
+            ])
+        ),
+        borderColor: colors[idx % colors.length],
+        backgroundColor: colors[idx % colors.length],
+        fill: false,
+        tension: 0.2,
+    }));
+    const ctx = document.getElementById("evolucao-notas-chart").getContext("2d");
+    return new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: datasets.length ? Object.keys(datasets[0].data) : [],
+            datasets: datasets,
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "top" },
+                title: { display: false },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10,
+                },
+            },
+        },
+    });
+}

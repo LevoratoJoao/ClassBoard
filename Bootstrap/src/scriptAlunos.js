@@ -147,63 +147,6 @@ function renderTabelaAprovacao() {
   container.innerHTML = html;
 }
 
-function renderEvolucaoNotasChart() {
-  const materias = Object.keys(mediasMaterias);
-  const bimestresSet = new Set();
-  notasAluno?.notas.forEach((notaObj) => {
-    bimestresSet.add(notaObj.avaliacao.bimestre);
-  });
-  const bimestres = Array.from(bimestresSet).sort((a, b) => a - b);
-  const colors = [
-    "rgba(54, 162, 235, 1)",
-    "rgba(255, 99, 132, 1)",
-    "rgba(255, 206, 86, 1)",
-    "rgba(75, 192, 192, 1)",
-    "rgba(153, 102, 255, 1)",
-    "rgba(255, 159, 64, 1)",
-  ];
-  const datasets = materias.map((materia, idx) => {
-
-    const rawNotasPorBimestre = getNotasByAlunoAndMateriaForEachBimestre(alunoNome, materia);
-
-    const notasPorBimestre = {};
-    Object.entries(rawNotasPorBimestre).forEach(([bimestre, nota]) => {
-      notasPorBimestre[`Bimestre ${bimestre}`] = nota;
-    });
-
-    return {
-      label: materia,
-      data: notasPorBimestre,
-      borderColor: colors[idx % colors.length],
-      backgroundColor: colors[idx % colors.length],
-      fill: false,
-      tension: 0.2,
-    };
-  });
-  const ctx = document.getElementById("evolucao-notas-chart").getContext("2d");
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: datasets.length ? Object.keys(datasets[0].data) : [],
-      datasets: datasets,
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "top" },
-        title: { display: false },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 10,
-        },
-      },
-    },
-  });
-}
-renderEvolucaoNotasChart();
-
 function calcularRankingAluno() {
   const mediasAlunos = getMediaForEachAluno();
   mediasAlunos.sort((a, b) => b.media - a.media);
