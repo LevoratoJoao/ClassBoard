@@ -1,14 +1,23 @@
-import { alunos } from "./data/alunos.js";
-import { notas } from "./data/notas.js";
 import { getAlunoByName } from "./services/alunosService.js";
 import {
   getNotasByAluno,
   getMediaByAlunoForEachMateria,
-  getMediaAvaliacaoForEachMateria,
   getMediaForEachAluno,
-  getNotasByAlunoAndMateriaForEachBimestre
+  getMediaByAlunoBimestreAndTipoForEachMateria,
+  getMediaByAlunoBimestreForEachMateria,
+  getMediaByAlunoAndTipoForEachMateria,
+  getMediaByAlunoForEachMateriaAndBimestre,
+  getMediaByAlunoAndTipoForEachMateriaAndBimestre,
+  getMediaByAlunoAndMateriaForEachBimestre,
+  getMediaByAlunoTipoAndMateriaForEachBimestre,
+  getMediaAvaliacaoByTipoAndBimestreForEachMateria,
+  getMediaAvaliacaoByBimestreForEachMateria,
+  getMediaAvaliacaoByMateriaAndTipoForEachBimestre,
+  getMediaAvaliacaoForEachMateria,
+  getMediaAvaliacaoByTipoForEachMateria
 } from "./services/notasService.js";
 import { buildAlunoAiAnalysis } from "./aiAnalysis.js";
+import { renderComparacaoTurmaChart, renderEvolucaoNotasChart } from "./charts.js";
 
 
 function getAlunoFromUrl() {
@@ -37,23 +46,17 @@ Object.entries(mediasMaterias).forEach(([materia, media]) => {
   mediasList.appendChild(li);
 });
 
-const materias = Object.keys(mediasMaterias);
-const mediaAprovacao = 6;
+const mediaTurma = getMediaAvaliacaoForEachMateria()
+let comparacaoTurmaChart = renderComparacaoTurmaChart(mediasMaterias, mediaTurma);
+
+const evolucaoNotasData = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
+let evolucaoNotasChart = renderEvolucaoNotasChart(evolucaoNotasData);
 
 document.addEventListener("DOMContentLoaded", () => {
-  const filtroMateria = document.getElementById("filtro-materia");
-  Object.keys(mediasMaterias).forEach((materia) => {
-    const opt = document.createElement("option");
-    opt.value = materia;
-    opt.textContent = materia;
-    filtroMateria.appendChild(opt);
-  });
 
   calcularRankingAluno();
 
   renderTabelaAprovacao();
-
-  renderComparacaoTurmaChart();
 
   const aiSummary = document.getElementById("ai-summary");
   const aiComment = document.getElementById("ai-comment");
@@ -64,62 +67,88 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-function renderComparacaoTurmaChart() {
-  new Chart(
-    document.getElementById("comparacao-turma-chart").getContext("2d"),
+window.applyFilters = function () {
+  const materia = document.getElementById("filtro-materia").value;
+  const bimestre = document.getElementById("filtro-bimestre").value;
+  const tipo = document.getElementById("filtro-tipo").value;
+
+  const chartCtx = document.getElementById("evolucao-notas-chart").getContext("2d");
+
+  let [notasFiltradas, notasTurma] = filterNotasForComparacaoTurma(materia, bimestre, tipo);
+
+  console.log(notasFiltradas);
+  comparacaoTurmaChart.destroy();
+  comparacaoTurmaChart = renderComparacaoTurmaChart(notasFiltradas, notasTurma);
+
+  let notasEvolucaoFiltradas = filterNotasForEvolucaoNotas(materia, tipo);
+
+  evolucaoNotasChart.destroy();
+  evolucaoNotasChart = renderEvolucaoNotasChart(notasEvolucaoFiltradas);
+
+};
+
+const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
+  let notasFiltradas = notasAluno?.notas || [];
+  let notasTurma = [];
+
+  const filters = [
     {
-      type: "bar",
-      data: {
-        labels: materias,
-        datasets: [
-          {
-            label: "Aluno",
-            data: mediasMaterias,
-            backgroundColor: "rgba(54, 162, 235, 0.7)",
-          },
-          {
-            label: "Turma",
-            data: getMediaAvaliacaoForEachMateria(),
-            backgroundColor: "rgba(255, 99, 132, 0.7)",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "top" },
-          title: { display: false },
-        },
-        layout: {
-          padding: {
-            left: 1,
-            right: 1,
-          },
-        },
-      },
-      plugins: [
-        {
-          id: "linhaAprovacao",
-          afterDraw: (chart) => {
-            const ctx = chart.ctx;
-            const yScale = chart.scales["y"];
-            const xScale = chart.scales["x"];
-            if (!yScale || !xScale) return;
-            const y = yScale.getPixelForValue(mediaAprovacao);
-            ctx.save();
-            ctx.beginPath();
-            ctx.setLineDash([10, 5]);
-            ctx.strokeStyle = "#1976d2";
-            ctx.lineWidth = 3;
-            ctx.moveTo(xScale.left, y);
-            ctx.lineTo(xScale.right, y);
-            ctx.stroke();
-            ctx.restore();
-          },
-        },
-      ],
+      condicion: () => materia === "All" && bimestre !== "All" && tipo !== "All",
+      mediaAluno: () => getMediaByAlunoBimestreAndTipoForEachMateria(alunoNome, Number(bimestre), tipo),
+      mediaTurma: () => getMediaAvaliacaoByTipoAndBimestreForEachMateria(tipo, Number(bimestre)),
+    },
+    {
+      condicion: () => materia === "All" && bimestre !== "All" && tipo === "All",
+      mediaAluno: () => getMediaByAlunoBimestreForEachMateria(alunoNome, Number(bimestre)),
+      mediaTurma: () => getMediaAvaliacaoByBimestreForEachMateria(Number(bimestre)),
+    },
+    {
+      condicion: () => materia === "All" && bimestre === "All" && tipo !== "All",
+      mediaAluno: () => getMediaByAlunoAndTipoForEachMateria(alunoNome, tipo),
+      mediaTurma: () => getMediaAvaliacaoByTipoForEachMateria(tipo),
     }
-  );
+  ];
+
+  for (const { condicion, mediaAluno, mediaTurma } of filters) {
+    if (condicion()) {
+      notasFiltradas = mediaAluno();
+      notasTurma = mediaTurma();
+      break;
+    } else {
+      notasFiltradas = getMediaByAlunoForEachMateria(alunoNome);
+      notasTurma = getMediaAvaliacaoForEachMateria();
+    }
+  }
+  return [notasFiltradas, notasTurma];
+}
+
+const filterNotasForEvolucaoNotas = (materia, tipo) => {
+  let notasFiltradas = notasAluno?.notas || [];
+
+  const filters = [
+    {
+      condicion: () => materia === "All" && tipo !== "All",
+      fn: () => getMediaByAlunoAndTipoForEachMateriaAndBimestre(alunoNome, materia),
+    },
+    {
+      condicion: () => materia !== "All" && tipo === "All",
+      fn: () => getMediaByAlunoAndMateriaForEachBimestre(alunoNome, materia, tipo),
+    },
+    {
+      condicion: () => materia !== "All" && tipo !== "All",
+      fn: () => getMediaByAlunoTipoAndMateriaForEachBimestre(alunoNome, materia, tipo),
+    },
+  ];
+
+  for (const { condicion, fn } of filters) {
+    if (condicion()) {
+      notasFiltradas = fn();
+      break;
+    } else {
+      notasFiltradas = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
+    }
+  }
+  return notasFiltradas;
 }
 
 function renderTabelaAprovacao() {
