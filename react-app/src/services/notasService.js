@@ -24,7 +24,7 @@ export const getNotasByMateriaAndBimestre = (materia, bimestre) =>
     getNotaValues(filterNotasByAvaliacoes({ materia, bimestre: Number(bimestre) }));
 
 export const getMediaByMateriaAndBimestre = (materia, bimestre) =>
-    calcMedia(getNotasByMateriaAndBimestre(materia, bimestre));
+    calcMedia(getNotasByMateriaAndBimestre(materia, Number(bimestre)));
 
 export const getNotasByMateriaAndTipo = (materia, tipo) =>
     getNotaValues(filterNotasByAvaliacoes({ materia, tipo }));
@@ -33,10 +33,10 @@ export const getMediaByMateriaAndTipo = (materia, tipo) =>
     calcMedia(getNotasByMateriaAndTipo(materia, tipo));
 
 export const getNotasByMateriaTipoAndBimestre = (materia, tipo, bimestre) =>
-    getNotaValues(filterNotasByAvaliacoes({ materia, tipo, bimestre }));
+    getNotaValues(filterNotasByAvaliacoes({ materia, tipo, bimestre: Number(bimestre) }));
 
 export const getMediaByMateriaTipoAndBimestre = (materia, tipo, bimestre) =>
-    calcMedia(getNotasByMateriaTipoAndBimestre(materia, tipo, bimestre));
+    calcMedia(getNotasByMateriaTipoAndBimestre(materia, tipo, Number(bimestre)));
 
 const groupBy = (arr, keyFn) => arr.reduce((acc, obj) => {
     const key = keyFn(obj);
@@ -187,7 +187,7 @@ export const getNotasByAlunoMateriaAndBimestre = (alunoNome, materia, bimestre) 
 }
 
 export const getMediaByAlunoMateriaAndBimestre = (alunoNome, materia, bimestre) =>
-    calcMedia(getNotasByAlunoMateriaAndBimestre(alunoNome, materia, bimestre));
+    calcMedia(getNotasByAlunoMateriaAndBimestre(alunoNome, materia, Number(bimestre)));
 
 export const getNotasByAlunoMateriaAndTipo = (alunoNome, materia, tipo) => {
     const notasAluno = findNotasAluno(alunoNome);
@@ -200,12 +200,12 @@ export const getMediaByAlunoMateriaAndTipo = (alunoNome, materia, tipo) =>
 
 export const getNotasByAlunoMateriaTipoAndBimestre = (alunoNome, materia, tipo, bimestre) => {
     const notasAluno = findNotasAluno(alunoNome);
-    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { materia, tipo, bimestre }
+    return notasAluno ? filterNotasByAlunoAndAvaliacoes(alunoNome, { materia, tipo, bimestre: Number(bimestre) }
     ).map(n => n.nota) : [];
 };
 
 export const getMediaByAlunoMateriaTipoAndBimestre = (alunoNome, materia, tipo, bimestre) =>
-    calcMedia(getNotasByAlunoMateriaTipoAndBimestre(alunoNome, materia, tipo, bimestre));
+    calcMedia(getNotasByAlunoMateriaTipoAndBimestre(alunoNome, materia, tipo, Number(bimestre)));
 
 export const getMediaByAlunoForEachMateria = alunoNome => {
     const notasAluno = findNotasAluno(alunoNome);

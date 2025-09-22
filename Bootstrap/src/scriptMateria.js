@@ -1,6 +1,6 @@
 import { renderChartMediaNotas, renderChartForEachAvaliacao, renderChartNotasPorAluno } from "./charts.js";
 import { buildMateriaAiAnalysis } from "./aiAnalysis.js";
-import { getMediaForEachMateria } from "./services/notasService.js";
+import { getMediaForEachMateria, getMediaByMateria } from "./services/notasService.js";
 import { getAvaliacoesByMateria } from "./services/avaliacoesService.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -85,13 +85,13 @@ const calcularRankingMateria = () => {
 const ranking = calcularRankingMateria();
 document.getElementById('ranking-materia').textContent = `${ranking.find(r => r.materia === materia)?.rank || 'N/A'}º de ${ranking.length}`;
 
-const mediaTotalMateria = ranking.find(r => r.materia === materia)?.media || 0;
+const mediaTotalMateria = getMediaByMateria(materia);
 document.getElementById('media-total').textContent = `${mediaTotalMateria} de 10`;
 
 const avaliacoesMateria = getAvaliacoesByMateria(materia);
 const ul = document.getElementById('avaliacoes-list');
 avaliacoesMateria.forEach(notaObj => {
     ul.innerHTML += `<li class="list-group-item">
-        <strong>${notaObj.tipo}</strong> - ${notaObj.bimestre}º Bimestre</strong>
+        <strong>${notaObj.tipo}</strong> - ${notaObj.bimestre}º Bimestre
     </li>`;
 });

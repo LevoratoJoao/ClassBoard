@@ -6,6 +6,9 @@ import NotasAvaliacoesChart from "../components/charts/notasAvaliacoesChart";
 import NotasPorAlunosChart from "../components/charts/notasPorAlunosChart";
 import { buildMateriaAiAnalysis } from "../services/aiService";
 import Navbar from "./navbar";
+import RankMateria from "../components/rank/rankMateria";
+import ListAvaliacoes from "../components/listAvaliacoes/listAvaliacoes";
+import MediaMateria from "../components/mediaCard/mediaMateria";
 
 const MateriaDetails = () => {
   const { materia } = useParams();
@@ -36,6 +39,15 @@ const MateriaDetails = () => {
         <h1 className="mb-4 text-center">
           {materia || "Matéria não encontrada"}
         </h1>
+
+        <div className="row">
+          <ListAvaliacoes materia={materia} />
+        </div>
+
+        <div className="row">
+          <MediaMateria materia={materia} />
+          <RankMateria materia={materia} />
+        </div>
 
         <div className="row">
           <div className="col-md-3">
