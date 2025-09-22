@@ -25,22 +25,32 @@ const NotasOverviewChart = ({
   chartType = "ALL_NOTES",
   tipo = "",
   bimestre = 0,
+  label = "Distribuição de Frequência das Notas",
 }) => {
   const [fn, argNames] =
     doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
   const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
   const data = {
-    labels: ["< 3", "3-5", "5-8", "> 8"],
+    labels: ["0-2", "3-4", "5-6", "7-8", "9-10"],
     datasets: [
       {
+        label,
         data: [
-          notas.filter((nota) => nota < 3).length,
-          notas.filter((nota) => nota >= 3 && nota < 5).length,
-          notas.filter((nota) => nota >= 5 && nota < 8).length,
-          notas.filter((nota) => nota >= 8).length,
+          notas.filter((n) => n >= 0 && n <= 2).length,
+          notas.filter((n) => n >= 3 && n <= 4).length,
+          notas.filter((n) => n >= 5 && n <= 6).length,
+          notas.filter((n) => n >= 7 && n <= 8).length,
+          notas.filter((n) => n >= 9 && n <= 10).length,
         ],
-        backgroundColor: ["#D1495B", "#F7E06C", "#4bc0c0ff", "#3A6EA5"],
+        backgroundColor: [
+          "#D1495B",
+          "#F7931E",
+          "#F7E06C",
+          "#4bc0c0ff",
+          "#3A6EA5",
+        ],
+        hoverOffset: 3,
       },
     ],
   };

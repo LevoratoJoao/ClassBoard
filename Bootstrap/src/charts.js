@@ -53,7 +53,7 @@ export const renderChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "
     };
 };
 
-export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', _tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
+export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Média da notas por Avaliação') => {
     const tipos = ['Prova', 'Trabalho'];
     const mediasPorTipo = tipos.map(tipo => {
         const [fn, argNames] = barChartTypes['BY_TYPE'] || barChartTypes.ALL_NOTES;
@@ -121,8 +121,8 @@ export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', _t
 export const renderChartNotasPorAluno = (
     materia,
     chartType = 'ALL_NOTES',
-    _tipo = "",
-    _bimestre = 0,
+    tipo = "",
+    bimestre = 0,
     label = 'Média das Notas por Bimestre e Tipo'
 ) => {
     const bimestres = [1, 2, 3];

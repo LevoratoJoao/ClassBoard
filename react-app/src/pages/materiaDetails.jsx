@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import FilterPanel from "../components/filters/filterPanel";
+import FilterPanelMateria from "../components/filters/filterPanelMateria";
 import NotasOverviewChart from "../components/charts/notasOverviewChart";
 import NotasAvaliacoesChart from "../components/charts/notasAvaliacoesChart";
 import NotasPorAlunosChart from "../components/charts/notasPorAlunosChart";
-import { buildAiAnalysis } from "../services/aiService";
+import { buildMateriaAiAnalysis } from "../services/aiService";
 import Navbar from "./navbar";
 
 const MateriaDetails = () => {
@@ -13,7 +13,7 @@ const MateriaDetails = () => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
 
   useEffect(() => {
-    const analysis = buildAiAnalysis(materia);
+    const analysis = buildMateriaAiAnalysis(materia);
     setAiAnalysis(analysis);
   }, [materia]);
 
@@ -39,7 +39,7 @@ const MateriaDetails = () => {
 
         <div className="row">
           <div className="col-md-3">
-            <FilterPanel onFiltersChange={handleFiltersChange} />
+            <FilterPanelMateria onFiltersChange={handleFiltersChange} />
           </div>
 
           <div className="col-md-9">

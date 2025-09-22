@@ -11,9 +11,9 @@ import {
 } from "chart.js";
 import {
   getMediaAvaliacaoByMateriaForEachAvaliacao,
-  getMediaAvaliacaoByMateriaForEachType,
+  getMediaAvaliacaoByMateriaForEachTipo,
   getMediaAvaliacaoByMateriaForEachBimestre,
-  getMediaAvaliacaoByMateriaForEachTypeAndBimestre,
+  getMediaAvaliacaoByMateriaForEachTipoAndBimestre,
 } from "../../services/notasService";
 import { getArgs } from "../../utils/utils";
 
@@ -29,10 +29,10 @@ ChartJS.register(
 
 const barChartTypes = {
   ALL_NOTES: [getMediaAvaliacaoByMateriaForEachAvaliacao, []],
-  BY_TYPE: [getMediaAvaliacaoByMateriaForEachType, ["tipo"]],
+  BY_TYPE: [getMediaAvaliacaoByMateriaForEachTipo, ["tipo"]],
   BY_BIMESTER: [getMediaAvaliacaoByMateriaForEachBimestre, ["bimestre"]],
   BY_TYPE_AND_BIMESTER: [
-    getMediaAvaliacaoByMateriaForEachTypeAndBimestre,
+    getMediaAvaliacaoByMateriaForEachTipoAndBimestre,
     ["tipo", "bimestre"],
   ],
 };
@@ -44,53 +44,66 @@ const EvolucaoNotasChart = ({
   bimestre = 0,
   label = "Média da notas por Avaliação",
 }) => {
-  const [fn, argNames] = barChartTypes[chartType] || barChartTypes.ALL_NOTES;
-  const medias = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+  const tipos = ["Prova", "Trabalho"];
+  const mediasPorTipo = tipos.map((tipo) => {
+    const [fn, argNames] = barChartTypes["BY_TYPE"] || barChartTypes.ALL_NOTES;
+    return {
+      tipo,
+      medias: fn(materia, ...getArgs(argNames, { tipo, bimestre })),
+    };
+  });
+
+  const allLabels = Array.from(
+    new Set(mediasPorTipo.flatMap((tp) => Object.keys(tp.medias)))
+  );
+
+  const datasets = mediasPorTipo.map((tp, idx) => ({
+    label: tp.tipo,
+    data: allLabels.map((label) => tp.medias[label] ?? null),
+    borderColor: idx === 0 ? "#3A6EA5" : "#F7931E",
+    borderWidth: 2,
+    tension: 0.4,
+    pointBackgroundColor: idx === 0 ? "#3A6EA5" : "#F7931E",
+    pointBorderColor: "#ffffff",
+    pointBorderWidth: 2,
+    pointRadius: 6,
+    pointHoverRadius: 8,
+  }));
 
   const data = {
-    labels: Object.keys(medias),
-    datasets: [
-      {
-        label,
-        data: Object.values(medias),
-        borderColor: "#3A6EA5",
-        backgroundColor: "rgba(58, 110, 165, 0.1)",
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: "#3A6EA5",
-        pointBorderColor: "#ffffff",
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8,
-      },
-    ],
+    labels: allLabels,
+    datasets,
   };
 
   const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: "top",
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 10,
-        title: {
+    type: "line",
+    data,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
           display: true,
-          text: "Média das Notas",
+          position: "top",
         },
       },
-      x: {
-        title: {
-          display: true,
-          text: "Avaliações",
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 10,
+          title: {
+            display: true,
+            text: "Média das Notas",
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Bimestres",
+          },
         },
       },
+      width: 800,
+      height: 400,
     },
   };
 
