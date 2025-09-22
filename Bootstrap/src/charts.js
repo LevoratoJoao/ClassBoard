@@ -22,7 +22,7 @@ function getArgs(argNames, params) {
     return argNames.map(name => params[name]);
 }
 
-export const renderChartMediaNotas = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Notas das avaliações') => {
+export const renderChartNotasOverview = (materia, chartType = 'ALL_NOTES', tipo = "", bimestre = 0, label = 'Notas das avaliações') => {
     const [fn, argNames] = doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
     const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
 
@@ -118,7 +118,7 @@ export const renderChartForEachAvaliacao = (materia, chartType = 'ALL_NOTES', ti
     };
 };
 
-export const renderChartNotasPorAluno = (
+export const renderChartNotasPorAvaliacao = (
     materia,
     chartType = 'ALL_NOTES',
     tipo = "",

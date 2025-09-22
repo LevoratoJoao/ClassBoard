@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import FilterPanelMateria from "../components/filters/filterPanelMateria";
 import NotasOverviewChart from "../components/charts/notasOverviewChart";
 import NotasAvaliacoesChart from "../components/charts/notasAvaliacoesChart";
-import NotasPorAlunosChart from "../components/charts/notasPorAlunosChart";
+import NotasPorAvaliacaoChart from "../components/charts/notasPorAvaliacaoChart";
 import { buildMateriaAiAnalysis } from "../services/aiService";
 import Navbar from "./navbar";
 import RankMateria from "../components/rank/rankMateria";
@@ -75,7 +75,7 @@ const MateriaDetails = () => {
                     tipo={filters.tipo}
                     bimestre={filters.bimestre}
                   />
-                  <NotasPorAlunosChart
+                  <NotasPorAvaliacaoChart
                     materia={materia}
                     chartType={getChartType(filters.bimestre, filters.tipo)}
                     tipo={filters.tipo}

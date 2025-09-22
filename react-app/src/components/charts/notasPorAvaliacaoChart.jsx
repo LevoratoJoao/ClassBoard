@@ -35,7 +35,7 @@ const doughnutChartTypes = {
   ],
 };
 
-const NotasPorAlunosChart = ({
+const NotasPorAvaliacaoChart = ({
   materia,
   chartType = "ALL_NOTES",
   tipo = "",
@@ -108,4 +108,4 @@ const NotasPorAlunosChart = ({
   );
 };
 
-export default NotasPorAlunosChart;
+export default NotasPorAvaliacaoChart;
