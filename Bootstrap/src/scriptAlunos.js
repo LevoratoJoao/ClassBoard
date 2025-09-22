@@ -100,6 +100,13 @@ window.applyFilters = function () {
 
 };
 
+window.clearFilters = function () {
+  document.getElementById("filtro-materia").value = "All";
+  document.getElementById("filtro-bimestre").value = "All";
+  document.getElementById("filtro-tipo").value = "All";
+  applyFilters();
+};
+
 const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
   let notasFiltradas = notasAluno?.notas || [];
   let notasTurma = [];

@@ -1,5 +1,7 @@
-import { renderChartMediaNotas, renderChartForEachAvaliacao, renderChartNotasPorAluno } from "./charts.js";
+import { renderChartNotasOverview, renderChartForEachAvaliacao, renderChartNotasPorAvaliacao } from "./charts.js";
 import { buildMateriaAiAnalysis } from "./aiAnalysis.js";
+import { getMediaForEachMateria, getMediaByMateria } from "./services/notasService.js";
+import { getAvaliacoesByMateria } from "./services/avaliacoesService.js";
 
 const params = new URLSearchParams(window.location.search);
 const materia = params.get('materia');
@@ -10,9 +12,9 @@ const mediaNotas = document.getElementById('media_notas').getContext('2d');
 const notasAvaliacoes = document.getElementById('notas_avaliacoes').getContext('2d');
 const notasPorAluno = document.getElementById('notas_alunos').getContext('2d');
 
-let mediaChart = new Chart(mediaNotas, renderChartMediaNotas(materia, 'ALL_NOTES', "", 0, 'Notas das avaliações'));
+let mediaChart = new Chart(mediaNotas, renderChartNotasOverview(materia, 'ALL_NOTES', "", 0, 'Notas das avaliações'));
 let notasAvaliacoesChart = new Chart(notasAvaliacoes, renderChartForEachAvaliacao(materia, 'ALL_AVALIACAO', "", 0, 'Média da notas por Avaliação'));
-let notasPorAlunoChart = new Chart(notasPorAluno, renderChartNotasPorAluno(materia, 'ALL_NOTES', "", 0, 'Notas por Aluno'));
+let notasPorAlunoChart = new Chart(notasPorAluno, renderChartNotasPorAvaliacao(materia, 'ALL_NOTES', "", 0, 'Notas por Aluno'));
 
 const aiAnalysis = buildMateriaAiAnalysis(materia);
 document.getElementById('ai-summary').textContent = aiAnalysis.summary;
@@ -47,7 +49,7 @@ window.applyFilters = function () {
     mediaChart.destroy();
     mediaChart = new Chart(
         chartCtx,
-        renderChartMediaNotas(materia, chartType, chartTipo, chartBimestre, chartLabel)
+        renderChartNotasOverview(materia, chartType, chartTipo, chartBimestre, chartLabel)
     );
 
     notasAvaliacoesChart.destroy();
@@ -59,7 +61,7 @@ window.applyFilters = function () {
     notasPorAlunoChart.destroy();
     notasPorAlunoChart = new Chart(
         notasPorAluno,
-        renderChartNotasPorAluno(materia, chartType, chartTipo, chartBimestre, chartLabel)
+        renderChartNotasPorAvaliacao(materia, chartType, chartTipo, chartBimestre, chartLabel)
     );
 
     mediaChart.update();
@@ -70,3 +72,26 @@ window.clearFilters = function () {
     document.querySelector('input[name="tipo"][value="All"]').checked = true;
     applyFilters();
 }
+
+const calcularRankingMateria = () => {
+    const mediasMaterias = getMediaForEachMateria();
+    mediasMaterias.sort((a, b) => b.media - a.media);
+    const ranking = mediasMaterias.map((item, index) => ({
+        ...item,
+        rank: index + 1
+    }));
+    return ranking;
+};
+const ranking = calcularRankingMateria();
+document.getElementById('ranking-materia').textContent = `${ranking.find(r => r.materia === materia)?.rank || 'N/A'}º de ${ranking.length}`;
+
+const mediaTotalMateria = getMediaByMateria(materia);
+document.getElementById('media-total').textContent = `${mediaTotalMateria} de 10`;
+
+const avaliacoesMateria = getAvaliacoesByMateria(materia);
+const ul = document.getElementById('avaliacoes-list');
+avaliacoesMateria.forEach(notaObj => {
+    ul.innerHTML += `<li class="list-group-item">
+        <strong>${notaObj.tipo}</strong> - ${notaObj.bimestre}º Bimestre
+    </li>`;
+});

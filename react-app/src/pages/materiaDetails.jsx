@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import FilterPanel from "../components/filters/filterPanel";
+import FilterPanelMateria from "../components/filters/filterPanelMateria";
 import NotasOverviewChart from "../components/charts/notasOverviewChart";
 import NotasAvaliacoesChart from "../components/charts/notasAvaliacoesChart";
-import NotasPorAlunosChart from "../components/charts/notasPorAlunosChart";
-import { buildAiAnalysis } from "../services/aiService";
+import NotasPorAvaliacaoChart from "../components/charts/notasPorAvaliacaoChart";
+import { buildMateriaAiAnalysis } from "../services/aiService";
 import Navbar from "./navbar";
+import RankMateria from "../components/rank/rankMateria";
+import ListAvaliacoes from "../components/listAvaliacoes/listAvaliacoes";
+import MediaMateria from "../components/mediaCard/mediaMateria";
 
 const MateriaDetails = () => {
   const { materia } = useParams();
@@ -13,7 +16,7 @@ const MateriaDetails = () => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
 
   useEffect(() => {
-    const analysis = buildAiAnalysis(materia);
+    const analysis = buildMateriaAiAnalysis(materia);
     setAiAnalysis(analysis);
   }, [materia]);
 
@@ -38,8 +41,17 @@ const MateriaDetails = () => {
         </h1>
 
         <div className="row">
+          <ListAvaliacoes materia={materia} />
+        </div>
+
+        <div className="row">
+          <MediaMateria materia={materia} />
+          <RankMateria materia={materia} />
+        </div>
+
+        <div className="row">
           <div className="col-md-3">
-            <FilterPanel onFiltersChange={handleFiltersChange} />
+            <FilterPanelMateria onFiltersChange={handleFiltersChange} />
           </div>
 
           <div className="col-md-9">
@@ -63,7 +75,7 @@ const MateriaDetails = () => {
                     tipo={filters.tipo}
                     bimestre={filters.bimestre}
                   />
-                  <NotasPorAlunosChart
+                  <NotasPorAvaliacaoChart
                     materia={materia}
                     chartType={getChartType(filters.bimestre, filters.tipo)}
                     tipo={filters.tipo}

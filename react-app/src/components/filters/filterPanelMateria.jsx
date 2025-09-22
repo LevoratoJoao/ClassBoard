@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const FilterPanel = ({ onFiltersChange }) => {
+const FilterPanelMateria = ({ onFiltersChange }) => {
   const [bimestre, setBimestre] = useState("All");
   const [tipo, setTipo] = useState("All");
 
@@ -92,4 +92,4 @@ const FilterPanel = ({ onFiltersChange }) => {
   );
 };
 
-export default FilterPanel;
+export default FilterPanelMateria;

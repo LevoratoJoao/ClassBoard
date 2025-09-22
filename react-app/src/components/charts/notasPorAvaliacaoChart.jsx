@@ -35,41 +35,35 @@ const doughnutChartTypes = {
   ],
 };
 
-const NotasPorAlunosChart = ({
+const NotasPorAvaliacaoChart = ({
   materia,
   chartType = "ALL_NOTES",
   tipo = "",
   bimestre = 0,
   label = "Distribuição de Frequência das Notas",
 }) => {
-  const [fn, argNames] =
-    doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
-  const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+  const bimestres = [1, 2, 3];
+  const tipos = ["Prova", "Trabalho"];
 
-  const faixas = [
-    { range: "0-2", min: 0, max: 2, color: "#D1495B" },
-    { range: "3-4", min: 3, max: 4, color: "#F7931E" },
-    { range: "5-6", min: 5, max: 6, color: "#F7E06C" },
-    { range: "7-8", min: 7, max: 8, color: "#4bc0c0ff" },
-    { range: "9-10", min: 9, max: 10, color: "#3A6EA5" },
-  ];
-
-  const frequencias = faixas.map((faixa) => {
-    return notas.filter((nota) => nota >= faixa.min && nota <= faixa.max)
-      .length;
+  const datasets = tipos.map((tipo, idx) => {
+    const data = bimestres.map((bimestre) => {
+      const [fn, argNames] = doughnutChartTypes["BY_TYPE_AND_BIMESTER"];
+      const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+      if (!notas.length) return null;
+      const media = notas.reduce((a, b) => a + b, 0) / notas.length;
+      return Number(media.toFixed(2));
+    });
+    return {
+      label: tipo,
+      data,
+      backgroundColor:
+        idx === 0 ? "rgba(54, 162, 235, 0.7)" : "rgba(255, 99, 132, 0.7)",
+    };
   });
 
   const data = {
-    labels: faixas.map((f) => f.range),
-    datasets: [
-      {
-        label: `Quantidade de notas - ${materia}`,
-        data: frequencias,
-        backgroundColor: faixas.map((f) => f.color),
-        borderColor: faixas.map((f) => f.color),
-        borderWidth: 1,
-      },
-    ],
+    labels: bimestres.map((b) => `Bimestre ${b}`),
+    datasets,
   };
 
   const options = {
@@ -80,19 +74,23 @@ const NotasPorAlunosChart = ({
       plugins: {
         title: {
           display: true,
-          text: `${label} - ${materia}`,
+          text: label + ` - ${materia}`,
+        },
+        legend: {
+          display: true,
+          position: "top",
         },
       },
       scales: {
         x: {
-          title: { display: true, text: "Faixas de Notas" },
+          title: { display: true, text: "Bimestres" },
+          stacked: false,
         },
         y: {
-          title: { display: true, text: "Quantidade de Alunos" },
+          title: { display: true, text: "Média das Notas" },
           beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
+          max: 10,
+          ticks: { stepSize: 1 },
         },
       },
       width: 800,
@@ -110,4 +108,4 @@ const NotasPorAlunosChart = ({
   );
 };
 
-export default NotasPorAlunosChart;
+export default NotasPorAvaliacaoChart;
