@@ -1,9 +1,10 @@
 import { avaliacoes } from "./avaliacoes.js";
+import { alunos } from "./alunos.js";
 
-export const notas = Array.from({ length: 10 }, (_, i) => ({
-    aluno: `Aluno${i + 1}`,
-    notas: avaliacoes.map((avaliacao, j) => ({
-        avaliacao,
-        nota: Math.floor(Math.random() * 11)
-    }))
+export const notas = alunos.map((alunoObj) => ({
+  aluno: alunoObj.nome,
+  notas: avaliacoes.map((avaliacao) => ({
+    avaliacao,
+    nota: Math.floor(Math.random() * 11),
+  })),
 }));

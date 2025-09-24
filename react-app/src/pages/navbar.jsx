@@ -23,7 +23,7 @@ const Navbar = () => {
             </Link>
           </li>
           <li className="nav-item ms-3">
-            <Link className="nav-link montserrat-bold" to="#">
+            <Link className="nav-link montserrat-bold" to="/alunos">
               Alunos
             </Link>
           </li>
