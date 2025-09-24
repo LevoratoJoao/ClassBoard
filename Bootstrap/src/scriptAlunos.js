@@ -20,11 +20,23 @@ import {
   getNotasByAlunoBimestreAndTipo,
   getNotasByAlunoAndBimestre,
   getNotasByAlunoAndTipo,
-  getNotasByAlunoAndMateria
+  getNotasByAlunoAndMateria,
+  getMediaByMateria,
+  getMediaByMateriaAndBimestre,
+  getMediaByMateriaAndTipo,
+  getMediaByMateriaTipoAndBimestre,
+  getMediaByAlunoAndMateria,
+  getMediaByAlunoMateriaAndBimestre,
+  getMediaByAlunoMateriaAndTipo,
+  getMediaByAlunoMateriaTipoAndBimestre,
+  getMediaByAlunoMateriaAndTipoForEachBimestre,
 } from "./services/notasService.js";
 import { buildAlunoAiAnalysis } from "./aiAnalysis.js";
-import { renderComparacaoTurmaChart, renderEvolucaoNotasChart, renderDistribuicaoNotasChart } from "./charts.js";
-
+import {
+  renderComparacaoTurmaChart,
+  renderEvolucaoNotasChart,
+  renderDistribuicaoNotasChart,
+} from "./charts.js";
 
 function getAlunoFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -42,7 +54,9 @@ if (alunoObj) {
 const faltasTotais = Math.floor(Math.random() * 20);
 document.getElementById("faltas-totais").textContent = faltasTotais + " faltas";
 
-const mediasMaterias = getMediaByAlunoForEachMateria(alunoObj?.nome || alunoNome);
+const mediasMaterias = getMediaByAlunoForEachMateria(
+  alunoObj?.nome || alunoNome
+);
 const mediasList = document.getElementById("medias-materias-list");
 Object.entries(mediasMaterias).forEach(([materia, media]) => {
   const li = document.createElement("li");
@@ -51,8 +65,11 @@ Object.entries(mediasMaterias).forEach(([materia, media]) => {
   mediasList.appendChild(li);
 });
 
-const mediaTurma = getMediaAvaliacaoForEachMateria()
-let comparacaoTurmaChart = renderComparacaoTurmaChart(mediasMaterias, mediaTurma);
+const mediaTurma = getMediaAvaliacaoForEachMateria();
+let comparacaoTurmaChart = renderComparacaoTurmaChart(
+  mediasMaterias,
+  mediaTurma
+);
 
 const evolucaoNotasData = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
 let evolucaoNotasChart = renderEvolucaoNotasChart(evolucaoNotasData);
@@ -63,7 +80,6 @@ const notasValues = notasAluno.notas.map((obj) => obj.nota);
 let distribuicaoNotasChart = renderDistribuicaoNotasChart(notasValues);
 
 document.addEventListener("DOMContentLoaded", () => {
-
   calcularRankingAluno();
 
   renderTabelaAprovacao();
@@ -82,22 +98,37 @@ window.applyFilters = function () {
   const bimestre = document.getElementById("filtro-bimestre").value;
   const tipo = document.getElementById("filtro-tipo").value;
 
-  const chartCtx = document.getElementById("evolucao-notas-chart").getContext("2d");
+  const chartCtx = document
+    .getElementById("evolucao-notas-chart")
+    .getContext("2d");
 
-  let [notasFiltradas, notasTurma] = filterNotasForComparacaoTurma(materia, bimestre, tipo);
+  let [notasFiltradas, notasTurma] = filterNotasForComparacaoTurma(
+    materia,
+    bimestre,
+    tipo
+  );
 
   comparacaoTurmaChart.destroy();
   comparacaoTurmaChart = renderComparacaoTurmaChart(notasFiltradas, notasTurma);
 
-  let notasEvolucaoFiltradas = filterNotasForEvolucaoNotas(materia, tipo);
+  let notasEvolucaoFiltradas = filterNotasForEvolucaoNotas(
+    materia,
+    bimestre,
+    tipo
+  );
 
   evolucaoNotasChart.destroy();
   evolucaoNotasChart = renderEvolucaoNotasChart(notasEvolucaoFiltradas);
 
-  let notasDistribuicaoFiltradas = filterNotasForDistribuicaoNotas(materia, bimestre, tipo);
+  let notasDistribuicaoFiltradas = filterNotasForDistribuicaoNotas(
+    materia,
+    bimestre,
+    tipo
+  );
   distribuicaoNotasChart.destroy();
-  distribuicaoNotasChart = renderDistribuicaoNotasChart(notasDistribuicaoFiltradas);
-
+  distribuicaoNotasChart = renderDistribuicaoNotasChart(
+    notasDistribuicaoFiltradas
+  );
 };
 
 window.clearFilters = function () {
@@ -108,25 +139,92 @@ window.clearFilters = function () {
 };
 
 const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
-  let notasFiltradas = notasAluno?.notas || [];
-  let notasTurma = [];
+  let notasFiltradas = {};
+  let notasTurma = {};
 
   const filters = [
+    // Casos específicos para uma matéria selecionada
     {
-      condicion: () => materia === "All" && bimestre !== "All" && tipo !== "All",
-      mediaAluno: () => getMediaByAlunoBimestreAndTipoForEachMateria(alunoNome, Number(bimestre), tipo),
-      mediaTurma: () => getMediaAvaliacaoByTipoAndBimestreForEachMateria(tipo, Number(bimestre)),
+      condicion: () =>
+        materia !== "All" && bimestre !== "All" && tipo !== "All",
+      mediaAluno: () => ({
+        [materia]: getMediaByAlunoMateriaTipoAndBimestre(
+          alunoNome,
+          materia,
+          tipo,
+          Number(bimestre)
+        ),
+      }),
+      mediaTurma: () => ({
+        [materia]: getMediaByMateriaTipoAndBimestre(
+          materia,
+          tipo,
+          Number(bimestre)
+        ),
+      }),
     },
     {
-      condicion: () => materia === "All" && bimestre !== "All" && tipo === "All",
-      mediaAluno: () => getMediaByAlunoBimestreForEachMateria(alunoNome, Number(bimestre)),
-      mediaTurma: () => getMediaAvaliacaoByBimestreForEachMateria(Number(bimestre)),
+      condicion: () =>
+        materia !== "All" && bimestre !== "All" && tipo === "All",
+      mediaAluno: () => ({
+        [materia]: getMediaByAlunoMateriaAndBimestre(
+          alunoNome,
+          materia,
+          Number(bimestre)
+        ),
+      }),
+      mediaTurma: () => ({
+        [materia]: getMediaByMateriaAndBimestre(materia, Number(bimestre)),
+      }),
     },
     {
-      condicion: () => materia === "All" && bimestre === "All" && tipo !== "All",
+      condicion: () =>
+        materia !== "All" && bimestre === "All" && tipo !== "All",
+      mediaAluno: () => ({
+        [materia]: getMediaByAlunoMateriaAndTipo(alunoNome, materia, tipo),
+      }),
+      mediaTurma: () => ({
+        [materia]: getMediaByMateriaAndTipo(materia, tipo),
+      }),
+    },
+    {
+      condicion: () =>
+        materia !== "All" && bimestre === "All" && tipo === "All",
+      mediaAluno: () => ({
+        [materia]: getMediaByAlunoAndMateria(alunoNome, materia),
+      }),
+      mediaTurma: () => ({ [materia]: getMediaByMateria(materia) }),
+    },
+    // Casos para todas as matérias
+    {
+      condicion: () =>
+        materia === "All" && bimestre !== "All" && tipo !== "All",
+      mediaAluno: () =>
+        getMediaByAlunoBimestreAndTipoForEachMateria(
+          alunoNome,
+          Number(bimestre),
+          tipo
+        ),
+      mediaTurma: () =>
+        getMediaAvaliacaoByTipoAndBimestreForEachMateria(
+          tipo,
+          Number(bimestre)
+        ),
+    },
+    {
+      condicion: () =>
+        materia === "All" && bimestre !== "All" && tipo === "All",
+      mediaAluno: () =>
+        getMediaByAlunoBimestreForEachMateria(alunoNome, Number(bimestre)),
+      mediaTurma: () =>
+        getMediaAvaliacaoByBimestreForEachMateria(Number(bimestre)),
+    },
+    {
+      condicion: () =>
+        materia === "All" && bimestre === "All" && tipo !== "All",
       mediaAluno: () => getMediaByAlunoAndTipoForEachMateria(alunoNome, tipo),
       mediaTurma: () => getMediaAvaliacaoByTipoForEachMateria(tipo),
-    }
+    },
   ];
 
   for (const { condicion, mediaAluno, mediaTurma } of filters) {
@@ -134,29 +232,147 @@ const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
       notasFiltradas = mediaAluno();
       notasTurma = mediaTurma();
       break;
-    } else {
-      notasFiltradas = getMediaByAlunoForEachMateria(alunoNome);
-      notasTurma = getMediaAvaliacaoForEachMateria();
     }
   }
-  return [notasFiltradas, notasTurma];
-}
 
-const filterNotasForEvolucaoNotas = (materia, tipo) => {
-  let notasFiltradas = notasAluno?.notas || [];
+  // Caso padrão (All, All, All)
+  if (Object.keys(notasFiltradas).length === 0) {
+    notasFiltradas = getMediaByAlunoForEachMateria(alunoNome);
+    notasTurma = getMediaAvaliacaoForEachMateria();
+  }
+
+  return [notasFiltradas, notasTurma];
+};
+
+const filterNotasForEvolucaoNotas = (materia, bimestre, tipo) => {
+  let notasFiltradas = [];
 
   const filters = [
+    // Casos específicos para uma matéria selecionada
     {
-      condicion: () => materia === "All" && tipo !== "All",
-      fn: () => getMediaByAlunoAndTipoForEachMateriaAndBimestre(alunoNome, materia),
+      condicion: () =>
+        materia !== "All" && bimestre !== "All" && tipo !== "All",
+      fn: () => {
+        // Para uma matéria específica com bimestre e tipo, retornar apenas essa matéria
+        const resultado = getMediaByAlunoMateriaAndTipoForEachBimestre(
+          alunoNome,
+          materia,
+          tipo
+        );
+        return Object.keys(resultado).length > 0
+          ? [
+              {
+                materia: materia,
+                notas: { [bimestre]: resultado[bimestre] || 0 },
+              },
+            ]
+          : [];
+      },
     },
     {
-      condicion: () => materia !== "All" && tipo === "All",
-      fn: () => getMediaByAlunoAndMateriaForEachBimestre(alunoNome, materia, tipo),
+      condicion: () =>
+        materia !== "All" && bimestre !== "All" && tipo === "All",
+      fn: () => {
+        // Para uma matéria específica com bimestre, mas todos os tipos
+        const resultado = getNotasByAlunoMateriaAndBimestre(
+          alunoNome,
+          materia,
+          Number(bimestre)
+        );
+        const media =
+          resultado.length > 0
+            ? (resultado.reduce((a, b) => a + b, 0) / resultado.length).toFixed(
+                2
+              )
+            : 0;
+        return [
+          {
+            materia: materia,
+            notas: { [bimestre]: media },
+          },
+        ];
+      },
     },
     {
-      condicion: () => materia !== "All" && tipo !== "All",
-      fn: () => getMediaByAlunoTipoAndMateriaForEachBimestre(alunoNome, materia, tipo),
+      condicion: () =>
+        materia !== "All" && bimestre === "All" && tipo !== "All",
+      fn: () =>
+        getMediaByAlunoTipoAndMateriaForEachBimestre(alunoNome, materia, tipo),
+    },
+    {
+      condicion: () =>
+        materia !== "All" && bimestre === "All" && tipo === "All",
+      fn: () => getMediaByAlunoAndMateriaForEachBimestre(alunoNome, materia),
+    },
+    // Casos para todas as matérias
+    {
+      condicion: () =>
+        materia === "All" && bimestre !== "All" && tipo !== "All",
+      fn: () => {
+        // Todas as matérias, mas apenas um bimestre específico com tipo específico
+        const allMaterias = [
+          "Matematica",
+          "Portugues",
+          "Historia",
+          "Geografia",
+          "Ciencias",
+          "Artes",
+        ];
+        return allMaterias
+          .map((mat) => {
+            const resultado = getMediaByAlunoMateriaAndTipoForEachBimestre(
+              alunoNome,
+              mat,
+              tipo
+            );
+            return {
+              materia: mat,
+              notas:
+                Object.keys(resultado).length > 0
+                  ? { [bimestre]: resultado[bimestre] || 0 }
+                  : { [bimestre]: 0 },
+            };
+          })
+          .filter((item) => Object.values(item.notas)[0] > 0);
+      },
+    },
+    {
+      condicion: () =>
+        materia === "All" && bimestre !== "All" && tipo === "All",
+      fn: () => {
+        // Todas as matérias, mas apenas um bimestre específico
+        const allMaterias = [
+          "Matematica",
+          "Portugues",
+          "Historia",
+          "Geografia",
+          "Ciencias",
+          "Artes",
+        ];
+        return allMaterias
+          .map((mat) => {
+            const notas = getNotasByAlunoMateriaAndBimestre(
+              alunoNome,
+              mat,
+              Number(bimestre)
+            );
+            const media =
+              notas.length > 0
+                ? (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(2)
+                : 0;
+            return {
+              materia: mat,
+              notas: { [bimestre]: media },
+            };
+          })
+          .filter((item) => Object.values(item.notas)[0] > 0);
+      },
+    },
+    {
+      condicion: () =>
+        materia === "All" && bimestre === "All" && tipo !== "All",
+      fn: () =>
+        getMediaByAlunoAndTipoForEachMateriaAndBimestre(alunoNome, tipo),
     },
   ];
 
@@ -164,55 +380,78 @@ const filterNotasForEvolucaoNotas = (materia, tipo) => {
     if (condicion()) {
       notasFiltradas = fn();
       break;
-    } else {
-      notasFiltradas = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
     }
   }
+
+  // Caso padrão (All, All, All)
+  if (notasFiltradas.length === 0) {
+    notasFiltradas = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
+  }
+
   return notasFiltradas;
-}
+};
 
 const filterNotasForDistribuicaoNotas = (materia, bimestre, tipo) => {
   let notasFiltradas = notasAluno?.notas || [];
 
   const filters = [
     {
-      condicion: () => materia !== "All" && bimestre !== "All" && tipo !== "All",
-      fn: () => getNotasByAlunoMateriaTipoAndBimestre(alunoNome, materia, tipo, Number(bimestre)),
+      condicion: () =>
+        materia !== "All" && bimestre !== "All" && tipo !== "All",
+      fn: () =>
+        getNotasByAlunoMateriaTipoAndBimestre(
+          alunoNome,
+          materia,
+          tipo,
+          Number(bimestre)
+        ),
     },
     {
-      condicion: () => materia !== "All" && bimestre !== "All" && tipo === "All",
-      fn: () => getNotasByAlunoMateriaAndBimestre(alunoNome, materia, Number(bimestre)),
+      condicion: () =>
+        materia !== "All" && bimestre !== "All" && tipo === "All",
+      fn: () =>
+        getNotasByAlunoMateriaAndBimestre(alunoNome, materia, Number(bimestre)),
     },
     {
-      condicion: () => materia !== "All" && bimestre === "All" && tipo !== "All",
+      condicion: () =>
+        materia !== "All" && bimestre === "All" && tipo !== "All",
       fn: () => getNotasByAlunoMateriaAndTipo(alunoNome, materia, tipo),
     },
     {
-      condicion: () => materia !== "All" && bimestre === "All" && tipo === "All",
+      condicion: () =>
+        materia !== "All" && bimestre === "All" && tipo === "All",
       fn: () => getNotasByAlunoAndMateria(alunoNome, materia),
     },
     {
-      condicion: () => materia === "All" && bimestre !== "All" && tipo !== "All",
-      fn: () => getNotasByAlunoBimestreAndTipo(alunoNome, Number(bimestre), tipo),
+      condicion: () =>
+        materia === "All" && bimestre !== "All" && tipo !== "All",
+      fn: () =>
+        getNotasByAlunoBimestreAndTipo(alunoNome, Number(bimestre), tipo),
     },
     {
-      condicion: () => materia === "All" && bimestre !== "All" && tipo === "All",
+      condicion: () =>
+        materia === "All" && bimestre !== "All" && tipo === "All",
       fn: () => getNotasByAlunoAndBimestre(alunoNome, Number(bimestre)),
     },
     {
-      condicion: () => materia === "All" && bimestre === "All" && tipo !== "All",
+      condicion: () =>
+        materia === "All" && bimestre === "All" && tipo !== "All",
       fn: () => getNotasByAlunoAndTipo(alunoNome, tipo),
-    }
+    },
   ];
 
   for (const { condicion, fn } of filters) {
     if (condicion()) {
       notasFiltradas = fn();
       break;
-    } else {
-      return notasValues;
     }
   }
+
+  // Caso padrão (All, All, All)
+  if (notasFiltradas === notasAluno?.notas) {
+    return notasValues;
+  }
+
   return notasFiltradas;
 };
 
@@ -233,8 +472,9 @@ function renderTabelaAprovacao() {
     html += `<tr>
             <td>${materia}</td>
             <td>${media}</td>
-            <td style="color:${aprovado ? "#1976d2" : "#d32f2f"
-      };font-weight:bold;">${aprovado ? "Aprovado" : "Reprovado"}</td>
+            <td style="color:${
+              aprovado ? "#1976d2" : "#d32f2f"
+            };font-weight:bold;">${aprovado ? "Aprovado" : "Reprovado"}</td>
         </tr>`;
   });
   html += "</tbody></table>";
