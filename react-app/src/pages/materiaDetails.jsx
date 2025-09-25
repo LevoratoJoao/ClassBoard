@@ -33,6 +33,7 @@ const MateriaDetails = () => {
 
   return (
     <>
+      <div className="bg-fundo"></div>
       <Navbar />
 
       <div className="container mt-4 mb-5">

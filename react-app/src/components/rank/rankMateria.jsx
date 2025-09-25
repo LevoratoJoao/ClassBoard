@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getMediaForEachMateria } from "../../services/notasService";
+import trofeuIcon from "../../assets/images/trofeu.webp";
 
 const calcularRankingMateria = () => {
   const mediasMaterias = getMediaForEachMateria();
@@ -24,13 +25,22 @@ const RankMateria = (materia) => {
       <div className="card mb-3">
         <div className="card-body d-flex align-items-center justify-content-between">
           <div>
-            <h5 className="card-title">Ranking da Matéria</h5>
+            <h5 className="card-title">Ranking da materia</h5>
             <span id="ranking-materia" className="fs-4">
               {ranking.find((r) => r.materia === materia.materia)?.rank ||
                 "N/A"}
               º de {ranking.length}
             </span>
           </div>
+          <img
+            src={trofeuIcon}
+            alt="Troféu"
+            style={{
+              height: "80px",
+              width: "80px",
+              objectFit: "contain",
+            }}
+          />
         </div>
       </div>
     </div>

@@ -1,36 +1,99 @@
+/* ========== FUNDO DA APLICAÇÃO ========== */
+/* Fundo com imagem para toda a aplicação */
+.bg-fundo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  background-image: url("./assets/images/fundo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 1;
+}
+
+body > *:not(.bg-fundo) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Texto em cima do fundo */
+.container,
+.container-fluid {
+  position: relative;
+  z-index: 2;
+}
+
+.container *,
+.container-fluid * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ========== FONTES E TIPOGRAFIA ========== */
 .montserrat-bold {
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
   font-style: normal;
+  color: #212529;
 }
 
+/* ========== NAVBAR ========== */
 nav {
   background-color: #103f28;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: #ffffff;
 }
 
 .navbar {
   --bs-navbar-brand-color: #212529;
 }
 
+nav,
+.navbar,
+.navbar * {
+  color: #212529;
+}
+
+nav a {
+  color: #212529;
+  transition: color 0.3s ease;
+}
+
+nav a:hover {
+  color: #3a6ea5 !important;
+}
+
+.nav-link:hover {
+  color: #3a6ea5 !important;
+}
+
+/* ========== TÍTULOS DAS PÁGINAS ========== */
+h1 {
+  color: #ffffff !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* ========== CARDS ========== */
 #cards-col-1 {
   min-height: 200px;
-  background-color: #D1495B;
+  background-color: #d1495b;
   box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
 
 #cards-col-2 {
   min-height: 200px;
-  background-color: #F7E06C;
+  background-color: #f7e06c;
   box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
 
 #cards-col-3 {
   min-height: 200px;
-  background-color: #3A6EA5;
+  background-color: #3a6ea5;
   box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
@@ -55,20 +118,70 @@ nav {
   color: #212529 !important;
 }
 
+.card-text {
+  text-decoration: none !important;
+}
+
+/* ========== BOTÕES ========== */
+/* Botões de ordenação - cores específicas */
+.btn-primary {
+  background-color: #3a6ea5 !important;
+  border-color: #3a6ea5 !important;
+}
+
+.btn-primary:hover {
+  background-color: #3a6ea5 !important;
+  color: #212529 !important;
+  border-color: #3a6ea5 !important;
+}
+
+.btn-outline-primary {
+  color: #3a6ea5 !important;
+  border-color: #3a6ea5 !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: #3a6ea5 !important;
+  color: #212529 !important;
+  border-color: #3a6ea5 !important;
+}
+
+.btn-warning {
+  background-color: #d1495b !important;
+  border-color: #d1495b !important;
+}
+
+.btn-warning:hover {
+  background-color: #d1495b !important;
+  color: #212529 !important;
+  border-color: #d1495b !important;
+}
+
+.btn-outline-warning {
+  color: #d1495b !important;
+  border-color: #d1495b !important;
+}
+
+.btn-outline-warning:hover {
+  background-color: #d1495b !important;
+  color: #212529 !important;
+  border-color: #d1495b !important;
+}
+
 .clearFilters {
-  background-color: #D1495B;
+  background-color: #d1495b;
   color: #ffffff;
   border: none;
   transition: background-color 0.3s, color 0.3s;
 }
 
 .clearFilters:hover {
-  background-color: #A8323B;
+  background-color: #a8323b;
   color: #ffffff;
 }
 
 .applyFilters {
-  background-color: #3A6EA5;
+  background-color: #3a6ea5;
   color: #ffffff;
   border: none;
   transition: background-color 0.3s, color 0.3s;
@@ -77,4 +190,48 @@ nav {
 .applyFilters:hover {
   background-color: #2c5f8f;
   color: #ffffff;
+}
+
+/* ========== BOTÃO UPLOAD ========== */
+.btn-upload {
+  background-color: #f6c358 !important;
+  color: #212529 !important;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-upload:hover {
+  background-color: #3a6ea5 !important;
+  color: #ffffff !important;
+}
+
+/* ========== LAYOUT DOS BOTÕES DE ORDENAÇÃO ========== */
+/* Estilos específicos para o card de ordenação apenas */
+.sorting-card {
+  width: fit-content !important;
+  margin: 0 auto !important;
+}
+
+.sorting-card .card-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+  padding: 15px !important;
+}
+
+.sorting-card .card-title {
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* ========== FOOTER ========== */
+footer {
+  position: relative;
+  z-index: 3 !important;
+  background: transparent !important;
+}
+
+footer img {
+  position: relative;
+  z-index: 4 !important;
 }

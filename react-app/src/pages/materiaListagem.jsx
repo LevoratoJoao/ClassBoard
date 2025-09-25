@@ -1,48 +1,61 @@
 import { Link } from "react-router-dom";
 import Navbar from "./navbar";
+import portIcon from "../assets/images/port.webp";
+import mathIcon from "../assets/images/math.png";
+import artesIcon from "../assets/images/artes.webp";
+import histIcon from "../assets/images/hist.webp";
+import geoIcon from "../assets/images/geo.webp";
+import cienciasIcon from "../assets/images/ciencias.webp";
 
 const MateriaListagem = () => {
   const materias = [
     {
       name: "Portugues",
       displayName: "Português",
-      icon: "book_3",
+      image: portIcon,
+      alt: "Português",
       cardClass: "cards-col-1",
     },
     {
       name: "Matematica",
       displayName: "Matemática",
-      icon: "calculate",
+      image: mathIcon,
+      alt: "Matemática",
       cardClass: "cards-col-2",
     },
     {
       name: "Artes",
       displayName: "Artes",
-      icon: "format_paint",
+      image: artesIcon,
+      alt: "Artes",
       cardClass: "cards-col-3",
     },
     {
       name: "Historia",
       displayName: "História",
-      icon: "history_edu",
+      image: histIcon,
+      alt: "História",
       cardClass: "cards-col-1",
     },
     {
       name: "Geografia",
       displayName: "Geografia",
-      icon: "globe",
+      image: geoIcon,
+      alt: "Geografia",
       cardClass: "cards-col-2",
     },
     {
       name: "Ciencias",
       displayName: "Ciencias",
-      icon: "science",
+      image: cienciasIcon,
+      alt: "Ciencias",
       cardClass: "cards-col-3",
     },
   ];
 
   return (
     <>
+      <div className="bg-fundo"></div>
       <Navbar />
 
       <div className="container mt-5">
@@ -57,12 +70,20 @@ const MateriaListagem = () => {
                     className="material-symbols-outlined card-title mb-4"
                     id="icons"
                   >
-                    {materia.icon}
+                    <img
+                      src={materia.image}
+                      alt={materia.alt}
+                      style={{
+                        height: "8rem",
+                        width: "8rem",
+                        objectFit: "contain",
+                        marginBottom: "0px",
+                      }}
+                    />
                   </span>
                   <Link
                     className="card-text montserrat-bold fs-3"
                     to={`/materia/${materia.name}`}
-                    style={{ textDecoration: "none" }}
                   >
                     {materia.displayName}
                   </Link>
@@ -81,12 +102,19 @@ const MateriaListagem = () => {
                     className="material-symbols-outlined card-title mb-4"
                     id="icons"
                   >
-                    {materia.icon}
+                    <img
+                      src={materia.image}
+                      alt={materia.alt}
+                      style={{
+                        height: "8rem",
+                        width: "8rem",
+                        objectFit: "contain",
+                      }}
+                    />
                   </span>
                   <Link
                     className="card-text montserrat-bold fs-3"
                     to={`/materia/${materia.name}`}
-                    style={{ textDecoration: "none" }}
                   >
                     {materia.displayName}
                   </Link>

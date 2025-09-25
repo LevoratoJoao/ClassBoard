@@ -51,7 +51,7 @@ const AlunoListagem = () => {
         {/* Controles de ordenação */}
         <div className="row justify-content-center mb-4">
           <div className="col-md-8">
-            <div className="card">
+            <div className="card sorting-card">
               <div className="card-body">
                 <h5 className="card-title">Ordenar por:</h5>
                 <div className="btn-group" role="group">
@@ -62,8 +62,7 @@ const AlunoListagem = () => {
                     }`}
                     onClick={() => handleSort("nome")}
                   >
-                    Nome{" "}
-                    {sortBy === "nome" && (sortOrder === "asc" ? "↑" : "↓")}
+                    Nome {sortBy === "nome"}
                   </button>
                   <button
                     type="button"
@@ -74,8 +73,7 @@ const AlunoListagem = () => {
                     }`}
                     onClick={() => handleSort("ranking")}
                   >
-                    Ranking{" "}
-                    {sortBy === "ranking" && (sortOrder === "asc" ? "↑" : "↓")}
+                    Ranking {sortBy === "ranking"}
                   </button>
                 </div>
               </div>
