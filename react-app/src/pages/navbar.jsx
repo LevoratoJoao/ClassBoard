@@ -1,8 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import logo from "../assets/images/logo.png";
 import graficoIcon from "../assets/images/grafico.webp";
+import saidaIcon from "../assets/images/saida.webp";
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <nav className="navbar bg-body-tertiary navbar-expand-lg py-3">
       <div className="container-fluid">
@@ -20,7 +30,7 @@ const Navbar = () => {
             </Link>
           </li>
           <li className="nav-item ms-3">
-            <Link className="nav-link montserrat-bold" to="/">
+            <Link className="nav-link montserrat-bold" to="/materias">
               Matéria
             </Link>
           </li>
@@ -39,22 +49,41 @@ const Navbar = () => {
             </Link>
           </li>
         </ul>
-        <button
-          type="button"
-          className="btn btn-upload montserrat-bold fs-5 px-4 py-2 me-2"
-        >
-          <img
-            src={graficoIcon}
-            alt="Gráfico"
-            style={{
-              height: "32px",
-              width: "32px",
-              marginRight: "10px",
-              verticalAlign: "middle",
-            }}
-          />
-          Upload
-        </button>
+        <div className="d-flex align-items-center">
+          <button
+            type="button"
+            className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
+          >
+            <img
+              src={graficoIcon}
+              alt="Gráfico"
+              style={{
+                height: "32px",
+                width: "32px",
+                marginRight: "10px",
+                verticalAlign: "middle",
+              }}
+            />
+            Upload
+          </button>
+          <button
+            type="button"
+            className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
+            onClick={handleLogout}
+          >
+            <img
+              src={saidaIcon}
+              alt="Sair"
+              style={{
+                height: "32px",
+                width: "32px",
+                marginRight: "10px",
+                verticalAlign: "middle",
+              }}
+            />
+            Sair
+          </button>
+        </div>
       </div>
     </nav>
   );

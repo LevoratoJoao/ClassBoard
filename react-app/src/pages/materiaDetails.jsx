@@ -9,6 +9,7 @@ import Navbar from "./navbar";
 import RankMateria from "../components/rank/rankMateria";
 import ListAvaliacoes from "../components/listAvaliacoes/listAvaliacoes";
 import MediaMateria from "../components/mediaCard/mediaMateria";
+import criancasFooter from "../assets/images/criancas.jpg";
 
 const MateriaDetails = () => {
   const { materia } = useParams();
@@ -101,6 +102,22 @@ const MateriaDetails = () => {
           </div>
         </div>
       </div>
+
+      <footer
+        className="text-center py-4"
+        style={{ background: "transparent" }}
+      >
+        <img
+          src={criancasFooter}
+          alt="Crianças"
+          style={{
+            height: "300px",
+            width: "300px",
+            objectFit: "contain",
+            marginTop: "0px",
+          }}
+        />
+      </footer>
     </>
   );
 };
