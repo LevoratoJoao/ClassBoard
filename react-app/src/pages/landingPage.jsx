@@ -2,8 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import cerebro from "../assets/images/cerebro.webp";
-import trofeu from "../assets/images/trofeu.webp";
+import ia from "../assets/images/ia.webp";
 import grafico from "../assets/images/grafico.webp";
+import deatlhes from "../assets/images/detalhes.webp";
+import { useCountUpOnVisible } from "../hooks/useCountUpOnVisible";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -12,41 +14,51 @@ const LandingPage = () => {
     navigate("/login");
   };
 
+  // No need to pass a ref as argument!
+  const [alunosRef, alunos] = useCountUpOnVisible(100);
+  const [escolasRef, escolas] = useCountUpOnVisible(12);
+  const [avaliacoesRef, avaliacoes] = useCountUpOnVisible(500);
+  const [satisfacaoRef, satisfacao] = useCountUpOnVisible(98);
+
   return (
     <div className="landing-page">
-      {/* Hero Section */}
-      <header className="hero-section">
-        <nav className="landing-nav">
-          <div className="nav-brand">
-            <img src={logo} alt="ClassBoard Logo" className="nav-logo" />
-          </div>
-          <button className="btn-login" onClick={handleLoginClick}>
-            Entrar
-          </button>
-        </nav>
+      <nav className="landing-nav">
+        <div className="nav-brand">
+          <img src={logo} alt="ClassBoard Logo" className="nav-logo" />
+        </div>
+        <button
+          className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
+          onClick={handleLoginClick}
+        >
+          Entrar
+        </button>
+      </nav>
 
+      <header className="hero-section">
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
-              Gerencie sua <span className="highlight">sala de aula</span> de
-              forma inteligente
+              O controle de <span className="highlight">sala de aula</span> que
+              você sempre quis
             </h1>
             <p className="hero-description">
               O ClassBoard é a plataforma completa para gestão educacional.
               Acompanhe o desempenho dos alunos, analise notas, visualize
               relatórios detalhados e tome decisões baseadas em dados.
             </p>
-            <button className="btn-primary-large" onClick={handleLoginClick}>
+            <button
+              className="btn btn-navbar montserrat-bold fs-4 px-4 py-2 me-2 startNow"
+              onClick={handleLoginClick}
+            >
               Começar Agora
             </button>
           </div>
           <div className="hero-image">
-            <img src={cerebro} alt="Educação Inteligente" />
+            <img src={ia} alt="Educação Inteligente" />
           </div>
         </div>
       </header>
 
-      {/* Features Section */}
       <section className="features-section">
         <div className="container">
           <h2 className="section-title">Recursos Principais</h2>
@@ -64,12 +76,16 @@ const LandingPage = () => {
 
             <div className="feature-card">
               <div className="feature-icon">
-                <img src={trofeu} alt="Rankings" />
+                <img
+                  src={deatlhes}
+                  alt="Rankings"
+                  style={{ width: "120px", objectFit: "contain" }}
+                />
               </div>
-              <h3>Rankings Inteligentes</h3>
+              <h3>Visão completa</h3>
               <p>
-                Acompanhe o progresso e identifique os melhores desempenhos em
-                cada disciplina.
+                Acompanhe todas as notas, faltas e evolução dos alunos em um só
+                lugar de forma simples e intuitiva.
               </p>
             </div>
 
@@ -87,32 +103,38 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
       <section className="stats-section">
         <div className="container">
           <h2 className="section-title">Dados que Importam</h2>
           <div className="stats-grid">
             <div className="stat-item">
-              <div className="stat-number">100+</div>
+              <div className="stat-number" ref={alunosRef}>
+                {alunos}+
+              </div>
               <div className="stat-label">Alunos Cadastrados</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">15</div>
-              <div className="stat-label">Disciplinas</div>
+              <div className="stat-number" ref={escolasRef}>
+                {escolas}+
+              </div>
+              <div className="stat-label">Escolas Atendidas</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">500+</div>
+              <div className="stat-number" ref={avaliacoesRef}>
+                {avaliacoes}+
+              </div>
               <div className="stat-label">Avaliações Registradas</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">98%</div>
+              <div className="stat-number" ref={satisfacaoRef}>
+                {satisfacao}%
+              </div>
               <div className="stat-label">Satisfação</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="cta-section">
         <div className="container">
           <div className="cta-content">
@@ -121,14 +143,16 @@ const LandingPage = () => {
               Junte-se a centenas de educadores que já transformaram sua forma
               de ensinar com o ClassBoard.
             </p>
-            <button className="btn-primary-large" onClick={handleLoginClick}>
+            <button
+              className="btn btn-navbar montserrat-bold fs-4 px-4 py-2 me-2"
+              onClick={handleLoginClick}
+            >
               Acessar Plataforma
             </button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="landing-footer">
         <div className="container">
           <div className="footer-content">
