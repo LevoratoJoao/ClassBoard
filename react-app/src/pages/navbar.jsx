@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import logo from "../assets/images/logo.png";
 import graficoIcon from "../assets/images/grafico.webp";
 import saidaIcon from "../assets/images/saida.webp";
+import { handleDownloadRelatorio } from "../utils/handleDownloadRelatorio";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -40,13 +41,13 @@ const Navbar = () => {
             </Link>
           </li>
           <li className="nav-item ms-3">
-            <Link
-              className="nav-link disabled montserrat-bold"
-              aria-disabled="true"
-              to="#"
+            <button
+              className="nav-link montserrat-bold btn btn-link"
+              onClick={handleDownloadRelatorio}
+              style={{ cursor: "pointer" }}
             >
               Relatório
-            </Link>
+            </button>
           </li>
         </ul>
         <div className="d-flex align-items-center">
