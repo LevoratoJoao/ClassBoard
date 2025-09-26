@@ -10,12 +10,8 @@ import {
   Legend,
 } from "chart.js";
 import {
-  getMediaAvaliacaoByMateriaForEachAvaliacao,
-  getMediaAvaliacaoByMateriaForEachTipo,
-  getMediaAvaliacaoByMateriaForEachBimestre,
   getMediaAvaliacaoByMateriaForEachTipoAndBimestre,
 } from "../../services/notasService";
-import { getArgs } from "../../utils/utils";
 
 ChartJS.register(
   CategoryScale,
@@ -27,84 +23,82 @@ ChartJS.register(
   Legend
 );
 
-const barChartTypes = {
-  ALL_NOTES: [getMediaAvaliacaoByMateriaForEachAvaliacao, []],
-  BY_TYPE: [getMediaAvaliacaoByMateriaForEachTipo, ["tipo"]],
-  BY_BIMESTER: [getMediaAvaliacaoByMateriaForEachBimestre, ["bimestre"]],
-  BY_TYPE_AND_BIMESTER: [
-    getMediaAvaliacaoByMateriaForEachTipoAndBimestre,
-    ["tipo", "bimestre"],
-  ],
-};
-
 const EvolucaoNotasChart = ({
   materia,
   chartType = "ALL_NOTES",
   tipo = "",
-  bimestre = 0,
+  bimestre = "",
   label = "Média da notas por Avaliação",
 }) => {
-  const tipos = ["Prova", "Trabalho"];
-  const mediasPorTipo = tipos.map((tipo) => {
-    const [fn, argNames] = barChartTypes["BY_TYPE"] || barChartTypes.ALL_NOTES;
+  let tiposToShow = ["Prova", "Trabalho"];
+  let bimestresToShow = [1, 2, 3];
+
+  if (tipo && tipo !== "All") {
+    tiposToShow = [tipo];
+  }
+  if (bimestre && bimestre !== "All") {
+    bimestresToShow = [Number(bimestre)];
+  }
+
+  const datasets = tiposToShow.map((tipoItem, idx) => {
+    const data = bimestresToShow.map((bimestreItem) => {
+      const mediasObj = getMediaAvaliacaoByMateriaForEachTipoAndBimestre(
+        materia,
+        tipoItem,
+        bimestreItem
+      );
+      const key = `Bimestre ${bimestreItem}`;
+      return mediasObj[key] !== undefined ? Number(mediasObj[key]) : null;
+    });
     return {
-      tipo,
-      medias: fn(materia, ...getArgs(argNames, { tipo, bimestre })),
+      label: tipoItem,
+      data,
+      borderColor: idx === 0 ? "#3A6EA5" : "#F7931E",
+      borderWidth: 2,
+      tension: 0.4,
+      pointBackgroundColor: idx === 0 ? "#3A6EA5" : "#F7931E",
+      pointBorderColor: "#ffffff",
+      pointBorderWidth: 2,
+      pointRadius: 6,
+      pointHoverRadius: 8,
     };
   });
 
-  const allLabels = Array.from(
-    new Set(mediasPorTipo.flatMap((tp) => Object.keys(tp.medias)))
-  );
-
-  const datasets = mediasPorTipo.map((tp, idx) => ({
-    label: tp.tipo,
-    data: allLabels.map((label) => tp.medias[label] ?? null),
-    borderColor: idx === 0 ? "#3A6EA5" : "#F7931E",
-    borderWidth: 2,
-    tension: 0.4,
-    pointBackgroundColor: idx === 0 ? "#3A6EA5" : "#F7931E",
-    pointBorderColor: "#ffffff",
-    pointBorderWidth: 2,
-    pointRadius: 6,
-    pointHoverRadius: 8,
-  }));
-
   const data = {
-    labels: allLabels,
+    labels: bimestresToShow.map((b) => `Bimestre ${b}`),
     datasets,
   };
 
   const options = {
-    type: "line",
-    data,
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: true,
-          position: "top",
-        },
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: "top",
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 10,
-          title: {
-            display: true,
-            text: "Média das Notas",
-          },
-        },
-        x: {
-          title: {
-            display: true,
-            text: "Bimestres",
-          },
-        },
+      title: {
+        display: true,
+        text: label + ` - ${materia}`,
       },
-      width: 800,
-      height: 400,
     },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 10,
+        title: {
+          display: true,
+          text: "Média das Notas",
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Bimestres",
+        },
+      },
+    },
+    width: 800,
+    height: 400,
   };
 
   return (
