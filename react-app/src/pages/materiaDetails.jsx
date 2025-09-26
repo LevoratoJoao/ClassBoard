@@ -43,7 +43,7 @@ const MateriaDetails = () => {
         </h1>
 
         <div className="row">
-          <ListAvaliacoes materia={materia} />
+          <ListAvaliacoes materia={materia} filters={filters} />
         </div>
 
         <div className="row">
