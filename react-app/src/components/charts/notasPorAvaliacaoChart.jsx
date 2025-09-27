@@ -9,12 +9,8 @@ import {
   Legend,
 } from "chart.js";
 import {
-  getNotasByMateria,
-  getNotasByMateriaAndBimestre,
-  getNotasByMateriaAndTipo,
   getNotasByMateriaTipoAndBimestre,
 } from "../../services/notasService";
-import { getArgs } from "../../utils/utils";
 
 ChartJS.register(
   CategoryScale,
@@ -25,36 +21,35 @@ ChartJS.register(
   Legend
 );
 
-const doughnutChartTypes = {
-  ALL_NOTES: [getNotasByMateria, []],
-  BY_BIMESTER: [getNotasByMateriaAndBimestre, ["bimestre"]],
-  BY_TYPE: [getNotasByMateriaAndTipo, ["tipo"]],
-  BY_TYPE_AND_BIMESTER: [
-    getNotasByMateriaTipoAndBimestre,
-    ["tipo", "bimestre"],
-  ],
-};
-
 const NotasPorAvaliacaoChart = ({
   materia,
-  chartType = "ALL_NOTES",
   tipo = "",
   bimestre = 0,
   label = "Distribuição de Frequência das Notas",
 }) => {
-  const bimestres = [1, 2, 3];
-  const tipos = ["Prova", "Trabalho"];
+  let tiposToShow = ["Prova", "Trabalho"];
+  let bimestresToShow = [1, 2, 3];
 
-  const datasets = tipos.map((tipo, idx) => {
-    const data = bimestres.map((bimestre) => {
-      const [fn, argNames] = doughnutChartTypes["BY_TYPE_AND_BIMESTER"];
-      const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+  if (tipo && tipo !== "All") {
+    tiposToShow = [tipo];
+  }
+  if (bimestre && bimestre !== "All") {
+    bimestresToShow = [Number(bimestre)];
+  }
+
+  const datasets = tiposToShow.map((tipoItem, idx) => {
+    const data = bimestresToShow.map((bimestreItem) => {
+      const notas = getNotasByMateriaTipoAndBimestre(
+        materia,
+        tipoItem,
+        bimestreItem
+      );
       if (!notas.length) return null;
       const media = notas.reduce((a, b) => a + b, 0) / notas.length;
       return Number(media.toFixed(2));
     });
     return {
-      label: tipo,
+      label: tipoItem,
       data,
       backgroundColor:
         idx === 0 ? "rgba(54, 162, 235, 0.7)" : "rgba(255, 99, 132, 0.7)",
@@ -62,40 +57,36 @@ const NotasPorAvaliacaoChart = ({
   });
 
   const data = {
-    labels: bimestres.map((b) => `Bimestre ${b}`),
+    labels: bimestresToShow.map((b) => `Bimestre ${b}`),
     datasets,
   };
 
   const options = {
-    type: "bar",
-    data,
-    options: {
-      responsive: true,
-      plugins: {
-        title: {
-          display: true,
-          text: label + ` - ${materia}`,
-        },
-        legend: {
-          display: true,
-          position: "top",
-        },
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: label + ` - ${materia}`,
       },
-      scales: {
-        x: {
-          title: { display: true, text: "Bimestres" },
-          stacked: false,
-        },
-        y: {
-          title: { display: true, text: "Média das Notas" },
-          beginAtZero: true,
-          max: 10,
-          ticks: { stepSize: 1 },
-        },
+      legend: {
+        display: true,
+        position: "top",
       },
-      width: 800,
-      height: 400,
     },
+    scales: {
+      x: {
+        title: { display: true, text: "Bimestres" },
+        stacked: false,
+      },
+      y: {
+        title: { display: true, text: "Média das Notas" },
+        beginAtZero: true,
+        max: 10,
+        ticks: { stepSize: 1 },
+      },
+    },
+    width: 800,
+    height: 400,
   };
 
   return (

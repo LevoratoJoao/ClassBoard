@@ -1,35 +1,24 @@
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import {
-  getNotasByMateria,
-  getNotasByMateriaAndBimestre,
-  getNotasByMateriaAndTipo,
-  getNotasByMateriaTipoAndBimestre,
-} from "../../services/notasService";
-import { getArgs } from "../../utils/utils";
+import { getNotasByMateriaTipoAndBimestre } from "../../services/notasService";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const doughnutChartTypes = {
-  ALL_NOTES: [getNotasByMateria, []],
-  BY_BIMESTER: [getNotasByMateriaAndBimestre, ["bimestre"]],
-  BY_TYPE: [getNotasByMateriaAndTipo, ["tipo"]],
-  BY_TYPE_AND_BIMESTER: [
-    getNotasByMateriaTipoAndBimestre,
-    ["tipo", "bimestre"],
-  ],
-};
-
 const NotasOverviewChart = ({
   materia,
-  chartType = "ALL_NOTES",
   tipo = "",
-  bimestre = 0,
+  bimestre = "",
   label = "Distribuição de Frequência das Notas",
 }) => {
-  const [fn, argNames] =
-    doughnutChartTypes[chartType] || doughnutChartTypes.ALL_NOTES;
-  const notas = fn(materia, ...getArgs(argNames, { tipo, bimestre }));
+  const tipoFilter = tipo && tipo !== "All" ? tipo : undefined;
+  const bimestreFilter =
+    bimestre && bimestre !== "All" ? Number(bimestre) : undefined;
+
+  const notas = getNotasByMateriaTipoAndBimestre(
+    materia,
+    tipoFilter,
+    bimestreFilter
+  );
 
   const data = {
     labels: ["0-2", "3-4", "5-6", "7-8", "9-10"],
