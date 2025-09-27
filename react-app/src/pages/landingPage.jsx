@@ -47,10 +47,18 @@ const LandingPage = () => {
           <img src={logo} alt="ClassBoard Logo" className="nav-logo" />
         </div>
         <div className="nav-links">
-          <a href="#recursos" className="nav-link">Recursos</a>
-          <a href="#detalhes" className="nav-link">Detalhes</a>
-          <a href="#sobre" className="nav-link">Sobre</a>
-          <a href="#faq" className="nav-link">FAQ</a>
+          <a href="#recursos" className="nav-link">
+            Recursos
+          </a>
+          <a href="#detalhes" className="nav-link">
+            Detalhes
+          </a>
+          <a href="#sobre" className="nav-link">
+            Sobre
+          </a>
+          <a href="#faq" className="nav-link">
+            FAQ
+          </a>
         </div>
         <button
           className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
