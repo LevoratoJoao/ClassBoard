@@ -15,10 +15,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar bg-body-tertiary navbar-expand-lg py-3">
+    <nav className="navbar bg-body-tertiary navbar-expand-lg py-2">
       <div className="container-fluid">
         <Link to="/" className="navbar-brand">
-          <img src={logo} alt="Logo" style={{ height: "64px" }} />
+          <img src={logo} alt="Logo" style={{ height: "50px" }} />
         </Link>
         <ul className="nav nav-fill fs-5">
           <li className="nav-item">
