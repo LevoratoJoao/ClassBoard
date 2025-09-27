@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/images/logo.png";
+import fundoLogin from "../assets/images/fundoLogin.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -94,23 +95,22 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
+    <div
+      className="login-page"
+      style={{ backgroundImage: `url(${fundoLogin})` }}
+    >
       <div className="login-container">
         <div className="login-header">
           <button className="back-button" onClick={handleBackToLanding}>
-            ← Voltar
+            ←
           </button>
           <div className="login-logo">
             <img src={logo} alt="ClassBoard Logo" />
-            <h1>ClassBoard</h1>
           </div>
         </div>
 
         <div className="login-form-container">
-          <h2>Entre na sua conta</h2>
-          <p className="login-subtitle">
-            Acesse o painel de controle educacional
-          </p>
+          <h2>Faça o Login</h2>
 
           {errors.general && (
             <div className="error-message general-error">{errors.general}</div>
@@ -161,7 +161,7 @@ const Login = () => {
           </form>
 
           <div className="login-demo">
-            <h4>Credenciais de Demonstração:</h4>
+            <h4>Use as Credenciais de Demonstração:</h4>
             <p>
               <strong>Email:</strong> admin@classboard.com
               <br />
