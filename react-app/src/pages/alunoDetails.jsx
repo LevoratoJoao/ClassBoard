@@ -16,7 +16,7 @@ const AlunoDetails = () => {
   const { aluno } = useParams();
   const alunoNome = aluno ? decodeURIComponent(aluno) : "";
 
-  // Hooks personalizados
+  // Hooks 
   const { filters, applyFilters } = useAlunoFilters(alunoNome);
   const {
     alunoData,

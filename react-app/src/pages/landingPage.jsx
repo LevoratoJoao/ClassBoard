@@ -81,7 +81,7 @@ const LandingPage = () => {
               relatórios detalhados e tome decisões baseadas em dados.
             </p>
             <button
-              className="btn btn-navbar montserrat-bold fs-4 px-4 py-2 me-2 startNow"
+              className="btn btn-navbar montserrat-bold fs-4 px-4 py-2 me-2"
               onClick={handleLoginClick}
             >
               Começar Agora

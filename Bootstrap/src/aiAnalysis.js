@@ -92,19 +92,16 @@ export const buildAlunoAiAnalysis = (alunoNome) => {
     const mediaGeral = getMediaByAluno(alunoNome);
     const mediasPorMateria = getMediaByAlunoForEachMateria(alunoNome);
 
-    // Aprovado se média >= 6
     const aprovadas = notas.filter(n => n.nota >= 6).length;
     const reprovadas = notas.filter(n => n.nota < 6).length;
     const percentualAprovacao = ((aprovadas / totalNotas) * 100).toFixed(1);
 
-    // Melhor e pior matéria
     const materias = Object.entries(mediasPorMateria);
     const melhorMateria = materias.reduce((prev, curr) =>
         parseFloat(prev[1]) > parseFloat(curr[1]) ? prev : curr, materias[0]);
     const piorMateria = materias.reduce((prev, curr) =>
         parseFloat(prev[1]) < parseFloat(curr[1]) ? prev : curr, materias[0]);
 
-    // Tendência simples: compara média das últimas 3 notas com as 3 primeiras
     let tendencia = "estável";
     if (totalNotas >= 6) {
         const primeiras = notas.slice(0, 3).map(n => n.nota);
@@ -116,7 +113,6 @@ export const buildAlunoAiAnalysis = (alunoNome) => {
         else if (diff < -0.5) tendencia = "caindo";
     }
 
-    // Classificação
     let classificacao = "Regular";
     if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
     else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";

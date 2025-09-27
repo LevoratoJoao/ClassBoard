@@ -143,7 +143,7 @@ const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
   let notasTurma = {};
 
   const filters = [
-    // Casos específicos para uma matéria selecionada
+    // Caso específico para cada matéria selecionada
     {
       condicion: () =>
         materia !== "All" && bimestre !== "All" && tipo !== "All",
@@ -195,7 +195,7 @@ const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
       }),
       mediaTurma: () => ({ [materia]: getMediaByMateria(materia) }),
     },
-    // Casos para todas as matérias
+    // Todas as matérias
     {
       condicion: () =>
         materia === "All" && bimestre !== "All" && tipo !== "All",
@@ -235,7 +235,7 @@ const filterNotasForComparacaoTurma = (materia, bimestre, tipo) => {
     }
   }
 
-  // Caso padrão (All, All, All)
+  // Caso default
   if (Object.keys(notasFiltradas).length === 0) {
     notasFiltradas = getMediaByAlunoForEachMateria(alunoNome);
     notasTurma = getMediaAvaliacaoForEachMateria();
@@ -248,12 +248,10 @@ const filterNotasForEvolucaoNotas = (materia, bimestre, tipo) => {
   let notasFiltradas = [];
 
   const filters = [
-    // Casos específicos para uma matéria selecionada
     {
       condicion: () =>
         materia !== "All" && bimestre !== "All" && tipo !== "All",
       fn: () => {
-        // Para uma matéria específica com bimestre e tipo, retornar apenas essa matéria
         const resultado = getMediaByAlunoMateriaAndTipoForEachBimestre(
           alunoNome,
           materia,
@@ -273,7 +271,6 @@ const filterNotasForEvolucaoNotas = (materia, bimestre, tipo) => {
       condicion: () =>
         materia !== "All" && bimestre !== "All" && tipo === "All",
       fn: () => {
-        // Para uma matéria específica com bimestre, mas todos os tipos
         const resultado = getNotasByAlunoMateriaAndBimestre(
           alunoNome,
           materia,
@@ -304,12 +301,10 @@ const filterNotasForEvolucaoNotas = (materia, bimestre, tipo) => {
         materia !== "All" && bimestre === "All" && tipo === "All",
       fn: () => getMediaByAlunoAndMateriaForEachBimestre(alunoNome, materia),
     },
-    // Casos para todas as matérias
     {
       condicion: () =>
         materia === "All" && bimestre !== "All" && tipo !== "All",
       fn: () => {
-        // Todas as matérias, mas apenas um bimestre específico com tipo específico
         const allMaterias = [
           "Matematica",
           "Portugues",
@@ -340,7 +335,6 @@ const filterNotasForEvolucaoNotas = (materia, bimestre, tipo) => {
       condicion: () =>
         materia === "All" && bimestre !== "All" && tipo === "All",
       fn: () => {
-        // Todas as matérias, mas apenas um bimestre específico
         const allMaterias = [
           "Matematica",
           "Portugues",
@@ -383,7 +377,6 @@ const filterNotasForEvolucaoNotas = (materia, bimestre, tipo) => {
     }
   }
 
-  // Caso padrão (All, All, All)
   if (notasFiltradas.length === 0) {
     notasFiltradas = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
   }
@@ -447,7 +440,6 @@ const filterNotasForDistribuicaoNotas = (materia, bimestre, tipo) => {
     }
   }
 
-  // Caso padrão (All, All, All)
   if (notasFiltradas === notasAluno?.notas) {
     return notasValues;
   }

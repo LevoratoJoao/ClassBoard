@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há um usuário logado no localStorage
     const storedUser = localStorage.getItem("classboard_user");
     if (storedUser) {
       try {

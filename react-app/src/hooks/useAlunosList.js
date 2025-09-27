@@ -55,7 +55,6 @@ export const useAlunosList = () => {
           const ranking = posicaoRanking >= 0 ? posicaoRanking + 1 : null;
           const totalAlunos = alunosOrdenados.length;
 
-          // Calcular cor do ranking
           let corRanking = "#6c757d";
           if (ranking && totalAlunos) {
             const percentualTop = (ranking / totalAlunos) * 100;

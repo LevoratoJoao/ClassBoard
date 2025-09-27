@@ -24,7 +24,6 @@ const EvolucaoNotasChart = ({ evolucaoData = [] }) => {
       "rgba(255, 159, 64, 1)",
     ];
 
-    // Coletar todos os rótulos possíveis
     const allLabels = new Set();
     evolucaoData.forEach((item) => {
       if (item.notas) {

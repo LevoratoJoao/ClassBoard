@@ -48,7 +48,6 @@ const AlunoListagem = () => {
           Alunos da turma ({totalAlunos})
         </h1>
 
-        {/* Controles de ordenação */}
         <div className="row justify-content-center mb-4">
           <div className="col-md-8">
             <div className="card sorting-card">
@@ -81,7 +80,6 @@ const AlunoListagem = () => {
           </div>
         </div>
 
-        {/* Lista de alunos */}
         <div className="row justify-content-center mb-4">
           <ul className="list-group mb-4">
             {alunos.map((aluno, index) => (

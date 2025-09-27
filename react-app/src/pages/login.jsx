@@ -21,7 +21,6 @@ const Login = () => {
       [name]: value,
     }));
 
-    // Limpar erro do campo quando começar a digitar
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,

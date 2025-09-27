@@ -6,26 +6,12 @@ nav,
 .navbar * {
   color: #212529 !important;
 }
-/* Fundo com imagem para toda a tela */
-.bg-fundo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  background-image: url("../../src/images/fundo.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 1;
-}
 
 body > *:not(.bg-fundo) {
   position: relative;
   z-index: 1;
 }
-/* Fundo com imagem para toda a tela */
+
 .bg-fundo {
   position: fixed;
   top: 0;

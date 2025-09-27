@@ -45,7 +45,6 @@ export const useAlunoFilters = (alunoNome) => {
       let notasTurma = {};
 
       const filterConfigs = [
-        // Casos específicos para uma matéria selecionada
         {
           condicion: () =>
             materia !== "All" && bimestre !== "All" && tipo !== "All",
@@ -97,7 +96,6 @@ export const useAlunoFilters = (alunoNome) => {
           }),
           mediaTurma: () => ({ [materia]: getMediaByMateria(materia) }),
         },
-        // Casos para todas as matérias
         {
           condicion: () =>
             materia === "All" && bimestre !== "All" && tipo !== "All",
@@ -206,7 +204,6 @@ export const useAlunoFilters = (alunoNome) => {
           fn: () =>
             getMediaByAlunoAndMateriaForEachBimestre(alunoNome, materia),
         },
-        // Casos para todas as matérias
         {
           condicion: () =>
             materia === "All" && bimestre !== "All" && tipo !== "All",
@@ -282,7 +279,6 @@ export const useAlunoFilters = (alunoNome) => {
         }
       }
 
-      // Caso padrão (All, All, All)
       if (notasFiltradas.length === 0) {
         notasFiltradas = getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
       }

@@ -14,7 +14,7 @@ body > *:not(.bg-fundo) {
   position: relative;
   z-index: 1;
 }
-/* Fundo com imagem para toda a tela */
+
 .bg-fundo {
   position: fixed;
   top: 0;
