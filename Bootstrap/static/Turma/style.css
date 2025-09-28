@@ -1,0 +1,155 @@
+:root {
+  --cb-bg: #0e1320;
+  --cb-text: #ffffff;
+  --cb-muted: #cfd8e3;
+
+  --cb-card-1: #d1495b;
+  --cb-card-2: #457b9d;
+  --cb-card-3: #2a9d8f;
+
+  --cb-surface: rgba(255, 255, 255, 0.06);
+  --cb-border: rgba(255, 255, 255, 0.12);
+  --cb-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.bg-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(1200px 600px at 20% 0%, rgba(69, 123, 157, 0.18), transparent 60%),
+    radial-gradient(1000px 500px at 100% 20%, rgba(209, 73, 91, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(14, 19, 32, 0.85), rgba(14, 19, 32, 0.98));
+  backdrop-filter: saturate(105%) contrast(100%);
+}
+
+.montserrat-bold {
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+body.bg-dark,
+.bg-dark {
+  background-color: var(--cb-bg) !important;
+  color: var(--cb-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: var(--cb-text);
+}
+
+#cards-col-1,
+#cards-col-2,
+#cards-col-3 {
+  border: 0;
+  color: #fff;
+  box-shadow: var(--cb-shadow);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+#cards-col-1 {
+  background-color: var(--cb-card-1);
+}
+
+#cards-col-2 {
+  background-color: var(--cb-card-2);
+}
+
+#cards-col-3 {
+  background-color: var(--cb-card-3);
+}
+
+#cards-col-1:hover,
+#cards-col-2:hover,
+#cards-col-3:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+}
+
+.turma-stat {
+  background: var(--cb-surface);
+  border: 1px solid var(--cb-border);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  color: var(--cb-text);
+}
+
+.turma-stat .label {
+  font-size: .875rem;
+  color: var(--cb-muted);
+  margin-bottom: .25rem;
+}
+
+.turma-stat .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.turma-scope .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--cb-text);
+  --bs-table-border-color: var(--cb-border);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+  --bs-table-striped-color: var(--cb-text);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.07);
+  --bs-table-hover-color: var(--cb-text);
+  margin-bottom: .75rem;
+}
+
+.turma-scope .table thead th {
+  border-bottom-color: var(--cb-border);
+  color: var(--cb-muted);
+  font-weight: 600;
+}
+
+.turma-scope .table tbody td,
+.turma-scope .table tbody th {
+  border-top-color: var(--cb-border);
+}
+
+.turma-scope .table td.text-end,
+.turma-scope .table th.text-end {
+  text-align: right;
+}
+
+.badge-low {
+  background: rgba(209, 73, 91, 0.15);
+  color: #ffb4c0;
+  border: 1px solid rgba(209, 73, 91, 0.35);
+}
+
+.badge-ok {
+  background: rgba(42, 157, 143, 0.15);
+  color: #b7fff4;
+  border: 1px solid rgba(42, 157, 143, 0.35);
+}
+
+.position-relative .stretched-link::after {
+  border-radius: inherit;
+}
+
+.text-muted-70 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.hr-soft {
+  border-color: var(--cb-border);
+  opacity: .7;
+}
+
+.navbar.bg-body-tertiary {
+  --bs-border-color: transparent;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 576px) {
+  .turma-stat .value {
+    font-size: 1.25rem;
+  }
+}

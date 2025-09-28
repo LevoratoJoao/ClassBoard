@@ -73,7 +73,7 @@ const Login = () => {
           email: formData.email,
           role: "admin",
         });
-        navigate("/alunos");
+        navigate("/inicial");
       } else {
         setErrors({
           general:

@@ -9,6 +9,9 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const isAuthenticated = !!user;
+  const logoTo = isAuthenticated ? "/inicial" : "/";
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -17,16 +20,13 @@ const Navbar = () => {
   return (
     <nav className="navbar bg-body-tertiary navbar-expand-lg py-2">
       <div className="container-fluid">
-        <Link to="/" className="navbar-brand">
+        <Link to={logoTo} className="navbar-brand">
           <img src={logo} alt="Logo" style={{ height: "50px" }} />
         </Link>
+
         <ul className="nav nav-fill fs-5">
           <li className="nav-item">
-            <Link
-              className="nav-link active montserrat-bold"
-              aria-current="page"
-              to="#"
-            >
+            <Link className="nav-link active montserrat-bold" aria-current="page" to="/turma">
               Turma
             </Link>
           </li>
@@ -50,20 +50,13 @@ const Navbar = () => {
             </button>
           </li>
         </ul>
+
         <div className="d-flex align-items-center">
-          <button
-            type="button"
-            className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
-          >
+          <button type="button" className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2">
             <img
               src={graficoIcon}
               alt="Gráfico"
-              style={{
-                height: "32px",
-                width: "32px",
-                marginRight: "10px",
-                verticalAlign: "middle",
-              }}
+              style={{ height: "32px", width: "32px", marginRight: "10px", verticalAlign: "middle" }}
             />
             Upload
           </button>
@@ -75,12 +68,7 @@ const Navbar = () => {
             <img
               src={saidaIcon}
               alt="Sair"
-              style={{
-                height: "32px",
-                width: "32px",
-                marginRight: "10px",
-                verticalAlign: "middle",
-              }}
+              style={{ height: "32px", width: "32px", marginRight: "10px", verticalAlign: "middle" }}
             />
             Sair
           </button>
