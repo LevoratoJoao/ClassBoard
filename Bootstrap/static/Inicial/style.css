@@ -1,16 +1,19 @@
 :root {
   --cb-bg: #0e1320;
-  --cb-text: #ffffff;
-
+  --cb-text: #fff;
   --cb-card-1: #d1495b;
   --cb-card-2: #457b9d;
   --cb-card-3: #2a9d8f;
-
   --cb-shadow: 0 8px 24px rgba(0, 0, 0, .25);
 }
 
+body.bg-dark {
+  background-color: var(--cb-bg) !important;
+  color: var(--cb-text);
+}
+
 .montserrat-bold {
-  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans";
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   font-weight: 700;
 }
 
@@ -19,16 +22,14 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(1200px 600px at 20% 0%, rgba(69, 123, 157, 0.18), transparent 60%),
-    radial-gradient(1000px 500px at 100% 20%, rgba(209, 73, 91, 0.12), transparent 60%),
-    linear-gradient(180deg, rgba(14, 19, 32, 0.85), rgba(14, 19, 32, 0.98));
+    radial-gradient(1200px 600px at 20% 0%, rgba(69, 123, 157, .18), transparent 60%),
+    radial-gradient(1000px 500px at 100% 20%, rgba(209, 73, 91, .12), transparent 60%),
+    linear-gradient(180deg, rgba(14, 19, 32, .85), rgba(14, 19, 32, .98));
   backdrop-filter: saturate(105%) contrast(100%);
 }
 
-body.bg-dark,
-.bg-dark {
-  background-color: var(--cb-bg) !important;
-  color: var(--cb-text);
+.navbar.bg-body-tertiary {
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .25);
 }
 
 #cards-col-1,
@@ -52,12 +53,10 @@ body.bg-dark,
   background-color: var(--cb-card-3);
 }
 
-#cards-col-1:hover,
-#cards-col-2:hover,
-#cards-col-3:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.03);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .32);
+.card-zoom:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
 }
 
 .card-illustration {
@@ -65,13 +64,6 @@ body.bg-dark,
   width: 8rem;
   object-fit: contain;
   border-radius: 1rem;
-  background: transparent;
-  padding: 0;
-}
-
-.navbar.bg-body-tertiary {
-  --bs-border-color: transparent;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, .25);
 }
 
 .position-relative .stretched-link::after {
