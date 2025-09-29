@@ -38,7 +38,7 @@ O ClassBoard foi pensado para facilitar o acompanhamento pedagógico, trazendo g
 
 ```
 ClassBoard/
-├── Bootstrap/          Bootstrap
+├── Bootstrap/     
 │   ├── src/
 │   │   ├── charts.js
 │   │   ├── aiAnalysis.js
