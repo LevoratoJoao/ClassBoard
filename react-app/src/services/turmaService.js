@@ -8,6 +8,10 @@ export function getMaterias() {
   return Array.isArray(materias) ? materias : [];
 }
 
+export function getTurma() {
+    return turma || {};
+}
+
 export function getMediaNotasPorMateria() {
   const alunos = getAlunos();
   const mats = getMaterias();
