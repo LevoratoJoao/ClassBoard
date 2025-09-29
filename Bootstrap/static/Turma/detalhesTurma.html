@@ -18,38 +18,39 @@
 <body class="bg-dark">
   <div class="bg-fundo"></div>
 
-  <nav class="navbar navbar-expand-lg bg-body-tertiary py-3">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="../Inicial/inicial.html">
-        <img src="../../src/images/logo.png" alt="Logo" style="height:64px;" />
-        <span class="fw-semibold">ClassBoard</span>
-      </a>
-
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-        aria-controls="mainNav" aria-expanded="false" aria-label="Alternar navegação">
-        <span class="navbar-toggler-icon"></span>
+  <nav class="navbar bg-body-tertiary navbar-expand-lg py-3">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../Inicial/inicial.html"><img src="../../src/images/logo.png" alt="Logo"
+          style="height: 64px" /></a>
+      <ul class="nav nav-fill fs-5">
+        <li class="nav-item">
+          <a class="nav-link active montserrat-bold" aria-current="page" href="#">Turma</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a class="nav-link montserrat-bold" href="../Materias/listagem.html">Matérias</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a class="nav-link montserrat-bold" href="../Alunos/listagemAlunos.html">Alunos</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a class="nav-link disabled montserrat-bold" aria-disabled="true">Relatório</a>
+        </li>
+      </ul>
+      <button type="button" class="btn btn-upload montserrat-bold fs-5 px-4 py-2 me-2">
+        <img src="../../src/images/grafico.webp" alt="Grafico" style="
+              height: 32px;
+              width: 32px;
+              margin-right: 10px;
+              vertical-align: middle;
+            " />
+        Upload
       </button>
-
-      <div class="collapse navbar-collapse" id="mainNav">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2 fs-5">
-          <li class="nav-item"><a class="nav-link active montserrat-bold" href="#">Turma</a></li>
-          <li class="nav-item ms-lg-1"><a class="nav-link montserrat-bold" href="../Materias/listagem.html">Matéria</a>
-          </li>
-          <li class="nav-item ms-lg-1"><a class="nav-link montserrat-bold"
-              href="../Alunos/listagemAlunos.html">Alunos</a></li>
-          <li class="nav-item ms-lg-1">
-            <button class="btn btn-link nav-link montserrat-bold" id="btn-relatorio"
-              style="cursor:pointer">Relatório</button>
-          </li>
-        </ul>
-      </div>
     </div>
   </nav>
 
   <main class="container mt-5">
     <header class="text-center mb-4">
       <h1 id="turma-title" class="montserrat-bold mb-1">Turma</h1>
-      <p class="text-muted mb-0">Resumo acadêmico e de frequência</p>
     </header>
 
     <section class="mb-4">

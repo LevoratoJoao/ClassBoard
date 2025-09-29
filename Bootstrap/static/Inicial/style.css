@@ -1,62 +1,83 @@
-:root {
-  --cb-bg: #0e1320;
-  --cb-text: #fff;
-  --cb-card-1: #d1495b;
-  --cb-card-2: #457b9d;
-  --cb-card-3: #2a9d8f;
-  --cb-shadow: 0 8px 24px rgba(0, 0, 0, .25);
-}
-
-body.bg-dark {
-  background-color: var(--cb-bg) !important;
-  color: var(--cb-text);
+.card-text {
+  text-decoration: none !important;
 }
 
 .montserrat-bold {
-  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
   font-weight: 700;
+  font-style: normal;
+  color: #ffffff;
+}
+
+body > *:not(.bg-fundo) {
+  position: relative;
+  z-index: 1;
 }
 
 .bg-fundo {
   position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(1200px 600px at 20% 0%, rgba(69, 123, 157, .18), transparent 60%),
-    radial-gradient(1000px 500px at 100% 20%, rgba(209, 73, 91, .12), transparent 60%),
-    linear-gradient(180deg, rgba(14, 19, 32, .85), rgba(14, 19, 32, .98));
-  backdrop-filter: saturate(105%) contrast(100%);
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 0;
+  background-image: url("../../src/images/fundo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 1;
 }
 
-.navbar.bg-body-tertiary {
-  box-shadow: 0 6px 22px rgba(0, 0, 0, .25);
+nav,
+.navbar,
+.navbar * {
+  color: #212529 !important;
+}
+
+nav {
+  background-color: #103f28;
+  box-shadow: 0 4px 6px rgba(0,0,0,.1);
+  color: #ffffff;
+}
+
+nav a {
+  color: #212529;
+}
+
+.navbar {
+  --bs-navbar-brand-color: #212529;
+}
+
+.btn-upload {
+  background-color: #f6c358 !important;
+  color: #212529 !important;
+  border: none;
 }
 
 #cards-col-1,
 #cards-col-2,
-#cards-col-3 {
+#cards-col-3,
+#cards-col-4 {
+  min-height: 200px;
   border: 0;
   color: #fff;
-  box-shadow: var(--cb-shadow);
+  box-shadow: 10px 10px 20px rgba(0,0,0,.2);
   transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
 
-#cards-col-1 {
-  background-color: var(--cb-card-1);
-}
-
-#cards-col-2 {
-  background-color: var(--cb-card-2);
-}
-
-#cards-col-3 {
-  background-color: var(--cb-card-3);
-}
+#cards-col-1 { background-color: #d1495b; }
+#cards-col-2 { background-color: #f6c358; }
+#cards-col-3 { background-color: #3a6ea5; }
+#cards-col-4 { background-color: #198754; }
 
 .card-zoom:hover {
   transform: translateY(-3px);
   filter: brightness(1.04);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  box-shadow: 0 12px 32px rgba(0,0,0,.35);
+}
+
+#icons {
+  padding-top: 20px;
+  font-size: 64px;
 }
 
 .card-illustration {
@@ -68,4 +89,8 @@ body.bg-dark {
 
 .position-relative .stretched-link::after {
   border-radius: inherit;
+}
+
+h1 {
+  color: #ffffff;
 }

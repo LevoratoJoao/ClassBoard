@@ -143,9 +143,22 @@ h5 {
   opacity: .7;
 }
 
-.navbar.bg-body-tertiary {
-  --bs-border-color: transparent;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
+nav {
+  background-color: #103f28;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
+nav a {
+  color: #212529;
+}
+
+h1 {
+  color: #ffffff;
+}
+
+.navbar {
+  --bs-navbar-brand-color: #212529;
 }
 
 @media (max-width: 576px) {

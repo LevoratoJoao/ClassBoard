@@ -7,7 +7,7 @@ import criancasImg from "../assets/images/criancas.jpg";
 import livrosImg from "../assets/images/livros.png";
 import relatorioImg from "../assets/images/relatorio.webp";
 import estudandoImg from "../assets/images/estudando.png";
-import professoraImg from "../assets/images/professor.png";
+import professorImg from "../assets/images/professor.png";
 
 const Inicial = () => {
     const imgStyle = {
@@ -78,8 +78,8 @@ const Inicial = () => {
 
                 <footer className="text-center py-4" style={{ background: "transparent" }}>
                     <img
-                        src={professoraImg}
-                        alt="Professora"
+                        src={professorImg}
+                        alt="Professor"
                         style={{ height: "250px", width: "250px", objectFit: "contain", marginTop: 0 }}
                     />
                 </footer>

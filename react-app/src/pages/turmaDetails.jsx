@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import Navbar from "./navbar";
-import { getTurma, getMaterias } from "../services/turmasService";
+import { getTurma, getMaterias } from "../services/turmaService";
 import detalhesFooter from "../assets/images/detalhes.webp";
 
 const NOTA_BAIXA = 6.0;

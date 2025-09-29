@@ -73,8 +73,7 @@ function App() {
               }
             />
 
-            <Route path="/turmas" element={<Navigate to="/turma" replace />} />
-            <Route path="/turma/:id" element={<Navigate to="/turma" replace />} />
+            <Route path="/turma" element={<Navigate to="/turma" replace />} />
             <Route path="*" element={<Navigate to="/inicial" replace />} />
           </Routes>
         </div>
