@@ -38,7 +38,7 @@ O ClassBoard foi pensado para facilitar o acompanhamento pedagógico, trazendo g
 
 ```
 ClassBoard/
-├── Bootstrap/     
+├── Bootstrap/
 │   ├── src/
 │   │   ├── charts.js
 │   │   ├── aiAnalysis.js
@@ -76,6 +76,10 @@ Devido a modularização do projeto com scripts separados, siga os passos abaixo
 2. Execute o comando para iniciar um servidor local:
    ```bash
     npx http-server ./static
+   ```
+   ou
+   ```bash
+       python3 -m http.server 8000
    ```
 3. Acesse `http://127.0.0.1:8080/Materias/listagem.html` no navegador.
 

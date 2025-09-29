@@ -10,4 +10,8 @@ Devido a modularização do projeto com scripts separados, siga os passos abaixo
    ```bash
     npx http-server ./static
    ```
+   ou
+   ```bash
+       python3 -m http.server 8000
+   ```
 3. Acesse `http://127.0.0.1:8080/Materias/listagem.html` no navegador.
