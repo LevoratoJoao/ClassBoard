@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Turma - Detalhes</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+  <link rel="stylesheet" href="../Alunos/style.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+</head>
+
+<body class="bg-dark">
+  <div class="bg-fundo"></div>
+
+  <nav class="navbar bg-body-tertiary navbar-expand-lg py-3">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../Inicial/inicial.html"><img src="../../src/images/logo.png" alt="Logo"
+          style="height: 64px" /></a>
+      <ul class="nav nav-fill fs-5">
+        <li class="nav-item">
+          <a class="nav-link active montserrat-bold" aria-current="page" href="#">Turma</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a class="nav-link montserrat-bold" href="../Materias/listagem.html">Matérias</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a class="nav-link montserrat-bold" href="../Alunos/listagemAlunos.html">Alunos</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a class="nav-link disabled montserrat-bold" aria-disabled="true">Relatório</a>
+        </li>
+      </ul>
+      <button type="button" class="btn btn-upload montserrat-bold fs-5 px-4 py-2 me-2">
+        <img src="../../src/images/grafico.webp" alt="Grafico" style="
+              height: 32px;
+              width: 32px;
+              margin-right: 10px;
+              vertical-align: middle;
+            " />
+        Upload
+      </button>
+    </div>
+  </nav>
+
+  <main class="container mt-5">
+    <header class="text-center mb-4">
+      <h1 id="turma-title" class="montserrat-bold mb-1">Turma</h1>
+    </header>
+
+    <section class="mb-4">
+      <div class="card rounded-4 shadow-sm">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3">Nota média da turma em cada matéria</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-borderless">
+                <tr>
+                  <th class="fw-semibold">Matéria</th>
+                  <th class="fw-semibold text-end">Média</th>
+                </tr>
+              </thead>
+              <tbody id="tb-nota-media-por-materia"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-4">
+      <div class="card rounded-4 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h5 class="card-title mb-0">Frequência média</h5>
+            <div class="text-muted">
+              <strong>Geral:</strong> <span id="freq-media-geral">—</span>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-borderless">
+                <tr>
+                  <th class="fw-semibold">Matéria</th>
+                  <th class="fw-semibold text-end">Frequência média</th>
+                </tr>
+              </thead>
+              <tbody id="tb-freq-media-por-materia"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-4">
+      <div class="card rounded-4 shadow-sm">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3">Dias com mais faltas</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-borderless">
+                <tr>
+                  <th class="fw-semibold">Data</th>
+                  <th class="fw-semibold text-end">Faltas</th>
+                </tr>
+              </thead>
+              <tbody id="tb-dias-com-mais-faltas"></tbody>
+            </table>
+          </div>
+          <div id="msg-sem-faltas" class="alert alert-secondary mt-3 py-2 px-3 d-none">
+            Nenhuma falta registrada.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <div class="card rounded-4 shadow-sm">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-1">Relação entre matérias</h5>
+          <p class="text-muted small mb-3">
+            Percentual de alunos por categoria (corte: nota &lt; 6.0).
+          </p>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-borderless">
+                <tr>
+                  <th class="fw-semibold">Par</th>
+                  <th class="fw-semibold text-end">Bem nas duas</th>
+                  <th class="fw-semibold text-end">Mal nas duas</th>
+                  <th class="fw-semibold text-end">Mal só em A</th>
+                  <th class="fw-semibold text-end">Mal só em B</th>
+                </tr>
+              </thead>
+              <tbody id="tb-relacao-materias"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="text-center py-4" style="background:transparent">
+    <img src="../../src/images/detalhes.webp" alt="Detalhes"
+      style="height:250px;width:250px;object-fit:contain;margin-top:0;" />
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-dN9c6mGqYo4Qf9/0b6GQ+1LwK9X8q5m3v/0k5Zr4LIsxO8FqYqD9q6XzY8RDP3vS"
+    crossorigin="anonymous"></script>
+
+  <script type="module" src="../../src/scriptTurma.js"></script>
+</body>
+
+</html>

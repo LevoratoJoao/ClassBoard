@@ -1,0 +1,25 @@
+{
+  "name": "classboard",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/LevoratoJoao/ClassBoard#readme",
+  "bugs": {
+    "url": "https://github.com/LevoratoJoao/ClassBoard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LevoratoJoao/ClassBoard.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.0"
+  },
+  "devDependencies": {}
+}
