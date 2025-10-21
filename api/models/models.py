@@ -1,9 +1,24 @@
 from pydantic import BaseModel
 from typing import List
+from enum import Enum
+
+class Materia(str, Enum):
+    PORTUGUES = "Portugues"
+    MATEMATICA = "Matematica"
+    CIENCIAS = "Ciencias"
+    GEOGRAFIA = "Geografia"
+    HISTORIA = "Historia"
+    ARTES = "Artes"
+
+class Turma(BaseModel):
+    id: int
+    nome: str
+    ano: int
+    alunos: List["Aluno"] = []
 
 class Avaliacao(BaseModel):
     id: int
-    materia: str
+    materia: Materia
     tipo: str
     bimestre: int
 
