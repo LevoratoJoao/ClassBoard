@@ -19,4 +19,8 @@ alunos = [
         nome="Ana",
         sexo="feminino",
     ),
+    Aluno(
+        nome="Pedro",
+        sexo="masculino",
+    ),
 ]

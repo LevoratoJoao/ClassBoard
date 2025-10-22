@@ -1,6 +1,7 @@
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { getNotasByMateriaTipoAndBimestre } from "../../services/notasService";
+import { useEffect, useState } from "react";
+import { notasAPI } from "../../services/apiService";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -10,15 +11,28 @@ const NotasOverviewChart = ({
   bimestre = "",
   label = "Distribuição de Frequência das Notas",
 }) => {
+  const [notas, setNotas] = useState([]);
+
   const tipoFilter = tipo && tipo !== "All" ? tipo : undefined;
   const bimestreFilter =
     bimestre && bimestre !== "All" ? Number(bimestre) : undefined;
 
-  const notas = getNotasByMateriaTipoAndBimestre(
-    materia,
-    tipoFilter,
-    bimestreFilter
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await notasAPI.filterNotas(
+          materia,
+          tipoFilter,
+          bimestreFilter
+        );
+        const notaValues = result.map((item) => item.nota);
+        setNotas(notaValues);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    fetchData();
+  }, [materia, tipo, bimestre]);
 
   const data = {
     labels: ["0-2", "3-4", "5-6", "7-8", "9-10"],
