@@ -54,7 +54,7 @@ const NotasPorAvaliacaoChart = ({
                 const notaValues = result.map((item) => item.nota);
                 if (!notaValues.length) return null;
                 const media = calcMedia(notaValues);
-                return Number(media.toFixed(2));
+                return Number(media);
               })
             );
             return {
