@@ -29,15 +29,10 @@ const NotasPorAvaliacaoChart = ({
 }) => {
   const [chartData, setChartData] = useState({ labels: [], datasets: [] });
 
-  let tiposToShow = ["Prova", "Trabalho"];
-  let bimestresToShow = [1, 2, 3];
-
-  if (tipo && tipo !== "All") {
-    tiposToShow = [tipo];
-  }
-  if (bimestre && bimestre !== "All") {
-    bimestresToShow = [Number(bimestre)];
-  }
+  const tiposToShow =
+    tipo && tipo !== "All" ? [tipo] : ["Prova", "Trabalho"];
+  const bimestresToShow =
+    bimestre && bimestre !== "All" ? [Number(bimestre)] : [1, 2, 3, 4];
 
   useEffect(() => {
     const fetchData = async () => {

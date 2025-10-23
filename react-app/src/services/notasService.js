@@ -13,7 +13,7 @@ const filterNotasByAvaliacoes = (criteria = {}) =>
 const getNotaValues = (notaObjs) => notaObjs.map((n) => n.nota);
 
 export const calcMedia = (arr) =>
-  arr.length ? (arr.reduce((acc, v) => acc + v, 0) / arr.length).toFixed(2) : 0;
+  arr.length ? (arr.reduce((acc, v) => acc + v, 0) / arr.length).toFixed(2) : null;
 
 const groupBy = (arr, keyFn) =>
   arr.reduce((acc, obj) => {
