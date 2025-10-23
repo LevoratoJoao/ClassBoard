@@ -1,4 +1,6 @@
 import { Bar } from "react-chartjs-2";
+import { useState, useEffect } from "react";
+import { notasAPI } from "../../services/apiService";
 import {
   Chart as ChartJS,
   BarElement,
@@ -8,9 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import {
-  getNotasByMateriaTipoAndBimestre,
-} from "../../services/notasService";
+import { calcMedia } from "../../services/notasService";
 
 ChartJS.register(
   CategoryScale,
@@ -27,6 +27,8 @@ const NotasPorAvaliacaoChart = ({
   bimestre = 0,
   label = "Distribuição de Frequência das Notas",
 }) => {
+  const [chartData, setChartData] = useState({ labels: [], datasets: [] });
+
   let tiposToShow = ["Prova", "Trabalho"];
   let bimestresToShow = [1, 2, 3];
 
@@ -37,29 +39,46 @@ const NotasPorAvaliacaoChart = ({
     bimestresToShow = [Number(bimestre)];
   }
 
-  const datasets = tiposToShow.map((tipoItem, idx) => {
-    const data = bimestresToShow.map((bimestreItem) => {
-      const notas = getNotasByMateriaTipoAndBimestre(
-        materia,
-        tipoItem,
-        bimestreItem
-      );
-      if (!notas.length) return null;
-      const media = notas.reduce((a, b) => a + b, 0) / notas.length;
-      return Number(media.toFixed(2));
-    });
-    return {
-      label: tipoItem,
-      data,
-      backgroundColor:
-        idx === 0 ? "rgba(54, 162, 235, 0.7)" : "rgba(255, 99, 132, 0.7)",
-    };
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const datasets = await Promise.all(
+          tiposToShow.map(async (tipoItem, idx) => {
+            const data = await Promise.all(
+              bimestresToShow.map(async (bimestreItem) => {
+                const result = await notasAPI.filterNotas(
+                  materia,
+                  tipoItem,
+                  bimestreItem
+                );
+                const notaValues = result.map((item) => item.nota);
+                if (!notaValues.length) return null;
+                const media = calcMedia(notaValues);
+                return Number(media.toFixed(2));
+              })
+            );
+            return {
+              label: tipoItem,
+              data,
+              backgroundColor:
+                idx === 0
+                  ? "rgba(54, 162, 235, 0.7)"
+                  : "rgba(255, 99, 132, 0.7)",
+            };
+          })
+        );
 
-  const data = {
-    labels: bimestresToShow.map((b) => `Bimestre ${b}`),
-    datasets,
-  };
+        setChartData({
+          labels: bimestresToShow.map((b) => `Bimestre ${b}`),
+          datasets,
+        });
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+      }
+    };
+
+    fetchData();
+  }, [materia, tipo, bimestre]);
 
   const options = {
     responsive: true,
@@ -93,7 +112,7 @@ const NotasPorAvaliacaoChart = ({
     <div className="mb-4 d-flex flex-column align-items-center">
       <h6>Distribuição de Frequência das Notas</h6>
       <div style={{ width: "700px", height: "400px" }}>
-        <Bar data={data} options={options} />
+        <Bar data={chartData} options={options} />
       </div>
     </div>
   );
