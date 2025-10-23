@@ -1,139 +1,117 @@
-import {
-    getMediaByMateria,
-    getNotasByMateria,
-    getMediaByMateriaAndBimestre,
-    getMediaAvaliacaoByMateriaForEachAvaliacao,
-    getNotasByAluno,
-    getMediaByAluno,
-    getMediaByAlunoForEachMateria,
-} from "../services/notasService";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-export const buildMateriaAiAnalysis = (materia) => {
-    const mediaGeral = getMediaByMateria(materia);
-    const todasNotas = getNotasByMateria(materia);
+import { notasAPI } from "./apiService";
 
-    const mediaB1 = getMediaByMateriaAndBimestre(materia, 1);
-    const mediaB2 = getMediaByMateriaAndBimestre(materia, 2);
-    const mediaB3 = getMediaByMateriaAndBimestre(materia, 3);
+const ai = new GoogleGenAI({ apiKey: process.env.REACT_APP_GEMINI_API_KEY });
 
-    const mediasAvaliacoes = getMediaAvaliacaoByMateriaForEachAvaliacao(materia);
-
-    const totalAlunos = todasNotas.length;
-    const alunosAprovados = todasNotas.filter(nota => nota >= 6).length;
-    const alunosReprovados = todasNotas.filter(nota => nota < 6).length;
-    const percentualAprovacao = ((alunosAprovados / totalAlunos) * 100).toFixed(1);
-
-    const bimestres = [
-        { nome: '1º Bimestre', media: parseFloat(mediaB1) },
-        { nome: '2º Bimestre', media: parseFloat(mediaB2) },
-        { nome: '3º Bimestre', media: parseFloat(mediaB3) }
-    ].filter(b => !isNaN(b.media) && b.media > 0);
-
-    const melhorBimestre = bimestres.reduce((prev, current) =>
-        prev.media > current.media ? prev : current, bimestres[0]);
-
-    const piorBimestre = bimestres.reduce((prev, current) =>
-        prev.media < current.media ? prev : current, bimestres[0]);
-
-    const avaliacoes = Object.entries(mediasAvaliacoes);
-    const melhorAvaliacao = avaliacoes.reduce((prev, current) =>
-        parseFloat(prev[1]) > parseFloat(current[1]) ? prev : current, avaliacoes[0]);
-
-    let tendencia = "estável";
-    if (bimestres.length >= 2) {
-        const ultimosBimestres = bimestres.slice(-2);
-        const diferenca = ultimosBimestres[1].media - ultimosBimestres[0].media;
-        if (diferenca > 0.5) tendencia = "crescente";
-        else if (diferenca < -0.5) tendencia = "decrescente";
+const generateAIAnalysis = async (prompt) => {
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Erro na análise da IA:", error);
+        return "Análise indisponível no momento.";
     }
-
-    let comment = `Média geral: ${mediaGeral}.<br>`;
-    comment += `<br>${percentualAprovacao}% dos alunos estão aprovados (${alunosAprovados}/${totalAlunos}).<br>`;
-
-    if (bimestres.length > 0) {
-        comment += `<br>Melhor desempenho: ${melhorBimestre.nome} (${melhorBimestre.media.toFixed(2)}).<br>`;
-        if (bimestres.length > 1) {
-            comment += `<br>Pior desempenho: ${piorBimestre.nome} (${piorBimestre.media.toFixed(2)}).<br>`;
-        }
-    }
-
-    if (melhorAvaliacao) {
-        comment += `<br>Melhor tipo de avaliação: ${melhorAvaliacao[0]} (${parseFloat(melhorAvaliacao[1]).toFixed(2)}).<br>`;
-    }
-
-    comment += `<br>Tendência: ${tendencia}.<br>`;
-
-    // Performance classification
-    let classificacao = "Regular";
-    if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
-    else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";
-    else if (parseFloat(mediaGeral) >= 6) classificacao = "Satisfatório";
-    else if (parseFloat(mediaGeral) < 5) classificacao = "Necessita Atenção";
-
-    return {
-        summary: `Análise de desempenho para ${materia}: ${classificacao}.`,
-        comment
-    };
 };
 
-export const buildAlunoAiAnalysis = (alunoNome) => {
+export const buildMateriaAiAnalysis = async (materia) => {
+    try {
+        const allNotas = await notasAPI.getAllNotas();
+        const notasMateria = allNotas.filter(n => n.avaliacao.materia === materia);
 
-    const alunoData = getNotasByAluno(alunoNome);
-    const notas = alunoData.notas || [];
-    const totalNotas = notas.length;
-    if (totalNotas === 0) {
+        const mediaGeral = (notasMateria.reduce((sum, n) => sum + n.nota, 0) / notasMateria.length).toFixed(2);
+        const totalAlunos = new Set(notasMateria.map(n => n.aluno_id)).size;
+        const alunosAprovados = notasMateria.filter(n => n.nota >= 6).length;
+        const percentualAprovacao = ((alunosAprovados / notasMateria.length) * 100).toFixed(1);
+
+        const prompt = `
+        Analise os dados de desempenho da matéria ${materia}:
+        - Média geral: ${mediaGeral}
+        - Total de alunos: ${totalAlunos}
+        - Percentual de aprovação: ${percentualAprovacao}%
+
+        Responda em máximo 3 parágrafos simples e curtos em português se possivel em tópicos, usando HTML simples (<p>, <strong>).
+        Foque em: situação atual, 1 recomendação prática para melhorar o desempenho geral, e 1 ponto positivo a ser mantido.
+        `;
+
+        const aiComment = await generateAIAnalysis(prompt);
+
+        let classificacao = "Regular";
+        if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
+        else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";
+        else if (parseFloat(mediaGeral) >= 6) classificacao = "Satisfatório";
+        else if (parseFloat(mediaGeral) < 5) classificacao = "Necessita Atenção";
+
         return {
-            summary: `Nenhuma nota encontrada para ${alunoNome}.`,
-            comment: ""
+            summary: `Análise de desempenho para ${materia}: ${classificacao}.`,
+            comment: aiComment
+        };
+    } catch (error) {
+        console.error("Erro na análise da matéria:", error);
+        return {
+            summary: `Análise de ${materia}: Dados indisponíveis`,
+            comment: "Não foi possível gerar a análise no momento."
         };
     }
+};
 
-    const mediaGeral = getMediaByAluno(alunoNome);
-    const mediasPorMateria = getMediaByAlunoForEachMateria(alunoNome);
+export const buildAlunoAiAnalysis = async (alunoId) => {
+    try {
+        const notasAluno = await notasAPI.getNotasByAluno(alunoId);
 
-    // Aprovado se média >= 6
-    const aprovadas = notas.filter(n => n.nota >= 6).length;
-    const reprovadas = notas.filter(n => n.nota < 6).length;
-    const percentualAprovacao = ((aprovadas / totalNotas) * 100).toFixed(1);
+        if (notasAluno.length === 0) {
+            return {
+                summary: "Nenhuma nota encontrada para este aluno.",
+                comment: ""
+            };
+        }
 
-    // Melhor e pior matéria
-    const materias = Object.entries(mediasPorMateria);
-    const melhorMateria = materias.reduce((prev, curr) =>
-        parseFloat(prev[1]) > parseFloat(curr[1]) ? prev : curr, materias[0]);
-    const piorMateria = materias.reduce((prev, curr) =>
-        parseFloat(prev[1]) < parseFloat(curr[1]) ? prev : curr, materias[0]);
+        const mediaGeral = (notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length).toFixed(2);
+        const aprovadas = notasAluno.filter(n => n.nota >= 6).length;
+        const percentualAprovacao = ((aprovadas / notasAluno.length) * 100).toFixed(1);
 
-    // Tendência simples: compara média das últimas 3 notas com as 3 primeiras
-    let tendencia = "estável";
-    if (totalNotas >= 6) {
-        const primeiras = notas.slice(0, 3).map(n => n.nota);
-        const ultimas = notas.slice(-3).map(n => n.nota);
-        const mediaPrimeiras = primeiras.reduce((a, b) => a + b, 0) / primeiras.length;
-        const mediaUltimas = ultimas.reduce((a, b) => a + b, 0) / ultimas.length;
-        const diff = mediaUltimas - mediaPrimeiras;
-        if (diff > 0.5) tendencia = "melhorando";
-        else if (diff < -0.5) tendencia = "caindo";
+        const materias = {};
+        notasAluno.forEach(n => {
+            if (!materias[n.avaliacao.materia]) materias[n.avaliacao.materia] = [];
+            materias[n.avaliacao.materia].push(n.nota);
+        });
+
+        const mediasPorMateria = Object.entries(materias).map(([mat, notas]) => ({
+            materia: mat,
+            media: (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(2)
+        }));
+
+        const prompt = `
+    Analise o desempenho do aluno:
+    - Média geral: ${mediaGeral}
+    - Percentual de aprovação: ${percentualAprovacao}%
+    - Médias por matéria: ${mediasPorMateria.map(m => `${m.materia}: ${m.media}`).join(', ')}
+    - Todas as notas: ${notasAluno.map(n => n.nota).join(', ')}
+
+    Forneça uma análise educacional personalizada em português com insights sobre pontos fortes, áreas de melhoria e recomendações.
+    `;
+
+        const aiComment = await generateAIAnalysis(prompt);
+
+        let classificacao = "Regular";
+        if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
+        else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";
+        else if (parseFloat(mediaGeral) >= 6) classificacao = "Satisfatório";
+        else if (parseFloat(mediaGeral) < 5) classificacao = "Necessita Atenção";
+
+        return {
+            summary: `Análise do aluno: ${classificacao}.`,
+            comment: aiComment
+        };
+    } catch (error) {
+        console.error("Erro na análise do aluno:", error);
+        return {
+            summary: "Análise indisponível",
+            comment: "Não foi possível gerar a análise no momento."
+        };
     }
-
-    // Classificação
-    let classificacao = "Regular";
-    if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
-    else if (parseFloat(mediaGeral) >= 7) classificacao = "Bom";
-    else if (parseFloat(mediaGeral) >= 6) classificacao = "Satisfatório";
-    else if (parseFloat(mediaGeral) < 5) classificacao = "Necessita Atenção";
-
-    let comment = `Média geral: ${mediaGeral}.<br>`;
-    comment += `${percentualAprovacao}% das avaliações foram aprovadas (${aprovadas}/${totalNotas}).<br>`;
-    if (melhorMateria) {
-        comment += `Melhor matéria: ${melhorMateria[0]} (${parseFloat(melhorMateria[1]).toFixed(2)}).<br>`;
-    }
-    if (piorMateria) {
-        comment += `Pior matéria: ${piorMateria[0]} (${parseFloat(piorMateria[1]).toFixed(2)}).<br>`;
-    }
-    comment += `Tendência: ${tendencia}.<br>`;
-
-    return {
-        summary: `Análise de desempenho de ${alunoNome}: ${classificacao}.`,
-        comment
-    };
 };
