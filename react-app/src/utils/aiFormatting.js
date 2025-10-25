@@ -3,82 +3,45 @@
  */
 
 /**
- * Processa o HTML retornado pela IA para garantir formatação adequada
- * @param {string} aiResponse - Resposta HTML da IA
- * @returns {string} - HTML formatado com classes CSS
+ * Processa o texto retornado pela IA para formatação simples
+ * @param {string} aiResponse - Resposta da IA
+ * @returns {string} - Texto formatado apenas com parágrafos
  */
 export const formatAiResponse = (aiResponse) => {
   if (!aiResponse || typeof aiResponse !== "string") {
-    return '<p class="analysis-text">Análise não disponível no momento.</p>';
+    return "Análise não disponível no momento.";
   }
 
-  let formattedResponse = aiResponse;
+  // Remove qualquer HTML existente e mantém apenas o texto
+  let formattedResponse = aiResponse.replace(/<[^>]*>/g, "");
 
-  // Envolver em container principal se não estiver presente
-  if (
-    !formattedResponse.includes("student-analysis") &&
-    !formattedResponse.includes("analysis-section")
-  ) {
-    formattedResponse = `<div class="student-analysis">${formattedResponse}</div>`;
+  // Remove asteriscos que podem vir da IA (markdown)
+  formattedResponse = formattedResponse.replace(/\*\*\*/g, "");
+  formattedResponse = formattedResponse.replace(/\*\*/g, "");
+  formattedResponse = formattedResponse.replace(/\*/g, "");
+
+  // Remove quebras de linha excessivas
+  formattedResponse = formattedResponse.replace(/\n\s*\n/g, "\n");
+
+  // Remove espaços extras
+  formattedResponse = formattedResponse.trim();
+
+  // Converte para HTML simples com apenas parágrafos, sem negrito
+  const lines = formattedResponse.split("\n");
+  let htmlResponse = "";
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine) {
+      htmlResponse += `<p>${trimmedLine}</p>`;
+    }
   }
 
-  // Adicionar classes CSS às tags HTML se não estiverem presentes
-  const formatRules = [
-    // Seções
-    {
-      pattern: /<div(?![^>]*class)/g,
-      replacement: '<div class="analysis-section"',
-    },
-
-    // Títulos
-    { pattern: /<h4(?![^>]*class)/g, replacement: '<h4 class="section-title"' },
-    { pattern: /<h3(?![^>]*class)/g, replacement: '<h3 class="section-title"' },
-
-    // Parágrafos
-    { pattern: /<p(?![^>]*class)/g, replacement: '<p class="analysis-text"' },
-
-    // Destaques
-    {
-      pattern: /<strong(?![^>]*class)/g,
-      replacement: '<strong class="highlight"',
-    },
-
-    // Listas
-    {
-      pattern: /<ul(?![^>]*class)/g,
-      replacement: '<ul class="recommendations-list"',
-    },
-  ];
-
-  formatRules.forEach((rule) => {
-    formattedResponse = formattedResponse.replace(
-      rule.pattern,
-      rule.replacement
-    );
-  });
-
-  // Adicionar ícones aos títulos baseado no conteúdo
-  const iconRules = [
-    { pattern: /(Desempenho\s+Geral|Performance)/i, icon: "📈" },
-    { pattern: /(Pontos?\s+Fortes?|Strengths)/i, icon: "🌟" },
-    {
-      pattern: /(Áreas?\s+de\s+Melhoria|Areas?\s+for\s+Improvement)/i,
-      icon: "📝",
-    },
-    { pattern: /(Recomendações?|Recommendations)/i, icon: "💡" },
-    { pattern: /(Situação\s+Atual|Current\s+Situation)/i, icon: "📊" },
-  ];
-
-  iconRules.forEach((rule) => {
-    const regex = new RegExp(`(<h[3-4][^>]*>)(${rule.pattern.source})`, "gi");
-    formattedResponse = formattedResponse.replace(regex, `$1${rule.icon} $2`);
-  });
-
-  return formattedResponse;
+  return htmlResponse || "<p>Análise não disponível no momento.</p>";
 };
 
 /**
- * Gera um prompt melhorado para análise de matéria
+ * Gera um prompt simples para análise de matéria
  * @param {string} materia - Nome da matéria
  * @param {number} mediaGeral - Média geral da matéria
  * @param {number} totalAlunos - Total de alunos
@@ -92,37 +55,28 @@ export const buildMateriaPrompt = (
   percentualAprovacao
 ) => {
   return `
-Analise os dados de desempenho da matéria ${materia}:
+Analise brevemente os dados de desempenho da matéria ${materia}:
 - Média geral: ${mediaGeral}
 - Total de alunos: ${totalAlunos}
 - Percentual de aprovação: ${percentualAprovacao}%
 
-Forneça uma análise estruturada seguindo EXATAMENTE este formato HTML:
+Forneça uma análise educacional organizada seguindo esta estrutura:
 
-<div class="analysis-section">
-  <h4 class="section-title">📊 Situação Atual</h4>
-  <p class="analysis-text">Descreva a situação atual da matéria com base nos dados apresentados. Use <strong class="highlight">palavras-chave importantes</strong> para destacar pontos relevantes.</p>
-</div>
+Situação Atual:
+[Descrição da situação atual da matéria]
 
-<div class="analysis-section">
-  <h4 class="section-title">💡 Recomendações</h4>
-  <ul class="recommendations-list">
-    <li>Primeira recomendação prática e específica</li>
-    <li>Segunda recomendação focada em melhorias</li>
-  </ul>
-</div>
+Pontos Positivos:
+[Aspectos positivos a serem mantidos]
 
-<div class="analysis-section">
-  <h4 class="section-title">🌟 Pontos Positivos</h4>
-  <p class="analysis-text">Destaque os aspectos positivos que devem ser mantidos e celebrados.</p>
-</div>
+Sugestões de Melhoria:
+[Recomendações práticas e específicas]
 
-Use linguagem educacional e construtiva em português brasileiro.
+Use linguagem clara e objetiva em português brasileiro.
 `;
 };
 
 /**
- * Gera um prompt melhorado para análise de aluno
+ * Gera um prompt simples para análise de aluno
  * @param {Object} dados - Dados do aluno para análise
  * @returns {string} - Prompt formatado para a IA
  */
@@ -131,39 +85,24 @@ export const buildAlunoPrompt = (dados) => {
     dados;
 
   return `
-Analise o desempenho do aluno com os seguintes dados:
+Analise brevemente o desempenho do aluno com os seguintes dados:
 - Média geral: ${mediaGeral}
 - Percentual de aprovação: ${percentualAprovacao}%
 - Médias por matéria: ${mediasPorMateria}
-- Todas as notas: ${todasNotas}
 
-Forneça uma análise educacional seguindo EXATAMENTE este formato HTML:
+Forneça uma análise educacional organizada seguindo esta estrutura:
 
-<div class="student-analysis">
-  <div class="analysis-section">
-    <h4 class="section-title">📈 Desempenho Geral</h4>
-    <p class="analysis-text">Resumo do rendimento do aluno com <strong class="highlight">classificação do desempenho</strong> baseada na média geral.</p>
-  </div>
+Desempenho Geral:
+[Resumo do rendimento geral do aluno]
 
-  <div class="analysis-section">
-    <h4 class="section-title">🌟 Pontos Fortes</h4>
-    <p class="analysis-text">Matérias e aspectos onde o aluno se destaca. Mencione as <strong class="highlight">matérias com melhor desempenho</strong>.</p>
-  </div>
+Pontos Fortes:
+[Matérias onde o aluno se destaca]
 
-  <div class="analysis-section">
-    <h4 class="section-title">📝 Áreas de Melhoria</h4>
-    <p class="analysis-text">Matérias que precisam de atenção especial. Identifique <strong class="highlight">oportunidades de crescimento</strong>.</p>
-  </div>
+Áreas de Melhoria:
+[Matérias que precisam de atenção]
 
-  <div class="analysis-section">
-    <h4 class="section-title">💡 Recomendações</h4>
-    <ul class="recommendations-list">
-      <li>Primeira recomendação específica e prática</li>
-      <li>Segunda sugestão para melhorar o desempenho</li>
-      <li>Terceira estratégia de estudo ou apoio</li>
-    </ul>
-  </div>
-</div>
+Recomendações:
+[Sugestões práticas de melhoria]
 
 Use linguagem encorajadora e educativa em português brasileiro.
 `;
