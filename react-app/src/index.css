@@ -1078,4 +1078,114 @@ footer img {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
+
+  .team-photo {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* ========== ANÁLISES IA - FORMATAÇÃO ========== */
+.analysis-section {
+  margin: 1.5rem 0;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border-left: 4px solid #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analysis-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.15);
+}
+
+.student-analysis {
+  background: #ffffff;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e3f2fd;
+}
+
+.section-title {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e74c3c;
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: "";
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.analysis-text {
+  color: #495057;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  text-align: justify;
+}
+
+.highlight {
+  color: #e74c3c;
+  font-weight: 600;
+  background: linear-gradient(120deg, #fff3cd 0%, #ffeaa7 100%);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #f39c12;
+}
+
+.recommendations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendations-list li {
+  background: #e8f5e8;
+  margin: 0.5rem 0;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #28a745;
+  transition: background-color 0.2s ease;
+}
+
+.recommendations-list li:hover {
+  background: #d4edda;
+}
+
+.recommendations-list li::before {
+  content: "✓";
+  color: #28a745;
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+/* Responsivo para análises */
+@media (max-width: 768px) {
+  .student-analysis {
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .analysis-section {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .section-title {
+    font-size: 1rem;
+  }
+
+  .analysis-text {
+    font-size: 0.9rem;
+  }
 }

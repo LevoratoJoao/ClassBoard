@@ -1,7 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleGenAI } from "@google/genai";
-
 import { notasAPI } from "./apiService";
+import {
+  formatAiResponse,
+  buildMateriaPrompt,
+  buildAlunoPrompt,
+} from "../utils/aiFormatting";
 
 const ai = new GoogleGenAI({ apiKey: process.env.REACT_APP_GEMINI_API_KEY });
 
@@ -35,17 +39,15 @@ export const buildMateriaAiAnalysis = async (materia) => {
       100
     ).toFixed(1);
 
-    const prompt = `
-        Analise os dados de desempenho da matéria ${materia}:
-        - Média geral: ${mediaGeral}
-        - Total de alunos: ${totalAlunos}
-        - Percentual de aprovação: ${percentualAprovacao}%
-
-        Responda em máximo 3 parágrafos simples e curtos em português se possivel em tópicos, usando HTML simples (<p>, <strong>).
-        Foque em: situação atual, 1 recomendação prática para melhorar o desempenho geral, e 1 ponto positivo a ser mantido.
-        `;
+    const prompt = buildMateriaPrompt(
+      materia,
+      mediaGeral,
+      totalAlunos,
+      percentualAprovacao
+    );
 
     const aiComment = await generateAIAnalysis(prompt);
+    const formattedComment = formatAiResponse(aiComment);
 
     let classificacao = "Regular";
     if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
@@ -55,7 +57,7 @@ export const buildMateriaAiAnalysis = async (materia) => {
 
     return {
       summary: `Análise de desempenho para ${materia}: ${classificacao}.`,
-      comment: aiComment,
+      comment: formattedComment,
     };
   } catch (error) {
     console.error("Erro na análise da matéria:", error);
@@ -107,19 +109,17 @@ export const buildAlunoAiAnalysis = async (alunoId) => {
       media: (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(2),
     }));
 
-    const prompt = `
-    Analise o desempenho do aluno:
-    - Média geral: ${mediaGeral}
-    - Percentual de aprovação: ${percentualAprovacao}%
-    - Médias por matéria: ${mediasPorMateria
-      .map((m) => `${m.materia}: ${m.media}`)
-      .join(", ")}
-    - Todas as notas: ${notasAluno.map((n) => n.nota).join(", ")}
-
-    Forneça uma análise educacional personalizada em português com insights sobre pontos fortes, áreas de melhoria e recomendações.
-    `;
+    const prompt = buildAlunoPrompt({
+      mediaGeral,
+      percentualAprovacao,
+      mediasPorMateria: mediasPorMateria
+        .map((m) => `${m.materia}: ${m.media}`)
+        .join(", "),
+      todasNotas: notasAluno.map((n) => n.nota).join(", "),
+    });
 
     const aiComment = await generateAIAnalysis(prompt);
+    const formattedComment = formatAiResponse(aiComment);
 
     let classificacao = "Regular";
     if (parseFloat(mediaGeral) >= 8) classificacao = "Excelente";
@@ -129,7 +129,7 @@ export const buildAlunoAiAnalysis = async (alunoId) => {
 
     return {
       summary: `Análise do aluno: ${classificacao}.`,
-      comment: aiComment,
+      comment: formattedComment,
     };
   } catch (error) {
     console.error("Erro na análise do aluno:", error);
