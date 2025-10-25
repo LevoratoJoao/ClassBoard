@@ -1,58 +1,62 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import logo from "../assets/images/logo.png";
 import fundoLogin from "../assets/images/fundoLogin.png";
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.username || !formData.password) {
-      setErrors({ general: "Username e senha são obrigatórios" });
+    if (!formData.username || !formData.password || !formData.confirmPassword) {
+      setErrors({ general: "Todos os campos são obrigatórios" });
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrors({ general: "Senhas não coincidem" });
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password);
-      navigate("/inicial");
-    } catch (error) {
-      setErrors({
-        general: "Credenciais inválidas. Tente novamente.",
+      const response = await fetch("http://localhost:8000/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
       });
+
+      if (response.ok) {
+        navigate("/login");
+      } else {
+        const error = await response.json();
+        setErrors({ general: error.detail || "Erro ao registrar usuário" });
+      }
+    } catch (error) {
+      setErrors({ general: "Erro de conexão. Tente novamente." });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleBackToLanding = () => {
-    navigate("/");
   };
 
   return (
@@ -62,7 +66,7 @@ const Login = () => {
     >
       <div className="login-container">
         <div className="login-header">
-          <button className="back-button" onClick={handleBackToLanding}>
+          <button className="back-button" onClick={() => navigate("/")}>
             ←
           </button>
           <div className="login-logo">
@@ -71,7 +75,7 @@ const Login = () => {
         </div>
 
         <div className="login-form-container">
-          <h2>Faça o Login</h2>
+          <h2>Criar Conta</h2>
 
           {errors.general && (
             <div className="error-message general-error">{errors.general}</div>
@@ -104,24 +108,31 @@ const Login = () => {
               />
             </div>
 
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirmar Senha</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirme sua senha"
+                disabled={isLoading}
+              />
+            </div>
+
             <button
               type="submit"
               className="btn-login-submit"
               disabled={isLoading}
             >
-              {isLoading ? "Entrando..." : "Entrar"}
+              {isLoading ? "Criando..." : "Criar Conta"}
             </button>
           </form>
 
           <div className="login-demo">
-            <h4>Use as Credenciais de Demonstração:</h4>
             <p>
-              <strong>Username:</strong> admin
-              <br />
-              <strong>Senha:</strong> admin123
-            </p>
-            <p>
-              Não tem uma conta? <Link to="/register">Criar conta</Link>
+              Já tem uma conta? <Link to="/login">Faça login</Link>
             </p>
           </div>
         </div>
@@ -130,4 +141,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
