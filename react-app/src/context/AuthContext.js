@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authService } from "../services/authService";
 
 const AuthContext = createContext();
 
@@ -15,30 +16,34 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("classboard_user");
-    if (storedUser) {
+    const initAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser));
+        const currentUser = await authService.getCurrentUser();
+        setUser(currentUser);
       } catch (error) {
-        console.error("Erro ao carregar usuário do localStorage:", error);
-        localStorage.removeItem("classboard_user");
+        console.error("Erro ao verificar autenticação:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
-  const login = (userData) => {
+  const login = async (username, password) => {
+    const tokenData = await authService.login(username, password);
+    const userData = await authService.getCurrentUser();
     setUser(userData);
-    localStorage.setItem("classboard_user", JSON.stringify(userData));
+    return userData;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
-    localStorage.removeItem("classboard_user");
   };
 
   const isAuthenticated = () => {
-    return user !== null;
+    return user !== null && authService.isAuthenticated();
   };
 
   const value = {

@@ -25,7 +25,6 @@ def get_user(username: str):
         return users_db[username]
 
 def authenticate_user(username: str, password: str):
-    print(username, password)
     user = get_user(username)
     if not user or not verify_password(password, user.hashed_password):
         return False

@@ -8,7 +8,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [errors, setErrors] = useState({});
@@ -29,60 +29,22 @@ const Login = () => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = "Email é obrigatório";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email inválido";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Senha é obrigatória";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres";
-    }
-
-    return newErrors;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!formData.username || !formData.password) {
+      setErrors({ general: "Username e senha são obrigatórios" });
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Simular autenticação (você pode substituir por uma API real)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Credenciais de demo
-      if (
-        formData.email === "admin@classboard.com" &&
-        formData.password === "admin123"
-      ) {
-        login({
-          id: 1,
-          name: "Administrador",
-          email: formData.email,
-          role: "admin",
-        });
-        navigate("/inicial");
-      } else {
-        setErrors({
-          general:
-            "Credenciais inválidas. Use: admin@classboard.com / admin123",
-        });
-      }
+      await login(formData.username, formData.password);
+      navigate("/inicial");
     } catch (error) {
       setErrors({
-        general: "Erro ao fazer login. Tente novamente.",
+        general: "Credenciais inválidas. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -117,20 +79,16 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="login-form">
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="username">Username</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
-                className={errors.email ? "error" : ""}
-                placeholder="Digite seu email"
+                placeholder="Digite seu username"
                 disabled={isLoading}
               />
-              {errors.email && (
-                <span className="error-message">{errors.email}</span>
-              )}
             </div>
 
             <div className="form-group">
@@ -141,13 +99,9 @@ const Login = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={errors.password ? "error" : ""}
                 placeholder="Digite sua senha"
                 disabled={isLoading}
               />
-              {errors.password && (
-                <span className="error-message">{errors.password}</span>
-              )}
             </div>
 
             <button
@@ -162,7 +116,7 @@ const Login = () => {
           <div className="login-demo">
             <h4>Use as Credenciais de Demonstração:</h4>
             <p>
-              <strong>Email:</strong> admin@classboard.com
+              <strong>Username:</strong> admin
               <br />
               <strong>Senha:</strong> admin123
             </p>
