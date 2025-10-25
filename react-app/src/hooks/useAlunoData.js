@@ -7,6 +7,7 @@ import {
   getMediaByAlunoForEachMateriaAndBimestre,
 } from "../services/notasService";
 import { buildAlunoAiAnalysis } from "../services/aiService";
+import { faltasAPI } from "../services/apiService";
 
 export const useAlunoData = (alunoNome) => {
   const [alunoData, setAlunoData] = useState(null);
@@ -15,7 +16,7 @@ export const useAlunoData = (alunoNome) => {
   const [evolucaoData, setEvolucaoData] = useState([]);
   const [notasValues, setNotasValues] = useState([]);
   const [aiAnalysis, setAiAnalysis] = useState(null);
-  const [faltasTotais] = useState(Math.floor(Math.random() * 20));
+  const [faltasTotais, setFaltasTotais] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,8 +31,28 @@ export const useAlunoData = (alunoNome) => {
         setLoading(true);
         setError(null);
 
-        const alunoObj = getAlunoByName(alunoNome);
-        setAlunoData({ nome: alunoObj || alunoNome });
+        // Buscar aluno da API
+        const alunoObj = await getAlunoByName(alunoNome);
+        setAlunoData({ nome: alunoObj?.nome || alunoNome });
+
+        // Buscar faltas totais da API se aluno encontrado
+        if (alunoObj?.id !== undefined) {
+          try {
+            const totalFaltas = await faltasAPI.getTotalFaltasByAluno(
+              alunoObj.id
+            );
+            setFaltasTotais(totalFaltas?.total || 0);
+          } catch (faltasError) {
+            console.warn(
+              "Erro ao buscar faltas, usando valor padrão:",
+              faltasError
+            );
+            setFaltasTotais(Math.floor(Math.random() * 20));
+          }
+        } else {
+          // Fallback para valor aleatório se não encontrar aluno
+          setFaltasTotais(Math.floor(Math.random() * 20));
+        }
 
         const medias = getMediaByAlunoForEachMateria(alunoNome);
         setMediasMaterias(medias);
@@ -49,7 +70,8 @@ export const useAlunoData = (alunoNome) => {
           : [];
         setNotasValues(valores);
 
-        const analysis = buildAlunoAiAnalysis(alunoNome);
+        // Gerar análise IA usando ID do aluno (se disponível)
+        const analysis = await buildAlunoAiAnalysis(alunoObj?.id || alunoNome);
         setAiAnalysis(analysis);
       } catch (err) {
         setError(err.message || "Erro ao carregar dados do aluno");

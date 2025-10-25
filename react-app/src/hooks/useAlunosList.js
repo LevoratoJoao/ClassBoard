@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { alunos } from "../data/alunos";
+import { getAllAlunos } from "../services/alunosService";
 import {
   getMediaByAlunoForEachMateria,
   getMediaForEachAluno,
@@ -18,12 +18,15 @@ export const useAlunosList = () => {
         setLoading(true);
         setError(null);
 
+        // Buscar alunos da API
+        const alunos = await getAllAlunos();
+
         const mediasAlunos = getMediaForEachAluno();
         const alunosOrdenados = [...mediasAlunos].sort(
           (a, b) => b.media - a.media
         );
 
-        const alunosEnriquecidos = alunos.map((aluno) => {
+        const alunosEnriquecidos = alunos.map((aluno, index) => {
           const mediaAluno = mediasAlunos.find(
             (m) =>
               m.aluno
@@ -67,6 +70,7 @@ export const useAlunosList = () => {
 
           return {
             ...aluno,
+            id: index, // Adicionar ID baseado no índice
             media: media && !isNaN(media) ? Number(media).toFixed(2) : "0.00",
             ranking,
             totalAlunos,

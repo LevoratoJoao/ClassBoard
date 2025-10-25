@@ -30,3 +30,8 @@ class Aluno(BaseModel):
     nome: str
     sexo: str
     notas: List[Nota] = []
+
+class Falta(BaseModel):
+    data: str
+    materia: Materia
+    tipo: str
