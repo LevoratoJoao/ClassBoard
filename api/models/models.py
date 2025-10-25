@@ -27,6 +27,7 @@ class Nota(BaseModel):
     nota: int
 
 class Aluno(BaseModel):
+    id: int = None
     nome: str
     sexo: str
     notas: List[Nota] = []

@@ -61,7 +61,18 @@ export const buildMateriaAiAnalysis = async (materia) => {
 
 export const buildAlunoAiAnalysis = async (alunoId) => {
     try {
-        const notasAluno = await notasAPI.getNotasByAluno(alunoId);
+        // Se alunoId é um nome (string) em vez de número, buscar o aluno primeiro
+        let finalAlunoId = alunoId;
+        if (isNaN(alunoId)) {
+            // É um nome, não um ID
+            console.warn("aiService recebeu nome em vez de ID:", alunoId);
+            return {
+                summary: "Dados indisponíveis para análise",
+                comment: "Não foi possível analisar os dados do aluno no momento."
+            };
+        }
+
+        const notasAluno = await notasAPI.getNotasByAluno(finalAlunoId);
 
         if (notasAluno.length === 0) {
             return {

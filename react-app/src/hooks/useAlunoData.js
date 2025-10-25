@@ -71,8 +71,15 @@ export const useAlunoData = (alunoNome) => {
         setNotasValues(valores);
 
         // Gerar análise IA usando ID do aluno (se disponível)
-        const analysis = await buildAlunoAiAnalysis(alunoObj?.id || alunoNome);
-        setAiAnalysis(analysis);
+        if (alunoObj?.id !== undefined && alunoObj?.id !== null) {
+          const analysis = await buildAlunoAiAnalysis(alunoObj.id);
+          setAiAnalysis(analysis);
+        } else {
+          setAiAnalysis({
+            summary: "Análise indisponível",
+            comment: "Dados do aluno não encontrados para análise."
+          });
+        }
       } catch (err) {
         setError(err.message || "Erro ao carregar dados do aluno");
         console.error("Erro no useAlunoData:", err);
