@@ -77,7 +77,7 @@ export const useAlunoData = (alunoNome) => {
         } else {
           setAiAnalysis({
             summary: "Análise indisponível",
-            comment: "Dados do aluno não encontrados para análise."
+            comment: "Dados do aluno não encontrados para análise.",
           });
         }
       } catch (err) {
