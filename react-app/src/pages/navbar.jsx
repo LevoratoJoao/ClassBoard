@@ -21,8 +21,11 @@ const Navbar = ({ currentMateria }) => {
     type: "success",
   });
 
+  // Verifica se usuário está autenticado
   const isAuthenticated = !!user;
   const logoTo = isAuthenticated ? "/inicial" : "/";
+
+  // Controla visibilidade dos botões baseado na rota atual
   const showUploadNotaButton = location.pathname.includes("/materia/");
   const showUploadAlunoButton = location.pathname === "/alunos";
 
@@ -43,8 +46,10 @@ const Navbar = ({ currentMateria }) => {
     setShowAlunoModal(true);
   };
 
+  // Processa envio de múltiplas notas
   const handleNotaModalSubmit = async (notasData) => {
     try {
+      // Cria promessas para todas as notas
       const promises = notasData.map((formData) =>
         fetch("http://localhost:8000/notas", {
           method: "POST",
@@ -56,12 +61,14 @@ const Navbar = ({ currentMateria }) => {
         })
       );
 
+      // Aguarda todas as requisições
       const responses = await Promise.all(promises);
       const allSuccessful = responses.every((response) => response.ok);
 
       if (allSuccessful) {
         showToast(`${notasData.length} notas adicionadas com sucesso!`);
         setShowNotaModal(false);
+        window.location.reload(); // Recarrega para mostrar novas notas
       } else {
         showToast("Erro ao adicionar algumas notas", "error");
       }
@@ -70,6 +77,7 @@ const Navbar = ({ currentMateria }) => {
     }
   };
 
+  // Processa envio de novo aluno
   const handleAlunoModalSubmit = async (formData) => {
     try {
       const response = await fetch("http://localhost:8000/alunos", {
@@ -84,7 +92,7 @@ const Navbar = ({ currentMateria }) => {
       if (response.ok) {
         showToast("Aluno adicionado com sucesso!");
         setShowAlunoModal(false);
-        window.location.reload();
+        window.location.reload(); // Recarrega para mostrar novo aluno
       } else {
         showToast("Erro ao adicionar aluno", "error");
       }
@@ -97,10 +105,12 @@ const Navbar = ({ currentMateria }) => {
     <>
       <nav className="navbar bg-body-tertiary navbar-expand-lg py-2">
         <div className="container-fluid">
+          {/* Logo com link dinâmico */}
           <Link to={logoTo} className="navbar-brand">
             <img src={logo} alt="Logo" style={{ height: "50px" }} />
           </Link>
 
+          {/* Menu de navegação principal */}
           <ul className="nav nav-fill fs-5">
             <li className="nav-item">
               <Link
@@ -132,7 +142,9 @@ const Navbar = ({ currentMateria }) => {
             </li>
           </ul>
 
+          {/* Botões de ação contextuais */}
           <div className="d-flex align-items-center">
+            {/* Botão de upload de notas - só aparece em páginas de matéria */}
             {showUploadNotaButton && (
               <button
                 type="button"
@@ -152,6 +164,7 @@ const Navbar = ({ currentMateria }) => {
                 Upload
               </button>
             )}
+            {/* Botão de adicionar aluno - só aparece na página de alunos */}
             {showUploadAlunoButton && (
               <button
                 type="button"
@@ -171,6 +184,7 @@ const Navbar = ({ currentMateria }) => {
                 Adicionar Aluno
               </button>
             )}
+            {/* Botão de logout */}
             <button
               type="button"
               className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
@@ -192,6 +206,7 @@ const Navbar = ({ currentMateria }) => {
         </div>
       </nav>
 
+      {/* Modais condicionais */}
       {showUploadNotaButton && (
         <BulkUploadNotaModal
           show={showNotaModal}
@@ -209,6 +224,7 @@ const Navbar = ({ currentMateria }) => {
         />
       )}
 
+      {/* Toast para feedback */}
       <Toast
         show={toast.show}
         message={toast.message}

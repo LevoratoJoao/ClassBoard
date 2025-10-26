@@ -14,6 +14,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
+  // Atualiza dados do formulário e limpa erros
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -32,6 +33,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validação básica dos campos obrigatórios
     if (!formData.username || !formData.password) {
       setErrors({ general: "Username e senha são obrigatórios" });
       return;
@@ -40,8 +42,9 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Tenta fazer login usando contexto de autenticação
       await login(formData.username, formData.password);
-      navigate("/inicial");
+      navigate("/inicial"); // Redireciona para página inicial
     } catch (error) {
       setErrors({
         general: "Credenciais inválidas. Tente novamente.",
@@ -62,6 +65,7 @@ const Login = () => {
     >
       <div className="login-container">
         <div className="login-header">
+          {/* Botão de voltar para página inicial */}
           <button className="back-button" onClick={handleBackToLanding}>
             ←
           </button>
@@ -73,6 +77,7 @@ const Login = () => {
         <div className="login-form-container">
           <h2>Faça o Login</h2>
 
+          {/* Exibe mensagens de erro */}
           {errors.general && (
             <div className="error-message general-error">{errors.general}</div>
           )}
@@ -104,6 +109,7 @@ const Login = () => {
               />
             </div>
 
+            {/* Botão com estado de loading */}
             <button
               type="submit"
               className="btn-login-submit"
@@ -113,6 +119,7 @@ const Login = () => {
             </button>
           </form>
 
+          {/* Seção de demonstração com credenciais */}
           <div className="login-demo">
             <h4>Use as Credenciais de Demonstração:</h4>
             <p>

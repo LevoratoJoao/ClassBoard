@@ -8,6 +8,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
   const [loading, setLoading] = useState(false);
   const API_BASE_URL = "http://localhost:8000";
 
+  // Carrega dados quando modal é aberto
   useEffect(() => {
     if (show) {
       fetchAvaliacoes();
@@ -15,6 +16,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
     }
   }, [show]);
 
+  // Busca avaliações disponíveis, filtrando por matéria se especificada
   const fetchAvaliacoes = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/avaliacoes`, {
@@ -24,6 +26,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
       });
       if (response.ok) {
         const data = await response.json();
+        // Filtra por matéria padrão se fornecida
         const filtered = defaultMateria
           ? data.filter((av) => av.materia === defaultMateria)
           : data;
@@ -34,6 +37,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
     }
   };
 
+  // Busca lista de alunos
   const fetchAlunos = async () => {
     setLoading(true);
     try {
@@ -45,7 +49,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
       if (response.ok) {
         const data = await response.json();
         setAlunos(data);
-        setNotas({});
+        setNotas({}); // Limpa notas ao carregar novos alunos
       }
     } catch (error) {
       console.error("Erro ao buscar alunos:", error);
@@ -54,35 +58,41 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
     }
   };
 
+  // Limpa notas quando avaliação é alterada
   const handleAvaliacaoChange = (e) => {
     setSelectedAvaliacao(e.target.value);
     setNotas({});
   };
 
+  // Atualiza nota de um aluno específico
   const handleNotaChange = (alunoNome, nota) => {
     setNotas((prev) => ({ ...prev, [alunoNome]: nota }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Encontra objeto da avaliação selecionada
     const avaliacao = avaliacoes.find(
       (av) => av.id === parseInt(selectedAvaliacao)
     );
     if (!avaliacao) return;
 
+    // Filtra apenas notas preenchidas e formata dados
     const notasData = Object.entries(notas)
       .filter(([_, nota]) => nota !== "" && nota !== undefined)
       .map(([alunoNome, nota]) => ({
         aluno_nome: alunoNome,
-        avaliacao_id: avaliacao.id, // Use existing evaluation ID
+        avaliacao_id: avaliacao.id,
         nota: parseFloat(nota),
       }));
 
     onSubmit(notasData);
+    // Limpa formulário após envio
     setSelectedAvaliacao("");
     setNotas({});
   };
 
+  // Objeto da avaliação selecionada para exibição
   const selectedAvaliacaoObj = avaliacoes.find(
     (av) => av.id === parseInt(selectedAvaliacao)
   );
@@ -103,6 +113,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
           </div>
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
+              {/* Seletor de avaliação */}
               <div className="mb-3">
                 <label className="form-label">Selecione a Avaliação</label>
                 <select
@@ -121,6 +132,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
                 </select>
               </div>
 
+              {/* Exibe detalhes da avaliação selecionada */}
               {selectedAvaliacaoObj && (
                 <div className="alert alert-info">
                   <strong>Avaliação selecionada:</strong>{" "}
@@ -129,6 +141,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
                 </div>
               )}
 
+              {/* Tabela de notas por aluno */}
               {selectedAvaliacao && (
                 <div
                   className="table-responsive"
@@ -153,6 +166,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
                           <tr key={aluno.id}>
                             <td>{aluno.nome}</td>
                             <td>
+                              {/* Input para nota individual */}
                               <input
                                 type="number"
                                 className="form-control"
