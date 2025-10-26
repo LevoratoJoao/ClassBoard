@@ -100,21 +100,33 @@ export const useAlunoData = (alunoNome) => {
         });
         setMediaTurma(mediasTurmaMaterias);
 
-        // Processar dados de evolução (por avaliação)
-        const evolucaoNotas = {};
+        // Processar dados de evolução (por matéria ao longo do tempo)
+        const materiaEvolucao = {};
         notasAluno.forEach((nota) => {
-          const avaliacao = nota.avaliacao.nome;
           const materia = nota.avaliacao.materia;
-          if (!evolucaoNotas[avaliacao]) evolucaoNotas[avaliacao] = {};
-          evolucaoNotas[avaliacao][materia] = nota.nota;
+          const bimestre = nota.avaliacao.bimestre;
+
+          if (!materiaEvolucao[materia]) {
+            materiaEvolucao[materia] = { materia, notas: {} };
+          }
+
+          // Acumular notas por bimestre
+          if (!materiaEvolucao[materia].notas[bimestre]) {
+            materiaEvolucao[materia].notas[bimestre] = [];
+          }
+          materiaEvolucao[materia].notas[bimestre].push(nota.nota);
         });
 
-        const evolucaoArray = Object.entries(evolucaoNotas).map(
-          ([avaliacao, materias]) => ({
-            avaliacao,
-            ...materias,
-          })
-        );
+        // Calcular média por bimestre
+        Object.values(materiaEvolucao).forEach((materia) => {
+          Object.keys(materia.notas).forEach((bimestre) => {
+            const notas = materia.notas[bimestre];
+            materia.notas[bimestre] =
+              notas.reduce((a, b) => a + b, 0) / notas.length;
+          });
+        });
+
+        const evolucaoArray = Object.values(materiaEvolucao);
         setEvolucaoData(evolucaoArray);
 
         // Extrair valores das notas
@@ -202,20 +214,32 @@ export const useAlunoData = (alunoNome) => {
         setMediaTurma(mediasTurmaMaterias);
 
         // Recalcular evolução
-        const evolucaoNotas = {};
+        const materiaEvolucao = {};
         notasAluno.forEach((nota) => {
-          const avaliacao = nota.avaliacao.nome;
           const materia = nota.avaliacao.materia;
-          if (!evolucaoNotas[avaliacao]) evolucaoNotas[avaliacao] = {};
-          evolucaoNotas[avaliacao][materia] = nota.nota;
+          const bimestre = nota.avaliacao.bimestre;
+
+          if (!materiaEvolucao[materia]) {
+            materiaEvolucao[materia] = { materia, notas: {} };
+          }
+
+          // Acumular notas por bimestre
+          if (!materiaEvolucao[materia].notas[bimestre]) {
+            materiaEvolucao[materia].notas[bimestre] = [];
+          }
+          materiaEvolucao[materia].notas[bimestre].push(nota.nota);
         });
 
-        const evolucaoArray = Object.entries(evolucaoNotas).map(
-          ([avaliacao, materias]) => ({
-            avaliacao,
-            ...materias,
-          })
-        );
+        // Calcular média por bimestre
+        Object.values(materiaEvolucao).forEach((materia) => {
+          Object.keys(materia.notas).forEach((bimestre) => {
+            const notas = materia.notas[bimestre];
+            materia.notas[bimestre] =
+              notas.reduce((a, b) => a + b, 0) / notas.length;
+          });
+        });
+
+        const evolucaoArray = Object.values(materiaEvolucao);
         setEvolucaoData(evolucaoArray);
 
         // Recalcular valores das notas
