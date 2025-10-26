@@ -50,6 +50,11 @@ export const useAlunoData = (alunoNome) => {
         // Buscar todas as notas para calcular médias da turma
         const todasNotas = await notasAPI.getAllNotas();
 
+        // Obter todas as matérias existentes na base de dados
+        const todasMaterias = [
+          ...new Set(todasNotas.map((nota) => nota.avaliacao.materia)),
+        ];
+
         // Calcular médias por matéria do aluno
         const materias = {};
         notasAluno.forEach((nota) => {
@@ -58,15 +63,23 @@ export const useAlunoData = (alunoNome) => {
           materias[materia].push(nota.nota);
         });
 
+        // Incluir TODAS as matérias, mesmo aquelas sem notas para o aluno
         const mediasAlunoMaterias = {};
-        Object.entries(materias).forEach(([materia, notas]) => {
-          mediasAlunoMaterias[materia] = (
-            notas.reduce((a, b) => a + b, 0) / notas.length
-          ).toFixed(2);
+        todasMaterias.forEach((materia) => {
+          if (materias[materia]) {
+            // Aluno tem notas nesta matéria
+            mediasAlunoMaterias[materia] = (
+              materias[materia].reduce((a, b) => a + b, 0) /
+              materias[materia].length
+            ).toFixed(2);
+          } else {
+            // Aluno não tem notas nesta matéria
+            mediasAlunoMaterias[materia] = "0.00";
+          }
         });
         setMediasMaterias(mediasAlunoMaterias);
 
-        // Calcular médias da turma por matéria
+        // Calcular médias da turma por matéria (para TODAS as matérias)
         const materiasTurma = {};
         todasNotas.forEach((nota) => {
           const materia = nota.avaliacao.materia;
@@ -75,10 +88,15 @@ export const useAlunoData = (alunoNome) => {
         });
 
         const mediasTurmaMaterias = {};
-        Object.entries(materiasTurma).forEach(([materia, notas]) => {
-          mediasTurmaMaterias[materia] = (
-            notas.reduce((a, b) => a + b, 0) / notas.length
-          ).toFixed(2);
+        todasMaterias.forEach((materia) => {
+          if (materiasTurma[materia]) {
+            mediasTurmaMaterias[materia] = (
+              materiasTurma[materia].reduce((a, b) => a + b, 0) /
+              materiasTurma[materia].length
+            ).toFixed(2);
+          } else {
+            mediasTurmaMaterias[materia] = "0.00";
+          }
         });
         setMediaTurma(mediasTurmaMaterias);
 
@@ -135,6 +153,11 @@ export const useAlunoData = (alunoNome) => {
         const notasAluno = await notasAPI.getNotasByAluno(alunoData.id);
         const todasNotas = await notasAPI.getAllNotas();
 
+        // Obter todas as matérias existentes
+        const todasMaterias = [
+          ...new Set(todasNotas.map((nota) => nota.avaliacao.materia)),
+        ];
+
         // Recalcular médias
         const materias = {};
         notasAluno.forEach((nota) => {
@@ -143,15 +166,21 @@ export const useAlunoData = (alunoNome) => {
           materias[materia].push(nota.nota);
         });
 
+        // Incluir TODAS as matérias
         const mediasAlunoMaterias = {};
-        Object.entries(materias).forEach(([materia, notas]) => {
-          mediasAlunoMaterias[materia] = (
-            notas.reduce((a, b) => a + b, 0) / notas.length
-          ).toFixed(2);
+        todasMaterias.forEach((materia) => {
+          if (materias[materia]) {
+            mediasAlunoMaterias[materia] = (
+              materias[materia].reduce((a, b) => a + b, 0) /
+              materias[materia].length
+            ).toFixed(2);
+          } else {
+            mediasAlunoMaterias[materia] = "0.00";
+          }
         });
         setMediasMaterias(mediasAlunoMaterias);
 
-        // Recalcular médias da turma
+        // Recalcular médias da turma (para TODAS as matérias)
         const materiasTurma = {};
         todasNotas.forEach((nota) => {
           const materia = nota.avaliacao.materia;
@@ -160,10 +189,15 @@ export const useAlunoData = (alunoNome) => {
         });
 
         const mediasTurmaMaterias = {};
-        Object.entries(materiasTurma).forEach(([materia, notas]) => {
-          mediasTurmaMaterias[materia] = (
-            notas.reduce((a, b) => a + b, 0) / notas.length
-          ).toFixed(2);
+        todasMaterias.forEach((materia) => {
+          if (materiasTurma[materia]) {
+            mediasTurmaMaterias[materia] = (
+              materiasTurma[materia].reduce((a, b) => a + b, 0) /
+              materiasTurma[materia].length
+            ).toFixed(2);
+          } else {
+            mediasTurmaMaterias[materia] = "0.00";
+          }
         });
         setMediaTurma(mediasTurmaMaterias);
 
