@@ -15,10 +15,28 @@ const MateriaDetails = () => {
   const { materia } = useParams();
   const [filters, setFilters] = useState({ bimestre: "All", tipo: "All" });
   const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [aiLoading, setAiLoading] = useState(true);
 
   useEffect(() => {
-    const analysis = buildMateriaAiAnalysis(materia);
-    setAiAnalysis(analysis);
+    let isCancelled = false;
+
+    const loadAnalysis = async () => {
+      if (!materia) return;
+
+      setAiLoading(true);
+      const analysis = await buildMateriaAiAnalysis(materia);
+
+      if (!isCancelled) {
+        setAiAnalysis(analysis);
+        setAiLoading(false);
+      }
+    };
+
+    loadAnalysis();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [materia]);
 
   const handleFiltersChange = (newFilters) => {
@@ -35,7 +53,7 @@ const MateriaDetails = () => {
   return (
     <>
       <div className="bg-fundo"></div>
-      <Navbar />
+      <Navbar currentMateria={materia} />
 
       <div className="container mt-4 mb-5">
         <h1 className="mb-4 text-center">
@@ -87,18 +105,38 @@ const MateriaDetails = () => {
               </div>
             </div>
 
-            {aiAnalysis && (
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Análise da IA</h5>
-                  <div className="mt-3">{aiAnalysis.summary}</div>
-                  <div
-                    className="mt-3"
-                    dangerouslySetInnerHTML={{ __html: aiAnalysis.comment }}
-                  />
-                </div>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">Análise da IA</h5>
+                {aiLoading ? (
+                  <div className="mt-3">
+                    <div className="placeholder-glow">
+                      <span className="placeholder col-8"></span>
+                    </div>
+                    <div className="placeholder-glow mt-2">
+                      <span className="placeholder col-12"></span>
+                      <span className="placeholder col-10 mt-1"></span>
+                      <span className="placeholder col-9 mt-1"></span>
+                    </div>
+                    <div className="placeholder-glow mt-3">
+                      <span className="placeholder col-11"></span>
+                      <span className="placeholder col-8 mt-1"></span>
+                      <span className="placeholder col-10 mt-1"></span>
+                    </div>
+                  </div>
+                ) : aiAnalysis ? (
+                  <>
+                    <div className="mt-3">{aiAnalysis.summary}</div>
+                    <div
+                      className="mt-3"
+                      dangerouslySetInnerHTML={{ __html: aiAnalysis.comment }}
+                    />
+                  </>
+                ) : (
+                  <div className="mt-3 text-muted">Análise não disponível</div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

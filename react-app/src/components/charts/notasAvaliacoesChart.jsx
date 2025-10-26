@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -9,9 +10,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import {
-  getMediaAvaliacaoByMateriaForEachTipoAndBimestre,
-} from "../../services/notasService";
+import { notasAPI } from "../../services/apiService";
+import { calcMedia } from "../../services/notasService";
 
 ChartJS.register(
   CategoryScale,
@@ -23,51 +23,64 @@ ChartJS.register(
   Legend
 );
 
-const EvolucaoNotasChart = ({
+const NotasAvaliacoesChart = ({
   materia,
-  chartType = "ALL_NOTES",
   tipo = "",
   bimestre = "",
   label = "Média da notas por Avaliação",
 }) => {
-  let tiposToShow = ["Prova", "Trabalho"];
-  let bimestresToShow = [1, 2, 3];
+  const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (tipo && tipo !== "All") {
-    tiposToShow = [tipo];
-  }
-  if (bimestre && bimestre !== "All") {
-    bimestresToShow = [Number(bimestre)];
-  }
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
 
-  const datasets = tiposToShow.map((tipoItem, idx) => {
-    const data = bimestresToShow.map((bimestreItem) => {
-      const mediasObj = getMediaAvaliacaoByMateriaForEachTipoAndBimestre(
-        materia,
-        tipoItem,
-        bimestreItem
+      const tiposToShow =
+        tipo && tipo !== "All" ? [tipo] : ["Prova", "Trabalho"];
+      const bimestresToShow =
+        bimestre && bimestre !== "All" ? [Number(bimestre)] : [1, 2, 3, 4];
+
+      const datasets = await Promise.all(
+        tiposToShow.map(async (tipoItem, idx) => {
+          const data = await Promise.all(
+            bimestresToShow.map(async (bimestreItem) => {
+              const result = await notasAPI.filterNotas(
+                materia,
+                tipoItem,
+                bimestreItem
+              );
+              const notaValues = result.map((item) => item.nota);
+
+              const media = calcMedia(notaValues);
+              return media;
+            })
+          );
+
+          return {
+            label: tipoItem,
+            data,
+            borderColor: idx === 0 ? "#3A6EA5" : "#F7931E",
+            borderWidth: 2,
+            tension: 0.4,
+            pointBackgroundColor: idx === 0 ? "#3A6EA5" : "#F7931E",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+          };
+        })
       );
-      const key = `Bimestre ${bimestreItem}`;
-      return mediasObj[key] !== undefined ? Number(mediasObj[key]) : null;
-    });
-    return {
-      label: tipoItem,
-      data,
-      borderColor: idx === 0 ? "#3A6EA5" : "#F7931E",
-      borderWidth: 2,
-      tension: 0.4,
-      pointBackgroundColor: idx === 0 ? "#3A6EA5" : "#F7931E",
-      pointBorderColor: "#ffffff",
-      pointBorderWidth: 2,
-      pointRadius: 6,
-      pointHoverRadius: 8,
-    };
-  });
 
-  const data = {
-    labels: bimestresToShow.map((b) => `Bimestre ${b}`),
-    datasets,
-  };
+      setChartData({
+        labels: bimestresToShow.map((b) => `Bimestre ${b}`),
+        datasets,
+      });
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [materia, tipo, bimestre]);
 
   const options = {
     responsive: true,
@@ -97,18 +110,20 @@ const EvolucaoNotasChart = ({
         },
       },
     },
-    width: 800,
-    height: 400,
   };
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
 
   return (
     <div className="mb-4 d-flex flex-column align-items-center">
       <h6>Média das Notas por Avaliação</h6>
       <div style={{ width: "700px", height: "400px" }}>
-        <Line data={data} options={options} />
+        <Line data={chartData} options={options} />
       </div>
     </div>
   );
 };
 
-export default EvolucaoNotasChart;
+export default NotasAvaliacoesChart;

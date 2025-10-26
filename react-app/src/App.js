@@ -12,6 +12,7 @@ import AlunoListagem from "./pages/alunoListagem";
 import AlunoDetails from "./pages/alunoDetails";
 import Inicial from "./pages/inicial";
 import TurmaDetails from "./pages/turmaDetails";
+import Register from "./pages/register";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
             <Route
               path="/inicial"
