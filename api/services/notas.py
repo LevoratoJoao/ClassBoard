@@ -97,8 +97,8 @@ def find_avaliacao_by_id(avaliacao_id: int) -> Any:
 def find_student_entry_by_aluno_id(aluno_id: int) -> Any:
     for entry in notas_por_aluno:
         if entry["aluno_id"] == aluno_id:
-            student_entry = entry
-            break
+            return entry
+    return None
 
 def find_existing_nota(student_entry, avaliacao) -> Any:
     for nota in student_entry["notas"]:
