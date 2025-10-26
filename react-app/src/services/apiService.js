@@ -43,31 +43,52 @@ export const apiService = {
 };
 
 export const notasAPI = {
-    getAllNotas: () => apiService.get('/notas'),
+  getAllNotas: () => apiService.get("/notas"),
 
-    filterNotas: (materia, tipo, bimestre, aluno_id) => {
-        const params = new URLSearchParams();
-        if (materia) params.append("materia", materia);
-        if (tipo && tipo !== "All") params.append("tipo", tipo);
-        if (bimestre && bimestre !== "All") params.append("bimestre", bimestre);
-        if (aluno_id) params.append("aluno_id", aluno_id);
+  filterNotas: (materia, tipo, bimestre, aluno_id) => {
+    const params = new URLSearchParams();
+    if (materia) params.append("materia", materia);
+    if (tipo && tipo !== "All") params.append("tipo", tipo);
+    if (bimestre && bimestre !== "All") params.append("bimestre", bimestre);
+    if (aluno_id) params.append("aluno_id", aluno_id);
 
-        return apiService.get(`/notas/filter?${params}`);
-    },
+    return apiService.get(`/notas/filter?${params}`);
+  },
 
-    getNotasByAluno: (aluno_id) =>
-        apiService.get(`/notas/${aluno_id}`)
+  getNotasByAluno: (aluno_id) => apiService.get(`/notas/${aluno_id}`),
 };
 
 export const avaliacoesAPI = {
-    getAllAvaliacoes: () => apiService.get('/avaliacoes'),
+  getAllAvaliacoes: () => apiService.get("/avaliacoes"),
 
-    filterAvaliacoes: (materia, tipo, bimestre) => {
-        const params = new URLSearchParams();
-        if (materia) params.append("materia", materia);
-        if (tipo && tipo !== "All") params.append("tipo", tipo);
-        if (bimestre && bimestre !== "All") params.append("bimestre", bimestre);
+  filterAvaliacoes: (materia, tipo, bimestre) => {
+    const params = new URLSearchParams();
+    if (materia) params.append("materia", materia);
+    if (tipo && tipo !== "All") params.append("tipo", tipo);
+    if (bimestre && bimestre !== "All") params.append("bimestre", bimestre);
 
-        return apiService.get(`/avaliacoes/filter?${params}`);
-    }
+    return apiService.get(`/avaliacoes/filter?${params}`);
+  },
+};
+
+export const alunosAPI = {
+  getAllAlunos: () => apiService.get("/alunos"),
+
+  getAlunoById: (aluno_id) => apiService.get(`/alunos/${aluno_id}`),
+
+  filterAlunos: (sexo) => {
+    const params = new URLSearchParams();
+    if (sexo && sexo !== "All") params.append("sexo", sexo);
+
+    return apiService.get(`/alunos/filter?${params}`);
+  },
+};
+
+export const faltasAPI = {
+  getAllFaltas: () => apiService.get("/faltas"),
+
+  getFaltasByAluno: (aluno_id) => apiService.get(`/faltas/${aluno_id}`),
+
+  getTotalFaltasByAluno: (aluno_id) =>
+    apiService.get(`/faltas/${aluno_id}/total`),
 };

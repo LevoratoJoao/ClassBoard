@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getMediaForEachAluno } from "../services/notasService";
+import { alunosAPI, notasAPI } from "../services/apiService";
 
 export const useRanking = (alunoNome) => {
   const [ranking, setRanking] = useState("");
@@ -17,7 +17,7 @@ export const useRanking = (alunoNome) => {
       .trim();
   }, []);
 
-  const calcularRanking = useCallback(() => {
+  const calcularRanking = useCallback(async () => {
     if (!alunoNome) {
       setLoading(false);
       return;
@@ -26,14 +26,34 @@ export const useRanking = (alunoNome) => {
     try {
       setLoading(true);
 
-      const mediasAlunos = getMediaForEachAluno();
+      // Buscar alunos e notas da API
+      const alunos = await alunosAPI.getAllAlunos();
+      const todasNotas = await notasAPI.getAllNotas();
 
-      if (!mediasAlunos || mediasAlunos.length === 0) {
+      if (!alunos || alunos.length === 0) {
         setRanking("Dados não disponíveis");
         setLoading(false);
         return;
       }
 
+      // Calcular médias por aluno usando dados da API
+      const mediasAlunos = alunos.map((aluno) => {
+        const notasAluno = todasNotas.filter(
+          (nota) => nota.aluno_id === aluno.id
+        );
+        const media =
+          notasAluno.length > 0
+            ? notasAluno.reduce((sum, nota) => sum + nota.nota, 0) /
+              notasAluno.length
+            : 0;
+        return {
+          aluno: aluno.nome,
+          media: media,
+          id: aluno.id,
+        };
+      });
+
+      // Ordenar por média
       const alunosOrdenados = [...mediasAlunos].sort(
         (a, b) => b.media - a.media
       );
@@ -60,7 +80,7 @@ export const useRanking = (alunoNome) => {
       } else {
         setRanking("Aluno não encontrado");
         setPosicao(null);
-        setTotalAlunos(mediasAlunos.length);
+        setTotalAlunos(alunos.length);
         setPercentil(null);
         setMediaAluno(null);
       }
@@ -76,9 +96,32 @@ export const useRanking = (alunoNome) => {
     calcularRanking();
   }, [calcularRanking]);
 
-  const getDadosCompletos = useCallback(() => {
-    const mediasAlunos = getMediaForEachAluno();
-    return [...mediasAlunos].sort((a, b) => b.media - a.media);
+  const getDadosCompletos = useCallback(async () => {
+    try {
+      const alunos = await alunosAPI.getAllAlunos();
+      const todasNotas = await notasAPI.getAllNotas();
+
+      const mediasAlunos = alunos.map((aluno) => {
+        const notasAluno = todasNotas.filter(
+          (nota) => nota.aluno_id === aluno.id
+        );
+        const media =
+          notasAluno.length > 0
+            ? notasAluno.reduce((sum, nota) => sum + nota.nota, 0) /
+              notasAluno.length
+            : 0;
+        return {
+          aluno: aluno.nome,
+          media: media,
+          id: aluno.id,
+        };
+      });
+
+      return [...mediasAlunos].sort((a, b) => b.media - a.media);
+    } catch (error) {
+      console.error("Erro ao buscar dados completos:", error);
+      return [];
+    }
   }, []);
 
   return {

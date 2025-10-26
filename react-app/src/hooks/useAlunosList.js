@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import { alunos } from "../data/alunos";
-import {
-  getMediaByAlunoForEachMateria,
-  getMediaForEachAluno,
-} from "../services/notasService";
+import { alunosAPI, notasAPI } from "../services/apiService";
 
 export const useAlunosList = () => {
   const [alunosData, setAlunosData] = useState([]);
@@ -18,60 +14,55 @@ export const useAlunosList = () => {
         setLoading(true);
         setError(null);
 
-        const mediasAlunos = getMediaForEachAluno();
-        const alunosOrdenados = [...mediasAlunos].sort(
-          (a, b) => b.media - a.media
+        // Buscar alunos da API
+        const alunos = await alunosAPI.getAllAlunos();
+
+        // Buscar todas as notas da API
+        const todasNotas = await notasAPI.getAllNotas();
+
+        // Calcular médias por aluno baseado nas notas da API
+        const mediasAlunos = {};
+        alunos.forEach((aluno) => {
+          const notasAluno = todasNotas.filter(
+            (nota) => nota.aluno_id === aluno.id
+          );
+          if (notasAluno.length > 0) {
+            const media =
+              notasAluno.reduce((sum, nota) => sum + nota.nota, 0) /
+              notasAluno.length;
+            mediasAlunos[aluno.id] = media;
+          } else {
+            mediasAlunos[aluno.id] = 0;
+          }
+        });
+
+        // Ordenar alunos por média para ranking
+        const alunosOrdenadosPorMedia = [...alunos].sort(
+          (a, b) => (mediasAlunos[b.id] || 0) - (mediasAlunos[a.id] || 0)
         );
 
+        // Enriquecer dados dos alunos
         const alunosEnriquecidos = alunos.map((aluno) => {
-          const mediaAluno = mediasAlunos.find(
-            (m) =>
-              m.aluno
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/\p{Diacritic}/gu, "") ===
-              aluno.nome
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/\p{Diacritic}/gu, "")
-          );
-
-          const posicaoRanking = alunosOrdenados.findIndex(
-            (a) =>
-              a.aluno
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/\p{Diacritic}/gu, "") ===
-              aluno.nome
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/\p{Diacritic}/gu, "")
-          );
-
-          const media =
-            mediaAluno && typeof mediaAluno.media === "number"
-              ? mediaAluno.media
-              : 0;
-          const ranking = posicaoRanking >= 0 ? posicaoRanking + 1 : null;
-          const totalAlunos = alunosOrdenados.length;
+          const media = mediasAlunos[aluno.id] || 0;
+          const ranking =
+            alunosOrdenadosPorMedia.findIndex((a) => a.id === aluno.id) + 1;
+          const totalAlunos = alunos.length;
 
           let corRanking = "#6c757d";
-          if (ranking && totalAlunos) {
-            const percentualTop = (ranking / totalAlunos) * 100;
-            if (percentualTop <= 10) corRanking = "#28a745";
-            else if (percentualTop <= 25) corRanking = "#20c997";
-            else if (percentualTop <= 50) corRanking = "#ffc107";
-            else if (percentualTop <= 75) corRanking = "#fd7e14";
-            else corRanking = "#dc3545";
-          }
+          const percentualTop = (ranking / totalAlunos) * 100;
+          if (percentualTop <= 10) corRanking = "#28a745";
+          else if (percentualTop <= 25) corRanking = "#20c997";
+          else if (percentualTop <= 50) corRanking = "#ffc107";
+          else if (percentualTop <= 75) corRanking = "#fd7e14";
+          else corRanking = "#dc3545";
 
           return {
             ...aluno,
-            media: media && !isNaN(media) ? Number(media).toFixed(2) : "0.00",
+            media: media.toFixed(2),
             ranking,
             totalAlunos,
             corRanking,
-            rankingTexto: ranking ? `${ranking}º de ${totalAlunos}` : "N/A",
+            rankingTexto: `${ranking}º de ${totalAlunos}`,
           };
         });
 
