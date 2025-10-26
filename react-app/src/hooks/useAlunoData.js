@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
-import { getAlunoByName } from "../services/alunosService";
-import {
-  getNotasByAluno,
-  getMediaByAlunoForEachMateria,
-  getMediaAvaliacaoForEachMateria,
-  getMediaByAlunoForEachMateriaAndBimestre,
-} from "../services/notasService";
+import { alunosAPI, notasAPI, faltasAPI } from "../services/apiService";
 import { buildAlunoAiAnalysis } from "../services/aiService";
-import { faltasAPI } from "../services/apiService";
 
 export const useAlunoData = (alunoNome) => {
   const [alunoData, setAlunoData] = useState(null);
@@ -31,55 +24,99 @@ export const useAlunoData = (alunoNome) => {
         setLoading(true);
         setError(null);
 
-        // Buscar aluno da API
-        const alunoObj = await getAlunoByName(alunoNome);
-        setAlunoData({ nome: alunoObj?.nome || alunoNome });
+        // Buscar aluno da API pelo nome
+        const alunos = await alunosAPI.getAllAlunos();
+        const alunoObj = alunos.find(
+          (a) =>
+            a.nome
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/\p{Diacritic}/gu, "") ===
+            alunoNome
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/\p{Diacritic}/gu, "")
+        );
 
-        // Buscar faltas totais da API se aluno encontrado
-        if (alunoObj?.id !== undefined) {
-          try {
-            const totalFaltas = await faltasAPI.getTotalFaltasByAluno(
-              alunoObj.id
-            );
-            setFaltasTotais(totalFaltas?.total || 0);
-          } catch (faltasError) {
-            console.warn(
-              "Erro ao buscar faltas, usando valor padrão:",
-              faltasError
-            );
-            setFaltasTotais(Math.floor(Math.random() * 20));
-          }
-        } else {
-          // Fallback para valor aleatório se não encontrar aluno
-          setFaltasTotais(Math.floor(Math.random() * 20));
+        if (!alunoObj) {
+          throw new Error("Aluno não encontrado");
         }
 
-        const medias = getMediaByAlunoForEachMateria(alunoNome);
-        setMediasMaterias(medias);
+        setAlunoData(alunoObj);
 
-        const mediaTurmaData = getMediaAvaliacaoForEachMateria();
-        setMediaTurma(mediaTurmaData);
+        // Buscar notas do aluno da API
+        const notasAluno = await notasAPI.getNotasByAluno(alunoObj.id);
 
-        const evolucaoNotasData =
-          getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
-        setEvolucaoData(evolucaoNotasData);
+        // Buscar todas as notas para calcular médias da turma
+        const todasNotas = await notasAPI.getAllNotas();
 
-        const notasAluno = getNotasByAluno(alunoNome);
-        const valores = notasAluno?.notas
-          ? notasAluno.notas.map((obj) => obj.nota)
-          : [];
+        // Calcular médias por matéria do aluno
+        const materias = {};
+        notasAluno.forEach((nota) => {
+          const materia = nota.avaliacao.materia;
+          if (!materias[materia]) materias[materia] = [];
+          materias[materia].push(nota.nota);
+        });
+
+        const mediasAlunoMaterias = {};
+        Object.entries(materias).forEach(([materia, notas]) => {
+          mediasAlunoMaterias[materia] = (
+            notas.reduce((a, b) => a + b, 0) / notas.length
+          ).toFixed(2);
+        });
+        setMediasMaterias(mediasAlunoMaterias);
+
+        // Calcular médias da turma por matéria
+        const materiasTurma = {};
+        todasNotas.forEach((nota) => {
+          const materia = nota.avaliacao.materia;
+          if (!materiasTurma[materia]) materiasTurma[materia] = [];
+          materiasTurma[materia].push(nota.nota);
+        });
+
+        const mediasTurmaMaterias = {};
+        Object.entries(materiasTurma).forEach(([materia, notas]) => {
+          mediasTurmaMaterias[materia] = (
+            notas.reduce((a, b) => a + b, 0) / notas.length
+          ).toFixed(2);
+        });
+        setMediaTurma(mediasTurmaMaterias);
+
+        // Processar dados de evolução (por avaliação)
+        const evolucaoNotas = {};
+        notasAluno.forEach((nota) => {
+          const avaliacao = nota.avaliacao.nome;
+          const materia = nota.avaliacao.materia;
+          if (!evolucaoNotas[avaliacao]) evolucaoNotas[avaliacao] = {};
+          evolucaoNotas[avaliacao][materia] = nota.nota;
+        });
+
+        const evolucaoArray = Object.entries(evolucaoNotas).map(
+          ([avaliacao, materias]) => ({
+            avaliacao,
+            ...materias,
+          })
+        );
+        setEvolucaoData(evolucaoArray);
+
+        // Extrair valores das notas
+        const valores = notasAluno.map((nota) => nota.nota);
         setNotasValues(valores);
 
-        // Gerar análise IA usando ID do aluno (se disponível)
-        if (alunoObj?.id !== undefined && alunoObj?.id !== null) {
-          const analysis = await buildAlunoAiAnalysis(alunoObj.id);
-          setAiAnalysis(analysis);
-        } else {
-          setAiAnalysis({
-            summary: "Análise indisponível",
-            comment: "Dados do aluno não encontrados para análise.",
-          });
+        // Buscar faltas totais da API
+        try {
+          const totalFaltas = await faltasAPI.getTotalFaltasByAluno(
+            alunoObj.id
+          );
+          setFaltasTotais(totalFaltas?.total || 0);
+        } catch (faltasError) {
+          console.warn("Erro ao buscar faltas:", faltasError);
+          setFaltasTotais(0);
         }
+
+        // Gerar análise IA usando dados da API
+        const analysis = await buildAlunoAiAnalysis(alunoObj.id);
+        setAiAnalysis(analysis);
       } catch (err) {
         setError(err.message || "Erro ao carregar dados do aluno");
         console.error("Erro no useAlunoData:", err);
@@ -91,23 +128,68 @@ export const useAlunoData = (alunoNome) => {
     loadAlunoData();
   }, [alunoNome]);
 
-  const refetchData = () => {
-    if (alunoNome) {
-      const medias = getMediaByAlunoForEachMateria(alunoNome);
-      setMediasMaterias(medias);
+  const refetchData = async () => {
+    if (alunoData?.id) {
+      try {
+        // Recarregar dados da API
+        const notasAluno = await notasAPI.getNotasByAluno(alunoData.id);
+        const todasNotas = await notasAPI.getAllNotas();
 
-      const mediaTurmaData = getMediaAvaliacaoForEachMateria();
-      setMediaTurma(mediaTurmaData);
+        // Recalcular médias
+        const materias = {};
+        notasAluno.forEach((nota) => {
+          const materia = nota.avaliacao.materia;
+          if (!materias[materia]) materias[materia] = [];
+          materias[materia].push(nota.nota);
+        });
 
-      const evolucaoNotasData =
-        getMediaByAlunoForEachMateriaAndBimestre(alunoNome);
-      setEvolucaoData(evolucaoNotasData);
+        const mediasAlunoMaterias = {};
+        Object.entries(materias).forEach(([materia, notas]) => {
+          mediasAlunoMaterias[materia] = (
+            notas.reduce((a, b) => a + b, 0) / notas.length
+          ).toFixed(2);
+        });
+        setMediasMaterias(mediasAlunoMaterias);
 
-      const notasAluno = getNotasByAluno(alunoNome);
-      const valores = notasAluno?.notas
-        ? notasAluno.notas.map((obj) => obj.nota)
-        : [];
-      setNotasValues(valores);
+        // Recalcular médias da turma
+        const materiasTurma = {};
+        todasNotas.forEach((nota) => {
+          const materia = nota.avaliacao.materia;
+          if (!materiasTurma[materia]) materiasTurma[materia] = [];
+          materiasTurma[materia].push(nota.nota);
+        });
+
+        const mediasTurmaMaterias = {};
+        Object.entries(materiasTurma).forEach(([materia, notas]) => {
+          mediasTurmaMaterias[materia] = (
+            notas.reduce((a, b) => a + b, 0) / notas.length
+          ).toFixed(2);
+        });
+        setMediaTurma(mediasTurmaMaterias);
+
+        // Recalcular evolução
+        const evolucaoNotas = {};
+        notasAluno.forEach((nota) => {
+          const avaliacao = nota.avaliacao.nome;
+          const materia = nota.avaliacao.materia;
+          if (!evolucaoNotas[avaliacao]) evolucaoNotas[avaliacao] = {};
+          evolucaoNotas[avaliacao][materia] = nota.nota;
+        });
+
+        const evolucaoArray = Object.entries(evolucaoNotas).map(
+          ([avaliacao, materias]) => ({
+            avaliacao,
+            ...materias,
+          })
+        );
+        setEvolucaoData(evolucaoArray);
+
+        // Recalcular valores das notas
+        const valores = notasAluno.map((nota) => nota.nota);
+        setNotasValues(valores);
+      } catch (err) {
+        console.error("Erro ao recarregar dados:", err);
+      }
     }
   };
 

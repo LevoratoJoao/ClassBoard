@@ -10,19 +10,26 @@ const RankMateria = ({ materia }) => {
     const calcularRankingMateria = async () => {
       try {
         setLoading(true);
+
+        // Buscar todas as notas de todas as matérias usando o mesmo método
         const allNotas = await notasAPI.getAllNotas();
 
         const materias = [...new Set(allNotas.map((n) => n.avaliacao.materia))];
-        const mediasMaterias = materias.map((mat) => {
-          const notasMateria = allNotas.filter(
-            (n) => n.avaliacao.materia === mat
-          );
-          const media = (
-            notasMateria.reduce((sum, n) => sum + n.nota, 0) /
-            notasMateria.length
-          ).toFixed(2);
-          return { materia: mat, media: parseFloat(media) };
-        });
+
+        // Calcular médias por matéria usando o mesmo método que os outros componentes
+        const mediasMaterias = await Promise.all(
+          materias.map(async (mat) => {
+            const notasMateria = await notasAPI.filterNotas(mat);
+            const media =
+              notasMateria.length > 0
+                ? (
+                    notasMateria.reduce((sum, n) => sum + n.nota, 0) /
+                    notasMateria.length
+                  ).toFixed(2)
+                : 0;
+            return { materia: mat, media: parseFloat(media) };
+          })
+        );
 
         mediasMaterias.sort((a, b) => b.media - a.media);
         const ranking = mediasMaterias.map((item, index) => ({

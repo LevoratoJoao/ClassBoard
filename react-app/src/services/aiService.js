@@ -24,14 +24,20 @@ const generateAIAnalysis = async (prompt) => {
 
 export const buildMateriaAiAnalysis = async (materia) => {
   try {
-    const allNotas = await notasAPI.getAllNotas();
-    const notasMateria = allNotas.filter(
-      (n) => n.avaliacao.materia === materia
-    );
+    // Usar o mesmo método que os componentes das tabelas usam
+    const notasMateria = await notasAPI.filterNotas(materia);
+
+    if (!notasMateria || notasMateria.length === 0) {
+      return {
+        summary: `Análise de ${materia}: Sem dados disponíveis`,
+        comment: "Não há notas suficientes para gerar uma análise.",
+      };
+    }
 
     const mediaGeral = (
       notasMateria.reduce((sum, n) => sum + n.nota, 0) / notasMateria.length
     ).toFixed(2);
+
     const totalAlunos = new Set(notasMateria.map((n) => n.aluno_id)).size;
     const alunosAprovados = notasMateria.filter((n) => n.nota >= 6).length;
     const percentualAprovacao = (
@@ -70,18 +76,16 @@ export const buildMateriaAiAnalysis = async (materia) => {
 
 export const buildAlunoAiAnalysis = async (alunoId) => {
   try {
-    // Se alunoId é um nome (string) em vez de número, buscar o aluno primeiro
-    let finalAlunoId = alunoId;
-    if (isNaN(alunoId)) {
-      // É um nome, não um ID
-      console.warn("aiService recebeu nome em vez de ID:", alunoId);
+    // Verificar se é um ID válido
+    if (isNaN(alunoId) || alunoId === null || alunoId === undefined) {
+      console.warn("aiService recebeu ID inválido:", alunoId);
       return {
         summary: "Dados indisponíveis para análise",
         comment: "Não foi possível analisar os dados do aluno no momento.",
       };
     }
 
-    const notasAluno = await notasAPI.getNotasByAluno(finalAlunoId);
+    const notasAluno = await notasAPI.getNotasByAluno(alunoId);
 
     if (notasAluno.length === 0) {
       return {
@@ -93,6 +97,7 @@ export const buildAlunoAiAnalysis = async (alunoId) => {
     const mediaGeral = (
       notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length
     ).toFixed(2);
+
     const aprovadas = notasAluno.filter((n) => n.nota >= 6).length;
     const percentualAprovacao = ((aprovadas / notasAluno.length) * 100).toFixed(
       1
@@ -104,18 +109,24 @@ export const buildAlunoAiAnalysis = async (alunoId) => {
       materias[n.avaliacao.materia].push(n.nota);
     });
 
-    const mediasPorMateria = Object.entries(materias).map(([mat, notas]) => ({
-      materia: mat,
-      media: (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(2),
-    }));
+    const mediasPorMateriaArray = Object.entries(materias).map(
+      ([mat, notas]) => ({
+        materia: mat,
+        media: (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(2),
+      })
+    );
+
+    const mediasPorMateria = mediasPorMateriaArray
+      .map((m) => `${m.materia}: ${m.media}`)
+      .join(", ");
+
+    const todasNotas = notasAluno.map((n) => n.nota).join(", ");
 
     const prompt = buildAlunoPrompt({
       mediaGeral,
       percentualAprovacao,
-      mediasPorMateria: mediasPorMateria
-        .map((m) => `${m.materia}: ${m.media}`)
-        .join(", "),
-      todasNotas: notasAluno.map((n) => n.nota).join(", "),
+      mediasPorMateria,
+      todasNotas,
     });
 
     const aiComment = await generateAIAnalysis(prompt);
