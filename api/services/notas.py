@@ -61,20 +61,29 @@ def filter_notas(**criteria) -> List[Nota]:
 
     return filtered_notas
 
-def create_nota(nota_data):
-    # Find aluno by name
-    aluno_entry = None
+def create_or_update_nota(nota_data):
+    """
+    Creates or updates a nota for a given aluno based on the provided data.
+    """
     aluno_id = None
-
     for i, aluno in enumerate(alunos):
         if aluno.nome == nota_data.aluno_nome:
-            aluno_id = i + 1
+            aluno_id = i
             break
 
     if aluno_id is None:
         raise ValueError(f"Aluno '{nota_data.aluno_nome}' não encontrado")
 
-    # Find or create student entry in notas_por_aluno
+    from data.avaliacoes import avaliacoes
+    avaliacao = None
+    for av in avaliacoes:
+        if av.id == nota_data.avaliacao_id:
+            avaliacao = av
+            break
+
+    if avaliacao is None:
+        raise ValueError(f"Avaliação com ID {nota_data.avaliacao_id} não encontrada")
+
     student_entry = None
     for entry in notas_por_aluno:
         if entry["aluno_id"] == aluno_id:
@@ -85,18 +94,20 @@ def create_nota(nota_data):
         student_entry = {"aluno_id": aluno_id, "notas": []}
         notas_por_aluno.append(student_entry)
 
-    # Create new nota
-    new_avaliacao = Avaliacao(
-        id=len(student_entry["notas"]) + 1,
-        materia=nota_data.materia,
-        tipo=nota_data.tipo,
-        bimestre=nota_data.bimestre
-    )
+    existing_nota = None
+    for nota in student_entry["notas"]:
+        if nota.avaliacao.id == avaliacao.id:
+            existing_nota = nota
+            break
 
-    new_nota = Nota(
-        avaliacao=new_avaliacao,
-        nota=int(nota_data.nota)
-    )
+    if existing_nota:
+        existing_nota.nota = int(nota_data.nota)
+        return existing_nota
+    else:
+        new_nota = Nota(
+            avaliacao=avaliacao,
+            nota=int(nota_data.nota)
+        )
+        student_entry["notas"].append(new_nota)
+        return new_nota
 
-    student_entry["notas"].append(new_nota)
-    return new_nota

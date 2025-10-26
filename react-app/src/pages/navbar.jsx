@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import UploadNotaModal from "../components/UploadNotaModal";
 import UploadAlunoModal from "../components/UploadAlunoModal";
 import Toast from "../components/Toast";
 import logo from "../assets/images/logo.png";
 import graficoIcon from "../assets/images/grafico.webp";
 import saidaIcon from "../assets/images/saida.webp";
 import { handleDownloadRelatorio } from "../utils/handleDownloadRelatorio";
+import BulkUploadNotaModal from "../components/BulkUploadNotaModal";
 
 const Navbar = ({ currentMateria }) => {
   const { user, logout } = useAuth();
@@ -43,23 +43,27 @@ const Navbar = ({ currentMateria }) => {
     setShowAlunoModal(true);
   };
 
-  const handleNotaModalSubmit = async (formData) => {
+  const handleNotaModalSubmit = async (notasData) => {
     try {
-      const response = await fetch("http://localhost:8000/notas", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const promises = notasData.map((formData) =>
+        fetch("http://localhost:8000/notas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          body: JSON.stringify(formData),
+        })
+      );
 
-      if (response.ok) {
-        showToast("Nota adicionada com sucesso!");
+      const responses = await Promise.all(promises);
+      const allSuccessful = responses.every((response) => response.ok);
+
+      if (allSuccessful) {
+        showToast(`${notasData.length} notas adicionadas com sucesso!`);
         setShowNotaModal(false);
-        window.location.reload();
       } else {
-        showToast("Erro ao adicionar nota", "error");
+        showToast("Erro ao adicionar algumas notas", "error");
       }
     } catch (error) {
       showToast("Erro de conexão", "error");
@@ -189,7 +193,7 @@ const Navbar = ({ currentMateria }) => {
       </nav>
 
       {showUploadNotaButton && (
-        <UploadNotaModal
+        <BulkUploadNotaModal
           show={showNotaModal}
           onClose={() => setShowNotaModal(false)}
           onSubmit={handleNotaModalSubmit}
