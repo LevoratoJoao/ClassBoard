@@ -357,9 +357,8 @@ const LandingPage = () => {
               </div>
               <div className="faq-answer">
                 <p>
-                  Você pode importar notas através do nosso modelo de planilha
-                  Excel. Nossa interface intuitiva torna o processo rápido e
-                  simples.
+                  Você pode importar notas através do upload dinâmico. Nossa
+                  interface intuitiva torna o processo rápido e simples.
                 </p>
               </div>
             </div>
