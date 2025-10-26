@@ -21,7 +21,6 @@ const AlunoDetails = () => {
   const [filterLoading, setFilterLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [aiLoading, setAiLoading] = useState(true);
-  const [notasDetalhadas, setNotasDetalhadas] = useState([]);
 
   // Hooks
   const { filters, applyFilters } = useAlunoFilters(alunoNome);
@@ -31,6 +30,7 @@ const AlunoDetails = () => {
     mediaTurma,
     evolucaoData,
     notasValues,
+    notasDetalhadas,
     faltasTotais,
     loading: dataLoading,
     error,
@@ -38,6 +38,7 @@ const AlunoDetails = () => {
     setMediaTurma,
     setEvolucaoData,
     setNotasValues,
+    setNotasDetalhadas,
   } = useAlunoData(alunoNome);
   const { ranking, loading: rankingLoading } = useRanking(alunoNome);
 

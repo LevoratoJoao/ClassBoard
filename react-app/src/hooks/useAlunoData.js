@@ -7,6 +7,7 @@ export const useAlunoData = (alunoNome) => {
   const [mediaTurma, setMediaTurma] = useState({});
   const [evolucaoData, setEvolucaoData] = useState([]);
   const [notasValues, setNotasValues] = useState([]);
+  const [notasDetalhadas, setNotasDetalhadas] = useState([]);
   const [faltasTotais, setFaltasTotais] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -131,6 +132,16 @@ export const useAlunoData = (alunoNome) => {
         const valores = notasAluno.map((nota) => nota.nota);
         setNotasValues(valores);
 
+        // Extrair notas detalhadas para o gráfico individual
+        const detalhadas = notasAluno.map((nota) => ({
+          materia: nota.avaliacao.materia,
+          nota: nota.nota,
+          tipo: nota.avaliacao.tipo,
+          bimestre: nota.avaliacao.bimestre,
+          avaliacao: `${nota.avaliacao.tipo} ${nota.avaliacao.bimestre}º Bim`,
+        }));
+        setNotasDetalhadas(detalhadas);
+
         // Buscar faltas totais da API
         try {
           const totalFaltas = await faltasAPI.getTotalFaltasByAluno(
@@ -253,6 +264,7 @@ export const useAlunoData = (alunoNome) => {
     mediaTurma,
     evolucaoData,
     notasValues,
+    notasDetalhadas,
     faltasTotais,
 
     loading,
@@ -263,6 +275,7 @@ export const useAlunoData = (alunoNome) => {
     setMediaTurma,
     setEvolucaoData,
     setNotasValues,
+    setNotasDetalhadas,
   };
 };
 
