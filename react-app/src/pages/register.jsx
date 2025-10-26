@@ -66,7 +66,7 @@ const Register = () => {
     >
       <div className="login-container">
         <div className="login-header">
-          <button className="back-button" onClick={() => navigate("/")}>
+          <button className="back-button" onClick={() => navigate("/login")}>
             ←
           </button>
           <div className="login-logo">

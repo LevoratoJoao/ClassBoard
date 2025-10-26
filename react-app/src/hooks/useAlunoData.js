@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { alunosAPI, notasAPI, faltasAPI } from "../services/apiService";
-import { buildAlunoAiAnalysis } from "../services/aiService";
 
 export const useAlunoData = (alunoNome) => {
   const [alunoData, setAlunoData] = useState(null);
@@ -8,7 +7,6 @@ export const useAlunoData = (alunoNome) => {
   const [mediaTurma, setMediaTurma] = useState({});
   const [evolucaoData, setEvolucaoData] = useState([]);
   const [notasValues, setNotasValues] = useState([]);
-  const [aiAnalysis, setAiAnalysis] = useState(null);
   const [faltasTotais, setFaltasTotais] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -144,9 +142,7 @@ export const useAlunoData = (alunoNome) => {
           setFaltasTotais(0);
         }
 
-        // Gerar análise IA usando dados da API
-        const analysis = await buildAlunoAiAnalysis(alunoObj.id);
-        setAiAnalysis(analysis);
+        // Análise da IA agora é carregada separadamente na página
       } catch (err) {
         setError(err.message || "Erro ao carregar dados do aluno");
         console.error("Erro no useAlunoData:", err);
@@ -257,7 +253,6 @@ export const useAlunoData = (alunoNome) => {
     mediaTurma,
     evolucaoData,
     notasValues,
-    aiAnalysis,
     faltasTotais,
 
     loading,
