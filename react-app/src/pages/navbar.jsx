@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useDownload } from "../context/DownloadContext";
 import UploadAlunoModal from "../components/UploadAlunoModal";
 import Toast from "../components/Toast";
 import logo from "../assets/images/logo.png";
 import graficoIcon from "../assets/images/grafico.webp";
 import saidaIcon from "../assets/images/saida.webp";
-import { handleDownloadRelatorio } from "../utils/handleDownloadRelatorio";
 import BulkUploadNotaModal from "../components/BulkUploadNotaModal";
 
 const Navbar = ({ currentMateria }) => {
   const { user, logout } = useAuth();
+  const { startDownload } = useDownload();
   const navigate = useNavigate();
   const location = useLocation();
   const [showNotaModal, setShowNotaModal] = useState(false);
@@ -101,6 +102,11 @@ const Navbar = ({ currentMateria }) => {
     }
   };
 
+  // Função de download usando contexto global
+  const handleDownloadClick = () => {
+    startDownload();
+  };
+
   return (
     <>
       <nav className="navbar bg-body-tertiary navbar-expand-lg py-2">
@@ -134,7 +140,7 @@ const Navbar = ({ currentMateria }) => {
             <li className="nav-item ms-3">
               <button
                 className="nav-link montserrat-bold btn btn-link"
-                onClick={handleDownloadRelatorio}
+                onClick={handleDownloadClick}
                 style={{ cursor: "pointer" }}
               >
                 Relatório
