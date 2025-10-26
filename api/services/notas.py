@@ -1,5 +1,7 @@
 from typing import List, Any
 from data.notas import notas_por_aluno
+from data.alunos import alunos
+from models.models import Avaliacao
 from models.models import Nota
 
 def get_all_notas() -> List[Nota]:
@@ -58,3 +60,43 @@ def filter_notas(**criteria) -> List[Nota]:
                 filtered_notas.append(nota)
 
     return filtered_notas
+
+def create_nota(nota_data):
+    # Find aluno by name
+    aluno_entry = None
+    aluno_id = None
+
+    for i, aluno in enumerate(alunos):
+        if aluno.nome == nota_data.aluno_nome:
+            aluno_id = i + 1
+            break
+
+    if aluno_id is None:
+        raise ValueError(f"Aluno '{nota_data.aluno_nome}' não encontrado")
+
+    # Find or create student entry in notas_por_aluno
+    student_entry = None
+    for entry in notas_por_aluno:
+        if entry["aluno_id"] == aluno_id:
+            student_entry = entry
+            break
+
+    if student_entry is None:
+        student_entry = {"aluno_id": aluno_id, "notas": []}
+        notas_por_aluno.append(student_entry)
+
+    # Create new nota
+    new_avaliacao = Avaliacao(
+        id=len(student_entry["notas"]) + 1,
+        materia=nota_data.materia,
+        tipo=nota_data.tipo,
+        bimestre=nota_data.bimestre
+    )
+
+    new_nota = Nota(
+        avaliacao=new_avaliacao,
+        nota=int(nota_data.nota)
+    )
+
+    student_entry["notas"].append(new_nota)
+    return new_nota

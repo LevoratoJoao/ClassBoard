@@ -53,7 +53,7 @@ const MateriaDetails = () => {
   return (
     <>
       <div className="bg-fundo"></div>
-      <Navbar />
+      <Navbar currentMateria={materia} />
 
       <div className="container mt-4 mb-5">
         <h1 className="mb-4 text-center">
