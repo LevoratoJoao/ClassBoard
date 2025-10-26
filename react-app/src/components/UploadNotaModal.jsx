@@ -10,6 +10,7 @@ const UploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
   });
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const API_BASE_URL = "http://localhost:8000";
 
   useEffect(() => {
     if (defaultMateria) {
@@ -26,7 +27,7 @@ const UploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
   const fetchAlunos = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/alunos", {
+      const response = await fetch(`${API_BASE_URL}/alunos`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },

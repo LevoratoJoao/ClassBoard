@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import UploadNotaModal from "../components/UploadNotaModal";
+import UploadAlunoModal from "../components/UploadAlunoModal";
+import Toast from "../components/Toast";
 import logo from "../assets/images/logo.png";
 import graficoIcon from "../assets/images/grafico.webp";
 import saidaIcon from "../assets/images/saida.webp";
@@ -11,22 +13,37 @@ const Navbar = ({ currentMateria }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showModal, setShowModal] = useState(false);
+  const [showNotaModal, setShowNotaModal] = useState(false);
+  const [showAlunoModal, setShowAlunoModal] = useState(false);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
   const isAuthenticated = !!user;
   const logoTo = isAuthenticated ? "/inicial" : "/";
-  const showUploadButton = location.pathname.includes("/materia/");
+  const showUploadNotaButton = location.pathname.includes("/materia/");
+  const showUploadAlunoButton = location.pathname === "/alunos";
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+  };
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const handleUploadClick = () => {
-    setShowModal(true);
+  const handleUploadNotaClick = () => {
+    setShowNotaModal(true);
   };
 
-  const handleModalSubmit = async (formData) => {
+  const handleUploadAlunoClick = () => {
+    setShowAlunoModal(true);
+  };
+
+  const handleNotaModalSubmit = async (formData) => {
     try {
       const response = await fetch("http://localhost:8000/notas", {
         method: "POST",
@@ -38,14 +55,37 @@ const Navbar = ({ currentMateria }) => {
       });
 
       if (response.ok) {
-        alert("Nota adicionada com sucesso!");
-        setShowModal(false);
-        window.location.reload(); // Refresh to show new data
+        showToast("Nota adicionada com sucesso!");
+        setShowNotaModal(false);
+        window.location.reload();
       } else {
-        alert("Erro ao adicionar nota");
+        showToast("Erro ao adicionar nota", "error");
       }
     } catch (error) {
-      alert("Erro de conexão");
+      showToast("Erro de conexão", "error");
+    }
+  };
+
+  const handleAlunoModalSubmit = async (formData) => {
+    try {
+      const response = await fetch("http://localhost:8000/alunos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        showToast("Aluno adicionado com sucesso!");
+        setShowAlunoModal(false);
+        window.location.reload();
+      } else {
+        showToast("Erro ao adicionar aluno", "error");
+      }
+    } catch (error) {
+      showToast("Erro de conexão", "error");
     }
   };
 
@@ -89,11 +129,11 @@ const Navbar = ({ currentMateria }) => {
           </ul>
 
           <div className="d-flex align-items-center">
-            {showUploadButton && (
+            {showUploadNotaButton && (
               <button
                 type="button"
                 className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
-                onClick={handleUploadClick}
+                onClick={handleUploadNotaClick}
               >
                 <img
                   src={graficoIcon}
@@ -106,6 +146,25 @@ const Navbar = ({ currentMateria }) => {
                   }}
                 />
                 Upload
+              </button>
+            )}
+            {showUploadAlunoButton && (
+              <button
+                type="button"
+                className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
+                onClick={handleUploadAlunoClick}
+              >
+                <img
+                  src={graficoIcon}
+                  alt="Gráfico"
+                  style={{
+                    height: "32px",
+                    width: "32px",
+                    marginRight: "10px",
+                    verticalAlign: "middle",
+                  }}
+                />
+                Adicionar Aluno
               </button>
             )}
             <button
@@ -129,14 +188,29 @@ const Navbar = ({ currentMateria }) => {
         </div>
       </nav>
 
-      {showUploadButton && (
+      {showUploadNotaButton && (
         <UploadNotaModal
-          show={showModal}
-          onClose={() => setShowModal(false)}
-          onSubmit={handleModalSubmit}
+          show={showNotaModal}
+          onClose={() => setShowNotaModal(false)}
+          onSubmit={handleNotaModalSubmit}
           defaultMateria={currentMateria}
         />
       )}
+
+      {showUploadAlunoButton && (
+        <UploadAlunoModal
+          show={showAlunoModal}
+          onClose={() => setShowAlunoModal(false)}
+          onSubmit={handleAlunoModalSubmit}
+        />
+      )}
+
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </>
   );
 };

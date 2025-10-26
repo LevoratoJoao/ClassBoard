@@ -22,3 +22,14 @@ def filter_alunos(sexo: str = None):
     if sexo and sexo != "All":
         filtered = [a for a in filtered if a.sexo.lower() == sexo.lower()]
     return filtered
+
+@router.post("/alunos", response_model=Aluno)
+def create_aluno(aluno_data: dict, current_user: User = Depends(get_current_user)):
+    new_id = len(alunos)
+    new_aluno = Aluno(
+        id=new_id,
+        nome=aluno_data["nome"],
+        sexo=aluno_data["sexo"]
+    )
+    alunos.append(new_aluno)
+    return new_aluno
