@@ -34,7 +34,7 @@ const DistribuicaoNotasChart = ({ notasAluno = [] }) => {
         labels: bins.map((_, i) => i.toString()),
         datasets: [
           {
-            label: "Frequência das notas",
+            label: "Frequência das médias",
             data: bins,
             backgroundColor: gradientColors,
           },
@@ -58,7 +58,7 @@ const DistribuicaoNotasChart = ({ notasAluno = [] }) => {
 
   return (
     <div className="mb-4 d-flex flex-column align-items-center">
-      <h6>Distribuição das notas do aluno</h6>
+      <h6>Distribuição das médias por matéria</h6>
       <canvas ref={chartRef} width="400" height="400"></canvas>
     </div>
   );

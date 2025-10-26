@@ -5,6 +5,7 @@ import FilterPanelAluno from "../components/filters/filterPanelAluno";
 import ComparacaoTurmaChart from "../components/charts/comparacaoTurmaChart";
 import EvolucaoNotasChart from "../components/charts/evolucaoNotasChart";
 import DistribuicaoNotasChart from "../components/charts/distribuicaoNotasChart";
+import NotasIndividuaisChart from "../components/charts/notasIndividuaisChart";
 import { useAlunoFilters } from "../hooks/useAlunoFilters";
 import { useAlunoData } from "../hooks/useAlunoData";
 import { useRanking } from "../hooks/useRanking";
@@ -20,6 +21,7 @@ const AlunoDetails = () => {
   const [filterLoading, setFilterLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [aiLoading, setAiLoading] = useState(true);
+  const [notasDetalhadas, setNotasDetalhadas] = useState([]);
 
   // Hooks
   const { filters, applyFilters } = useAlunoFilters(alunoNome);
@@ -73,7 +75,8 @@ const AlunoDetails = () => {
         setMediasMaterias,
         setMediaTurma,
         setEvolucaoData,
-        setNotasValues
+        setNotasValues,
+        setNotasDetalhadas
       );
     } catch (error) {
       console.error("Erro ao aplicar filtros:", error);
@@ -103,18 +106,29 @@ const AlunoDetails = () => {
         </thead>
         <tbody>
           {Object.entries(mediasMaterias).map(([materia, media]) => {
-            const aprovado = media >= 6;
+            const isNA = media === "N/A";
+            const mediaNum = isNA ? 0 : parseFloat(media);
+            const aprovado = mediaNum >= 6;
+
             return (
               <tr key={materia}>
                 <td>{materia}</td>
-                <td>{media}</td>
                 <td
                   style={{
-                    color: aprovado ? "#1976d2" : "#d32f2f",
-                    fontWeight: "bold",
+                    color: isNA ? "#6c757d" : "inherit",
+                    fontStyle: isNA ? "italic" : "normal",
                   }}
                 >
-                  {aprovado ? "Aprovado" : "Reprovado"}
+                  {isNA ? "Sem dados" : media}
+                </td>
+                <td
+                  style={{
+                    color: isNA ? "#6c757d" : aprovado ? "#1976d2" : "#d32f2f",
+                    fontWeight: "bold",
+                    fontStyle: isNA ? "italic" : "normal",
+                  }}
+                >
+                  {isNA ? "N/A" : aprovado ? "Aprovado" : "Reprovado"}
                 </td>
               </tr>
             );
@@ -169,11 +183,22 @@ const AlunoDetails = () => {
               <div className="card-body">
                 <h5 className="card-title">Nota média em cada Matéria</h5>
                 <ul className="list-group">
-                  {Object.entries(mediasMaterias).map(([materia, media]) => (
-                    <li key={materia} className="list-group-item">
-                      {materia}: {media}
-                    </li>
-                  ))}
+                  {Object.entries(mediasMaterias).map(([materia, media]) => {
+                    const isNA = media === "N/A";
+                    return (
+                      <li key={materia} className="list-group-item">
+                        <span>{materia}: </span>
+                        <span
+                          style={{
+                            color: isNA ? "#6c757d" : "inherit",
+                            fontStyle: isNA ? "italic" : "normal",
+                          }}
+                        >
+                          {isNA ? "Sem dados" : media}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
@@ -261,6 +286,7 @@ const AlunoDetails = () => {
                   />
                   <EvolucaoNotasChart evolucaoData={evolucaoData} />
                   <DistribuicaoNotasChart notasAluno={notasValues} />
+                  <NotasIndividuaisChart notasDetalhadas={notasDetalhadas} />
                 </div>
               </div>
             </div>
