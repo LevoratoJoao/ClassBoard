@@ -1,5 +1,161 @@
 import { useState, useEffect } from "react";
-import { alunosAPI, notasAPI, faltasAPI } from "../services/apiService";
+import {
+  alunosAPI,
+  notasAPI,
+  faltasAPI,
+  avaliacoesAPI,
+} from "../services/apiService";
+
+// Função helper para calcular média correta considerando todas as avaliações obrigatórias
+const calcularMediaCorretaAlunoData = async (
+  notasAluno,
+  todasAvaliacoes,
+  alunoId
+) => {
+  try {
+    // Criar mapa de notas existentes
+    const notasMap = {};
+    notasAluno.forEach((nota) => {
+      notasMap[nota.avaliacao.id] = nota.nota;
+    });
+
+    // Agrupar por matéria e calcular médias
+    const mediasPorMateria = {};
+
+    todasAvaliacoes.forEach((avaliacao) => {
+      const materiaKey = avaliacao.materia;
+
+      if (!mediasPorMateria[materiaKey]) {
+        mediasPorMateria[materiaKey] = { somaNotas: 0, totalAvaliacoes: 0 };
+      }
+
+      // Usar nota existente ou 0 se não foi feita
+      const nota = notasMap[avaliacao.id] || 0;
+      mediasPorMateria[materiaKey].somaNotas += nota;
+      mediasPorMateria[materiaKey].totalAvaliacoes += 1;
+    });
+
+    // Calcular médias finais
+    const resultado = {};
+    Object.keys(mediasPorMateria).forEach((mat) => {
+      const dados = mediasPorMateria[mat];
+      if (dados.totalAvaliacoes > 0) {
+        resultado[mat] = (dados.somaNotas / dados.totalAvaliacoes).toFixed(2);
+      } else {
+        resultado[mat] = "0.00";
+      }
+    });
+
+    return resultado;
+  } catch (error) {
+    console.error("Erro ao calcular média correta:", error);
+    return {};
+  }
+};
+
+// Função para calcular evolução correta por bimestre
+const calcularEvolucaoCorreta = (notasAluno, todasAvaliacoes) => {
+  try {
+    // Criar mapa de notas existentes
+    const notasMap = {};
+    notasAluno.forEach((nota) => {
+      notasMap[nota.avaliacao.id] = nota.nota;
+    });
+
+    // Agrupar por matéria e bimestre
+    const materiaEvolucao = {};
+
+    todasAvaliacoes.forEach((avaliacao) => {
+      const materia = avaliacao.materia;
+      const bimestre = avaliacao.bimestre;
+
+      if (!materiaEvolucao[materia]) {
+        materiaEvolucao[materia] = { materia, notas: {} };
+      }
+
+      if (!materiaEvolucao[materia].notas[bimestre]) {
+        materiaEvolucao[materia].notas[bimestre] = {
+          somaNotas: 0,
+          totalAvaliacoes: 0,
+        };
+      }
+
+      // Usar nota existente ou 0 se não foi feita
+      const nota = notasMap[avaliacao.id] || 0;
+      materiaEvolucao[materia].notas[bimestre].somaNotas += nota;
+      materiaEvolucao[materia].notas[bimestre].totalAvaliacoes += 1;
+    });
+
+    // Calcular média por bimestre
+    Object.values(materiaEvolucao).forEach((materia) => {
+      Object.keys(materia.notas).forEach((bimestre) => {
+        const dados = materia.notas[bimestre];
+        if (dados.totalAvaliacoes > 0) {
+          materia.notas[bimestre] = dados.somaNotas / dados.totalAvaliacoes;
+        } else {
+          materia.notas[bimestre] = 0;
+        }
+      });
+    });
+
+    return Object.values(materiaEvolucao);
+  } catch (error) {
+    console.error("Erro ao calcular evolução correta:", error);
+    return [];
+  }
+};
+
+// Função para calcular médias da turma considerando avaliações obrigatórias
+const calcularMediaCorretaTurma = async (
+  todasNotas,
+  todasAvaliacoes,
+  todosAlunos
+) => {
+  try {
+    const mediasAlunosPorMateria = {};
+
+    // Para cada aluno, calcular sua média correta
+    for (const aluno of todosAlunos) {
+      const notasAluno = todasNotas.filter(
+        (nota) => nota.aluno_id === aluno.id
+      );
+      const mediasAluno = await calcularMediaCorretaAlunoData(
+        notasAluno,
+        todasAvaliacoes,
+        aluno.id
+      );
+
+      // Adicionar às médias da turma
+      Object.keys(mediasAluno).forEach((mat) => {
+        const media = parseFloat(mediasAluno[mat]);
+        if (!isNaN(media)) {
+          if (!mediasAlunosPorMateria[mat]) {
+            mediasAlunosPorMateria[mat] = [];
+          }
+          mediasAlunosPorMateria[mat].push(media);
+        }
+      });
+    }
+
+    // Calcular média final da turma por matéria
+    const mediasTurma = {};
+    Object.keys(mediasAlunosPorMateria).forEach((mat) => {
+      const medias = mediasAlunosPorMateria[mat];
+      if (medias.length > 0) {
+        mediasTurma[mat] = (
+          medias.reduce((a, b) => a + b, 0) / medias.length
+        ).toFixed(2);
+      } else {
+        mediasTurma[mat] = "0.00";
+      }
+    });
+
+    return mediasTurma;
+  } catch (error) {
+    console.error("Erro ao calcular média correta da turma:", error);
+    return {};
+  }
+};
 
 export const useAlunoData = (alunoNome) => {
   const [alunoData, setAlunoData] = useState(null);
@@ -43,89 +199,33 @@ export const useAlunoData = (alunoNome) => {
 
         setAlunoData(alunoObj);
 
-        // Buscar notas do aluno da API
+        // Buscar dados necessários
         const notasAluno = await notasAPI.getNotasByAluno(alunoObj.id);
-
-        // Buscar todas as notas para calcular médias da turma
         const todasNotas = await notasAPI.getAllNotas();
+        const todasAvaliacoes = await avaliacoesAPI.getAllAvaliacoes();
+        const todosAlunos = await alunosAPI.getAllAlunos();
 
-        // Obter todas as matérias existentes na base de dados
-        const todasMaterias = [
-          ...new Set(todasNotas.map((nota) => nota.avaliacao.materia)),
-        ];
-
-        // Calcular médias por matéria do aluno
-        const materias = {};
-        notasAluno.forEach((nota) => {
-          const materia = nota.avaliacao.materia;
-          if (!materias[materia]) materias[materia] = [];
-          materias[materia].push(nota.nota);
-        });
-
-        // Incluir TODAS as matérias, mesmo aquelas sem notas para o aluno
-        const mediasAlunoMaterias = {};
-        todasMaterias.forEach((materia) => {
-          if (materias[materia]) {
-            // Aluno tem notas nesta matéria
-            mediasAlunoMaterias[materia] = (
-              materias[materia].reduce((a, b) => a + b, 0) /
-              materias[materia].length
-            ).toFixed(2);
-          } else {
-            // Aluno não tem notas nesta matéria
-            mediasAlunoMaterias[materia] = "0.00";
-          }
-        });
+        // Calcular médias corretas do aluno usando a função helper
+        const mediasAlunoMaterias = await calcularMediaCorretaAlunoData(
+          notasAluno,
+          todasAvaliacoes,
+          alunoObj.id
+        );
         setMediasMaterias(mediasAlunoMaterias);
 
-        // Calcular médias da turma por matéria (para TODAS as matérias)
-        const materiasTurma = {};
-        todasNotas.forEach((nota) => {
-          const materia = nota.avaliacao.materia;
-          if (!materiasTurma[materia]) materiasTurma[materia] = [];
-          materiasTurma[materia].push(nota.nota);
-        });
-
-        const mediasTurmaMaterias = {};
-        todasMaterias.forEach((materia) => {
-          if (materiasTurma[materia]) {
-            mediasTurmaMaterias[materia] = (
-              materiasTurma[materia].reduce((a, b) => a + b, 0) /
-              materiasTurma[materia].length
-            ).toFixed(2);
-          } else {
-            mediasTurmaMaterias[materia] = "0.00";
-          }
-        });
+        // Calcular médias corretas da turma usando a função helper
+        const mediasTurmaMaterias = await calcularMediaCorretaTurma(
+          todasNotas,
+          todasAvaliacoes,
+          todosAlunos
+        );
         setMediaTurma(mediasTurmaMaterias);
 
-        // Processar dados de evolução (por matéria ao longo do tempo)
-        const materiaEvolucao = {};
-        notasAluno.forEach((nota) => {
-          const materia = nota.avaliacao.materia;
-          const bimestre = nota.avaliacao.bimestre;
-
-          if (!materiaEvolucao[materia]) {
-            materiaEvolucao[materia] = { materia, notas: {} };
-          }
-
-          // Acumular notas por bimestre
-          if (!materiaEvolucao[materia].notas[bimestre]) {
-            materiaEvolucao[materia].notas[bimestre] = [];
-          }
-          materiaEvolucao[materia].notas[bimestre].push(nota.nota);
-        });
-
-        // Calcular média por bimestre
-        Object.values(materiaEvolucao).forEach((materia) => {
-          Object.keys(materia.notas).forEach((bimestre) => {
-            const notas = materia.notas[bimestre];
-            materia.notas[bimestre] =
-              notas.reduce((a, b) => a + b, 0) / notas.length;
-          });
-        });
-
-        const evolucaoArray = Object.values(materiaEvolucao);
+        // Processar dados de evolução usando função correta
+        const evolucaoArray = calcularEvolucaoCorreta(
+          notasAluno,
+          todasAvaliacoes
+        );
         setEvolucaoData(evolucaoArray);
 
         // Extrair valores das notas
@@ -171,82 +271,30 @@ export const useAlunoData = (alunoNome) => {
         // Recarregar dados da API
         const notasAluno = await notasAPI.getNotasByAluno(alunoData.id);
         const todasNotas = await notasAPI.getAllNotas();
+        const todasAvaliacoes = await avaliacoesAPI.getAllAvaliacoes();
+        const todosAlunos = await alunosAPI.getAllAlunos();
 
-        // Obter todas as matérias existentes
-        const todasMaterias = [
-          ...new Set(todasNotas.map((nota) => nota.avaliacao.materia)),
-        ];
-
-        // Recalcular médias
-        const materias = {};
-        notasAluno.forEach((nota) => {
-          const materia = nota.avaliacao.materia;
-          if (!materias[materia]) materias[materia] = [];
-          materias[materia].push(nota.nota);
-        });
-
-        // Incluir TODAS as matérias
-        const mediasAlunoMaterias = {};
-        todasMaterias.forEach((materia) => {
-          if (materias[materia]) {
-            mediasAlunoMaterias[materia] = (
-              materias[materia].reduce((a, b) => a + b, 0) /
-              materias[materia].length
-            ).toFixed(2);
-          } else {
-            mediasAlunoMaterias[materia] = "0.00";
-          }
-        });
+        // Recalcular médias corretas do aluno
+        const mediasAlunoMaterias = await calcularMediaCorretaAlunoData(
+          notasAluno,
+          todasAvaliacoes,
+          alunoData.id
+        );
         setMediasMaterias(mediasAlunoMaterias);
 
-        // Recalcular médias da turma (para TODAS as matérias)
-        const materiasTurma = {};
-        todasNotas.forEach((nota) => {
-          const materia = nota.avaliacao.materia;
-          if (!materiasTurma[materia]) materiasTurma[materia] = [];
-          materiasTurma[materia].push(nota.nota);
-        });
-
-        const mediasTurmaMaterias = {};
-        todasMaterias.forEach((materia) => {
-          if (materiasTurma[materia]) {
-            mediasTurmaMaterias[materia] = (
-              materiasTurma[materia].reduce((a, b) => a + b, 0) /
-              materiasTurma[materia].length
-            ).toFixed(2);
-          } else {
-            mediasTurmaMaterias[materia] = "0.00";
-          }
-        });
+        // Recalcular médias corretas da turma
+        const mediasTurmaMaterias = await calcularMediaCorretaTurma(
+          todasNotas,
+          todasAvaliacoes,
+          todosAlunos
+        );
         setMediaTurma(mediasTurmaMaterias);
 
-        // Recalcular evolução
-        const materiaEvolucao = {};
-        notasAluno.forEach((nota) => {
-          const materia = nota.avaliacao.materia;
-          const bimestre = nota.avaliacao.bimestre;
-
-          if (!materiaEvolucao[materia]) {
-            materiaEvolucao[materia] = { materia, notas: {} };
-          }
-
-          // Acumular notas por bimestre
-          if (!materiaEvolucao[materia].notas[bimestre]) {
-            materiaEvolucao[materia].notas[bimestre] = [];
-          }
-          materiaEvolucao[materia].notas[bimestre].push(nota.nota);
-        });
-
-        // Calcular média por bimestre
-        Object.values(materiaEvolucao).forEach((materia) => {
-          Object.keys(materia.notas).forEach((bimestre) => {
-            const notas = materia.notas[bimestre];
-            materia.notas[bimestre] =
-              notas.reduce((a, b) => a + b, 0) / notas.length;
-          });
-        });
-
-        const evolucaoArray = Object.values(materiaEvolucao);
+        // Recalcular evolução usando função correta
+        const evolucaoArray = calcularEvolucaoCorreta(
+          notasAluno,
+          todasAvaliacoes
+        );
         setEvolucaoData(evolucaoArray);
 
         // Recalcular valores das notas

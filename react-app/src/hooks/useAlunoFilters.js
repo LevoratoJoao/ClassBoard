@@ -1,5 +1,77 @@
 import { useState, useCallback } from "react";
-import { notasAPI, alunosAPI } from "../services/apiService";
+import { notasAPI, alunosAPI, avaliacoesAPI } from "../services/apiService";
+
+// Função helper para calcular média correta considerando todas as avaliações obrigatórias
+const calcularMediaCorreta = async (
+  notasAluno,
+  materia = null,
+  bimestre = null,
+  tipo = null
+) => {
+  try {
+    // Buscar todas as avaliações do sistema
+    const todasAvaliacoes = await avaliacoesAPI.getAllAvaliacoes();
+
+    // Filtrar avaliações baseado nos critérios
+    let avaliacoesFiltradas = todasAvaliacoes;
+
+    if (materia && materia !== "All") {
+      avaliacoesFiltradas = avaliacoesFiltradas.filter(
+        (av) => av.materia === materia
+      );
+    }
+
+    if (bimestre && bimestre !== "All") {
+      avaliacoesFiltradas = avaliacoesFiltradas.filter(
+        (av) => av.bimestre === parseInt(bimestre)
+      );
+    }
+
+    if (tipo && tipo !== "All") {
+      avaliacoesFiltradas = avaliacoesFiltradas.filter(
+        (av) => av.tipo === tipo
+      );
+    }
+
+    // Criar mapa de notas existentes
+    const notasMap = {};
+    notasAluno.forEach((nota) => {
+      notasMap[nota.avaliacao.id] = nota.nota;
+    });
+
+    // Agrupar por matéria e calcular médias
+    const mediasPorMateria = {};
+
+    avaliacoesFiltradas.forEach((avaliacao) => {
+      const materiaKey = avaliacao.materia;
+
+      if (!mediasPorMateria[materiaKey]) {
+        mediasPorMateria[materiaKey] = { somaNotas: 0, totalAvaliacoes: 0 };
+      }
+
+      // Usar nota existente ou 0 se não foi feita
+      const nota = notasMap[avaliacao.id] || 0;
+      mediasPorMateria[materiaKey].somaNotas += nota;
+      mediasPorMateria[materiaKey].totalAvaliacoes += 1;
+    });
+
+    // Calcular médias finais
+    const resultado = {};
+    Object.keys(mediasPorMateria).forEach((mat) => {
+      const dados = mediasPorMateria[mat];
+      if (dados.totalAvaliacoes > 0) {
+        resultado[mat] = (dados.somaNotas / dados.totalAvaliacoes).toFixed(2);
+      } else {
+        resultado[mat] = "N/A";
+      }
+    });
+
+    return resultado;
+  } catch (error) {
+    console.error("Erro ao calcular média correta:", error);
+    return {};
+  }
+};
 
 export const useAlunoFilters = (alunoNome) => {
   const [filters, setFilters] = useState({
@@ -37,56 +109,8 @@ export const useAlunoFilters = (alunoNome) => {
         // Buscar todas as notas do aluno
         const notasAluno = await notasAPI.getNotasByAluno(alunoId);
 
-        // Buscar todas as matérias disponíveis no sistema
-        const todasNotas = await notasAPI.getAllNotas();
-        const todasMaterias = [
-          ...new Set(todasNotas.map((nota) => nota.avaliacao.materia)),
-        ];
-
-        // Aplicar filtros
-        let notasFiltradas = notasAluno;
-
-        if (materia && materia !== "All") {
-          notasFiltradas = notasFiltradas.filter(
-            (nota) => nota.avaliacao.materia === materia
-          );
-        }
-
-        if (tipo && tipo !== "All") {
-          notasFiltradas = notasFiltradas.filter(
-            (nota) => nota.avaliacao.tipo === tipo
-          );
-        }
-
-        if (bimestre && bimestre !== "All") {
-          notasFiltradas = notasFiltradas.filter(
-            (nota) => nota.avaliacao.bimestre === parseInt(bimestre)
-          );
-        }
-
-        // Calcular médias por matéria apenas das notas filtradas
-        const materias = {};
-        notasFiltradas.forEach((nota) => {
-          const mat = nota.avaliacao.materia;
-          if (!materias[mat]) materias[mat] = [];
-          materias[mat].push(nota.nota);
-        });
-
-        // Incluir TODAS as matérias do sistema, mesmo sem notas no filtro
-        const mediasMaterias = {};
-        todasMaterias.forEach((mat) => {
-          if (materias[mat]) {
-            // Matéria tem notas com esse filtro
-            mediasMaterias[mat] = (
-              materias[mat].reduce((a, b) => a + b, 0) / materias[mat].length
-            ).toFixed(2);
-          } else {
-            // Matéria não tem notas com esse filtro - marcar como sem dados
-            mediasMaterias[mat] = "N/A";
-          }
-        });
-
-        return mediasMaterias;
+        // Usar a função helper para cálculo correto
+        return await calcularMediaCorreta(notasAluno, materia, bimestre, tipo);
       } catch (error) {
         console.error("Erro ao calcular médias:", error);
         return {};
@@ -101,50 +125,43 @@ export const useAlunoFilters = (alunoNome) => {
       // Buscar todas as notas da turma
       const todasNotas = await notasAPI.getAllNotas();
 
-      // Obter todas as matérias disponíveis
-      const todasMaterias = [
-        ...new Set(todasNotas.map((nota) => nota.avaliacao.materia)),
-      ];
+      // Buscar todos os alunos
+      const todosAlunos = await alunosAPI.getAllAlunos();
 
-      // Aplicar filtros
-      let notasFiltradas = todasNotas;
+      // Calcular média correta para cada aluno e depois fazer média da turma
+      const mediasAlunosPorMateria = {};
 
-      if (materia && materia !== "All") {
-        notasFiltradas = notasFiltradas.filter(
-          (nota) => nota.avaliacao.materia === materia
+      for (const aluno of todosAlunos) {
+        const notasAluno = todasNotas.filter(
+          (nota) => nota.aluno_id === aluno.id
         );
+        const mediasAluno = await calcularMediaCorreta(
+          notasAluno,
+          materia,
+          bimestre,
+          tipo
+        );
+
+        // Adicionar às médias da turma
+        Object.keys(mediasAluno).forEach((mat) => {
+          if (mediasAluno[mat] !== "N/A") {
+            if (!mediasAlunosPorMateria[mat]) {
+              mediasAlunosPorMateria[mat] = [];
+            }
+            mediasAlunosPorMateria[mat].push(parseFloat(mediasAluno[mat]));
+          }
+        });
       }
 
-      if (tipo && tipo !== "All") {
-        notasFiltradas = notasFiltradas.filter(
-          (nota) => nota.avaliacao.tipo === tipo
-        );
-      }
-
-      if (bimestre && bimestre !== "All") {
-        notasFiltradas = notasFiltradas.filter(
-          (nota) => nota.avaliacao.bimestre === parseInt(bimestre)
-        );
-      }
-
-      // Calcular médias por matéria apenas das notas filtradas
-      const materias = {};
-      notasFiltradas.forEach((nota) => {
-        const mat = nota.avaliacao.materia;
-        if (!materias[mat]) materias[mat] = [];
-        materias[mat].push(nota.nota);
-      });
-
-      // Incluir TODAS as matérias do sistema
+      // Calcular média final da turma por matéria
       const mediasTurma = {};
-      todasMaterias.forEach((mat) => {
-        if (materias[mat]) {
-          // Matéria tem notas com esse filtro
+      Object.keys(mediasAlunosPorMateria).forEach((mat) => {
+        const medias = mediasAlunosPorMateria[mat];
+        if (medias.length > 0) {
           mediasTurma[mat] = (
-            materias[mat].reduce((a, b) => a + b, 0) / materias[mat].length
+            medias.reduce((a, b) => a + b, 0) / medias.length
           ).toFixed(2);
         } else {
-          // Matéria não tem notas com esse filtro
           mediasTurma[mat] = "N/A";
         }
       });
