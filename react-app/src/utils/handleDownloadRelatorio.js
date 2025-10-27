@@ -10,25 +10,25 @@ import cerebroIcon from "../assets/images/cerebro.webp";
 // Função específica para limpar nomes de pessoas (alunos, etc)
 const limparNome = (nome) => {
   if (!nome) return "Nome não disponível";
-  
+
   return String(nome)
-    .replace(/Ø=Ü./g, '')
-    .replace(/Ø=Ü/g, '')
-    .replace(/ÃƒÂ/g, '')
-    .replace(/[ÃØÜ]/g, '')
-    .replace(/[^\x20-\x7E\u00C0-\u00FF]/g, '') // Manter apenas ASCII + acentos latinos
-    .replace(/\s+/g, ' ') // Normalizar espaços
+    .replace(/Ø=Ü./g, "")
+    .replace(/Ø=Ü/g, "")
+    .replace(/ÃƒÂ/g, "")
+    .replace(/[ÃØÜ]/g, "")
+    .replace(/[^\x20-\x7E\u00C0-\u00FF]/g, "") // Manter apenas ASCII + acentos latinos
+    .replace(/\s+/g, " ") // Normalizar espaços
     .trim();
 };
 
 // Função para gerar análise de fallback baseada em dados estatísticos
 const gerarAnaliseFallback = (tipo, nome, dados = {}) => {
-  if (tipo === 'materia') {
+  if (tipo === "materia") {
     const { media = 0, totalAlunos = 0, percentualAprovacao = 0 } = dados;
-    
+
     let classificacao = "Regular";
     let recomendacao = "Manter acompanhamento.";
-    
+
     if (media >= 8) {
       classificacao = "Excelente";
       recomendacao = "Continuar com as estratégias atuais.";
@@ -42,17 +42,17 @@ const gerarAnaliseFallback = (tipo, nome, dados = {}) => {
       classificacao = "Necessita Atenção";
       recomendacao = "Intervenção pedagógica urgente recomendada.";
     }
-    
+
     return {
       summary: `Análise de ${nome}: ${classificacao} (Média: ${media}).`,
-      comment: `A matéria ${nome} apresenta média de ${media} pontos com ${percentualAprovacao}% de aprovação entre ${totalAlunos} alunos. ${recomendacao} O desempenho indica ${classificacao.toLowerCase()} rendimento da turma nesta disciplina.`
+      comment: `A matéria ${nome} apresenta média de ${media} pontos com ${percentualAprovacao}% de aprovação entre ${totalAlunos} alunos. ${recomendacao} O desempenho indica ${classificacao.toLowerCase()} rendimento da turma nesta disciplina.`,
     };
-  } else if (tipo === 'aluno') {
+  } else if (tipo === "aluno") {
     const { mediaGeral = 0, situacao = "Em avaliação" } = dados;
-    
+
     let status = "Regular";
     let orientacao = "Acompanhar desenvolvimento.";
-    
+
     if (mediaGeral >= 8) {
       status = "Excelente";
       orientacao = "Manter o bom desempenho e servir de exemplo.";
@@ -66,74 +66,79 @@ const gerarAnaliseFallback = (tipo, nome, dados = {}) => {
       status = "Necessita Apoio";
       orientacao = "Reforço escolar e acompanhamento próximo recomendados.";
     }
-    
+
     return {
       summary: `Análise do aluno ${nome}: ${status} (Média geral: ${mediaGeral}).`,
-      comment: `O estudante ${nome} apresenta média geral de ${mediaGeral} pontos, situação acadêmica ${situacao}. ${orientacao} O desempenho demonstra necessidade de ${status.toLowerCase()} acompanhamento pedagógico.`
+      comment: `O estudante ${nome} apresenta média geral de ${mediaGeral} pontos, situação acadêmica ${situacao}. ${orientacao} O desempenho demonstra necessidade de ${status.toLowerCase()} acompanhamento pedagógico.`,
     };
   }
-  
+
   return {
     summary: `Análise de ${nome}: Dados em processamento.`,
-    comment: "Análise detalhada será disponibilizada em breve com base nos dados coletados."
+    comment:
+      "Análise detalhada será disponibilizada em breve com base nos dados coletados.",
   };
 };
 
 // Função ultra-agressiva para limpar texto da IA
 const limparTextoIA = (texto) => {
   if (!texto) return "Análise não disponível.";
-  
+
   try {
     let textoProcessado = String(texto);
-    
+
     // ETAPA 1: Remover TODOS os caracteres problemáticos conhecidos
     textoProcessado = textoProcessado
       // Remover sequências específicas problemáticas
-      .replace(/Ø=Ü[^\s]*/g, '')
-      .replace(/Ø=Ü/g, '')
-      .replace(/ÃƒÂ[^\s]*/g, '')
-      .replace(/ÃƒÂ/g, '')
-      .replace(/Ã[^aeiou\s]/g, '') // Remove Ã seguido de qualquer coisa que não seja vogal
-      .replace(/[ÃØÜ][^\w\s]/g, '') // Remove sequências problemáticas
-      .replace(/[ÃØÜ]/g, '') // Remove os caracteres individuais
+      .replace(/Ø=Ü[^\s]*/g, "")
+      .replace(/Ø=Ü/g, "")
+      .replace(/ÃƒÂ[^\s]*/g, "")
+      .replace(/ÃƒÂ/g, "")
+      .replace(/Ã[^aeiou\s]/g, "") // Remove Ã seguido de qualquer coisa que não seja vogal
+      .replace(/[ÃØÜ][^\w\s]/g, "") // Remove sequências problemáticas
+      .replace(/[ÃØÜ]/g, "") // Remove os caracteres individuais
       // Caracteres específicos de encoding problemático
-      .replace(/â€[™œ¢"]/g, '')
-      .replace(/â€"/g, '-')
-      .replace(/[â€]/g, '')
-      
+      .replace(/â€[™œ¢"]/g, "")
+      .replace(/â€"/g, "-")
+      .replace(/[â€]/g, "");
+
     // ETAPA 2: Forçar remoção de TUDO que não é ASCII básico + acentos portugueses essenciais
-    textoProcessado = textoProcessado.replace(/[^\x20-\x7E\u00E0-\u00E9\u00EC-\u00ED\u00F2-\u00F5\u00F9-\u00FA\u00E7\u00C0-\u00C9\u00CC-\u00CD\u00D2-\u00D5\u00D9-\u00DA\u00C7]/g, '');
-    
+    textoProcessado = textoProcessado.replace(
+      /[^\x20-\x7E\u00E0-\u00E9\u00EC-\u00ED\u00F2-\u00F5\u00F9-\u00FA\u00E7\u00C0-\u00C9\u00CC-\u00CD\u00D2-\u00D5\u00D9-\u00DA\u00C7]/g,
+      ""
+    );
+
     // ETAPA 3: Limpeza de markdown e HTML
     textoProcessado = textoProcessado
-      .replace(/<[^>]*>/g, '') // Remove HTML
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove markdown bold mas mantém conteúdo
-      .replace(/\*([^*]+)\*/g, '$1') // Remove markdown italic mas mantém conteúdo
-      .replace(/#{1,6}\s*/g, '') // Remove headers markdown
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/`([^`]*)`/g, '$1') // Remove inline code, mantém conteúdo
-      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Remove links, mantém texto
-      
+      .replace(/<[^>]*>/g, "") // Remove HTML
+      .replace(/\*\*([^*]+)\*\*/g, "$1") // Remove markdown bold mas mantém conteúdo
+      .replace(/\*([^*]+)\*/g, "$1") // Remove markdown italic mas mantém conteúdo
+      .replace(/#{1,6}\s*/g, "") // Remove headers markdown
+      .replace(/```[\s\S]*?```/g, "") // Remove code blocks
+      .replace(/`([^`]*)`/g, "$1") // Remove inline code, mantém conteúdo
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1"); // Remove links, mantém texto
+
     // ETAPA 4: Normalizar espaços e quebras
     textoProcessado = textoProcessado
-      .replace(/\s{2,}/g, ' ') // Normaliza espaços múltiplos
-      .replace(/\n\s*\n/g, '\n') // Remove quebras múltiplas
-      .replace(/^\s+|\s+$/g, '') // Remove espaços do início e fim
+      .replace(/\s{2,}/g, " ") // Normaliza espaços múltiplos
+      .replace(/\n\s*\n/g, "\n") // Remove quebras múltiplas
+      .replace(/^\s+|\s+$/g, "") // Remove espaços do início e fim
       .trim();
-    
+
     // ETAPA 5: Validação final
     if (!textoProcessado || textoProcessado.length < 10) {
       return "Análise educacional não disponível para este item.";
     }
-    
+
     // ETAPA 6: Verificação de caracteres remanescentes problemáticos
     if (/[ÃØÜ]/.test(textoProcessado)) {
-      console.warn("Caracteres problemáticos ainda presentes, aplicando limpeza final");
-      textoProcessado = textoProcessado.replace(/[ÃØÜ]/g, '').trim();
+      console.warn(
+        "Caracteres problemáticos ainda presentes, aplicando limpeza final"
+      );
+      textoProcessado = textoProcessado.replace(/[ÃØÜ]/g, "").trim();
     }
-    
+
     return textoProcessado;
-    
   } catch (error) {
     console.error("Erro crítico ao processar texto da IA:", error);
     return "Erro na análise - conteúdo indisponível.";
@@ -143,32 +148,32 @@ const limparTextoIA = (texto) => {
 // Função para limpar texto de caracteres problemáticos de encoding e markdown
 const limparTexto = (texto) => {
   if (!texto) return "";
-  
+
   // Primeiro, remover TODOS os caracteres problemáticos conhecidos
   let textoLimpo = String(texto)
     .replace(/Ø=Ü./g, "") // Remove caracteres específicos problemáticos
     .replace(/Ø=Ü/g, "")
-    .replace(/ÃƒÂ/g, "") 
-    .replace(/â€™/g, "'") 
-    .replace(/â€œ/g, '"') 
-    .replace(/â€/g, '"') 
-    .replace(/â€¢/g, "•") 
-    .replace(/â€"/g, "-") 
-    .replace(/Ã§/g, "ç") 
-    .replace(/Ã£/g, "ã") 
-    .replace(/Ã¡/g, "á") 
-    .replace(/Ã©/g, "é") 
-    .replace(/Ã­/g, "í") 
-    .replace(/Ã³/g, "ó") 
-    .replace(/Ãº/g, "ú") 
-    .replace(/Ã /g, "à") 
-    .replace(/Ãª/g, "ê") 
-    .replace(/Ã´/g, "ô") 
-    .replace(/Ãµ/g, "õ") 
-    .replace(/Ã¢/g, "â") 
-    .replace(/Ã¯/g, "ï") 
-    .replace(/Ã¼/g, "ü") 
-    .replace(/Ã¶/g, "ö") 
+    .replace(/ÃƒÂ/g, "")
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€/g, '"')
+    .replace(/â€¢/g, "•")
+    .replace(/â€"/g, "-")
+    .replace(/Ã§/g, "ç")
+    .replace(/Ã£/g, "ã")
+    .replace(/Ã¡/g, "á")
+    .replace(/Ã©/g, "é")
+    .replace(/Ã­/g, "í")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãº/g, "ú")
+    .replace(/Ã /g, "à")
+    .replace(/Ãª/g, "ê")
+    .replace(/Ã´/g, "ô")
+    .replace(/Ãµ/g, "õ")
+    .replace(/Ã¢/g, "â")
+    .replace(/Ã¯/g, "ï")
+    .replace(/Ã¼/g, "ü")
+    .replace(/Ã¶/g, "ö")
     .replace(/Ã¤/g, "ä")
     // Remover qualquer sequência que pareça encoding problemático
     .replace(/[ÃØÜ][^\w\s]/g, "")
@@ -187,47 +192,179 @@ const limparTexto = (texto) => {
     .trim();
 };
 
-// Função para renderizar análise de IA com formatação melhorada
-const renderAiAnalysis = (doc, analise, x, y, maxWidth, colors = { header: [52, 152, 219], text: [44, 62, 80] }) => {
+// Função para processar e formatar texto da IA para PDF
+const formatarTextoIAParaPDF = (texto) => {
+  if (!texto) return "Análise não disponível.";
+
+  let textoFormatado = String(texto);
+
+  // Processar HTML básico para formatação de texto
+  textoFormatado = textoFormatado
+    // Quebras de linha
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<p[^>]*>/gi, "")
+
+    // Headers - converter para texto com emojis
+    .replace(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi, (match, content) => {
+      // Adicionar emoji baseado no conteúdo
+      if (/desempenho\s+geral/i.test(content))
+        return `📈 ${content.toUpperCase()}\n`;
+      if (/pontos?\s+fortes?/i.test(content))
+        return `🌟 ${content.toUpperCase()}\n`;
+      if (/áreas?\s+de\s+melhoria/i.test(content))
+        return `📝 ${content.toUpperCase()}\n`;
+      if (/recomendações?/i.test(content))
+        return `💡 ${content.toUpperCase()}\n`;
+      if (/situação\s+atual/i.test(content))
+        return `📊 ${content.toUpperCase()}\n`;
+      return `• ${content.toUpperCase()}\n`;
+    })
+
+    // Listas
+    .replace(/<ul[^>]*>/gi, "")
+    .replace(/<\/ul>/gi, "\n")
+    .replace(/<li[^>]*>([^<]+)<\/li>/gi, "• $1\n")
+
+    // Formatação de texto
+    .replace(/<strong[^>]*>([^<]+)<\/strong>/gi, "$1")
+    .replace(/<b[^>]*>([^<]+)<\/b>/gi, "$1")
+    .replace(/<em[^>]*>([^<]+)<\/em>/gi, "$1")
+    .replace(/<i[^>]*>([^<]+)<\/i>/gi, "$1")
+
+    // Remover outras tags HTML
+    .replace(/<[^>]+>/g, "")
+
+    // Processar markdown se houver
+    .replace(/#{1,6}\s*([^\n]+)/g, "• $1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+
+    // Normalizar espaços e quebras
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+
+  return textoFormatado;
+};
+
+// Função para renderizar texto formatado no PDF com quebras e seções
+const renderTextoFormatado = (doc, texto, x, y, maxWidth, lineHeight = 4.5) => {
   let currentY = y;
-  
+  const lines = texto.split("\n");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (!line) {
+      // Linha vazia - adicionar espaço
+      currentY += lineHeight * 0.7;
+      continue;
+    }
+
+    // Verificar se é um título (linha com emoji ou em maiúsculas)
+    const isTitulo =
+      /^[📈🌟📝💡📊]/.test(line) ||
+      (line === line.toUpperCase() && line.length > 3 && line.length < 50);
+
+    if (isTitulo) {
+      // Renderizar como título
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(44, 62, 80);
+
+      const tituloLines = doc.splitTextToSize(line, maxWidth);
+      tituloLines.forEach((tituloLine) => {
+        doc.text(tituloLine, x, currentY);
+        currentY += lineHeight;
+      });
+      currentY += 2; // Espaço extra após título
+    } else if (line.startsWith("• ")) {
+      // Renderizar como item de lista
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(44, 62, 80);
+
+      const itemText = line.substring(2); // Remove o "• "
+      const itemLines = doc.splitTextToSize(`• ${itemText}`, maxWidth);
+      itemLines.forEach((itemLine) => {
+        doc.text(itemLine, x, currentY);
+        currentY += lineHeight;
+      });
+    } else {
+      // Renderizar como texto normal
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(44, 62, 80);
+
+      const normalLines = doc.splitTextToSize(line, maxWidth);
+      normalLines.forEach((normalLine) => {
+        doc.text(normalLine, x, currentY);
+        currentY += lineHeight;
+      });
+    }
+  }
+
+  return currentY;
+};
+
+// Função para renderizar análise de IA com formatação melhorada
+const renderAiAnalysis = (
+  doc,
+  analise,
+  x,
+  y,
+  maxWidth,
+  colors = { header: [52, 152, 219], text: [44, 62, 80] }
+) => {
+  let currentY = y;
+
   // Limpar e processar os textos com validação extra
   let summaryLimpo = "";
   let comentarioLimpo = "";
-  
+
   try {
-    // Manter o texto da IA original, sem limpeza agressiva
-    summaryLimpo = analise.summary || "Análise disponível: Desempenho em avaliação.";
-    comentarioLimpo = analise.comment || "Análise detalhada em processamento. Dados estatísticos disponíveis no relatório.";
-    
-    // Se após verificação o texto ficou vazio ou muito pequeno, usar fallback
+    // Processar e formatar os textos da IA mantendo a formatação
+    summaryLimpo = formatarTextoIAParaPDF(
+      analise.summary || "Análise disponível: Desempenho em avaliação."
+    );
+    comentarioLimpo = formatarTextoIAParaPDF(
+      analise.comment ||
+        "Análise detalhada em processamento. Dados estatísticos disponíveis no relatório."
+    );
+
+    // Se após formatação o texto ficou vazio ou muito pequeno, usar fallback
     if (!summaryLimpo || summaryLimpo.length < 10) {
       summaryLimpo = "Análise disponível: Desempenho em avaliação.";
     }
-    
+
     if (!comentarioLimpo || comentarioLimpo.length < 20) {
-      comentarioLimpo = "Análise detalhada em processamento. Dados estatísticos disponíveis no relatório.";
+      comentarioLimpo =
+        "Análise detalhada em processamento. Dados estatísticos disponíveis no relatório.";
     }
-    
   } catch (error) {
     console.warn("Erro ao processar texto da IA:", error);
     summaryLimpo = "Análise indisponível no momento.";
     comentarioLimpo = "Erro ao processar análise da IA.";
   }
-  
+
   // Renderizar summary com estilo destacado
   doc.setFillColor(colors.header[0], colors.header[1], colors.header[2]);
-  doc.setDrawColor(colors.header[0] - 20, colors.header[1] - 20, colors.header[2] - 20);
-  
+  doc.setDrawColor(
+    colors.header[0] - 20,
+    colors.header[1] - 20,
+    colors.header[2] - 20
+  );
+
   // Calcular altura necessária para o summary
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   const linhasSummary = doc.splitTextToSize(summaryLimpo, maxWidth - 20);
   const summaryHeight = Math.max(15, linhasSummary.length * 4.5 + 8);
-  
+
   // Caixa para o summary
   doc.roundedRect(x, currentY, maxWidth, summaryHeight, 2, 2, "FD");
-  
+
   // Ícone de IA
   doc.setFillColor(255, 255, 255);
   doc.circle(x + 8, currentY + 8, 3, "F");
@@ -235,41 +372,43 @@ const renderAiAnalysis = (doc, analise, x, y, maxWidth, colors = { header: [52, 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6);
   doc.text("IA", x + 8, currentY + 10, { align: "center" });
-  
+
   // Texto do summary
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  
+
   linhasSummary.forEach((linha, index) => {
-    doc.text(linha, x + 18, currentY + 8 + (index * 4.5));
+    doc.text(linha, x + 18, currentY + 8 + index * 4.5);
   });
-  
+
   currentY += summaryHeight + 5;
-  
+
   // Renderizar comentário detalhado
   if (comentarioLimpo && comentarioLimpo.trim()) {
-    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    
-    const linhasComentario = doc.splitTextToSize(comentarioLimpo, maxWidth - 10);
-    
+    // Calcular altura necessária baseada no conteúdo formatado
+    const comentarioHeight = Math.max(
+      40,
+      comentarioLimpo.split("\n").length * 5 + 15
+    );
+
     // Caixa sutil para o comentário
-    const comentarioHeight = linhasComentario.length * 4.5 + 10;
     doc.setFillColor(248, 249, 250);
     doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.3);
     doc.roundedRect(x, currentY, maxWidth, comentarioHeight, 2, 2, "FD");
-    
-    // Renderizar linhas do comentário
-    linhasComentario.forEach((linha, index) => {
-      doc.text(linha, x + 5, currentY + 8 + (index * 4.5));
-    });
-    
-    currentY += comentarioHeight;
+
+    // Renderizar texto formatado com a nova função
+    const finalY = renderTextoFormatado(
+      doc,
+      comentarioLimpo,
+      x + 5,
+      currentY + 8,
+      maxWidth - 10
+    );
+    currentY = Math.max(currentY + comentarioHeight, finalY);
   }
-  
+
   return currentY + 5; // Retorna a nova posição Y
 };
 
@@ -367,16 +506,21 @@ const calculateStats = (valores) => {
 };
 
 // Função para gerar análise IA das estatísticas
-const generateStatsAnalysis = async (estatisticas, totalAlunos, totalNotas, analisesMateria) => {
+const generateStatsAnalysis = async (
+  estatisticas,
+  totalAlunos,
+  totalNotas,
+  analisesMateria
+) => {
   // Extrair insights das análises de matérias
   const materiasComProblemas = [];
   const materiasExcelentes = [];
-  
+
   Object.entries(analisesMateria).forEach(([materia, analise]) => {
     const summary = analise.summary.toLowerCase();
-    if (summary.includes('necessita atenção') || summary.includes('regular')) {
+    if (summary.includes("necessita atenção") || summary.includes("regular")) {
       materiasComProblemas.push(materia);
-    } else if (summary.includes('excelente') || summary.includes('bom')) {
+    } else if (summary.includes("excelente") || summary.includes("bom")) {
       materiasExcelentes.push(materia);
     }
   });
@@ -390,8 +534,12 @@ const generateStatsAnalysis = async (estatisticas, totalAlunos, totalNotas, anal
   - Desvio Padrão: ${estatisticas.desvio}
   - Nota Mínima: ${estatisticas.minimo}
   - Nota Máxima: ${estatisticas.maximo}
-  - Matérias com bom desempenho: ${materiasExcelentes.join(', ') || 'Nenhuma identificada'}
-  - Matérias que necessitam atenção: ${materiasComProblemas.join(', ') || 'Nenhuma identificada'}
+  - Matérias com bom desempenho: ${
+    materiasExcelentes.join(", ") || "Nenhuma identificada"
+  }
+  - Matérias que necessitam atenção: ${
+    materiasComProblemas.join(", ") || "Nenhuma identificada"
+  }
   
   Forneça uma análise integrada considerando tanto as estatísticas quanto o desempenho por matéria. 
   Seja direto e objetivo em máximo 4 parágrafos. Inclua recomendações práticas para a gestão escolar.`;
@@ -866,7 +1014,7 @@ const generateSimpleChart = async (data, type = "bar") => {
 export const handleDownloadRelatorio = async (onProgress = null) => {
   // Callback para atualizar progresso se fornecido
   const updateProgress = (message) => {
-    if (onProgress && typeof onProgress === 'function') {
+    if (onProgress && typeof onProgress === "function") {
       onProgress(message);
     }
     console.log(message);
@@ -895,41 +1043,53 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
     updateProgress(`Analisando ${materia} (${i + 1}/${materias.length})...`);
     try {
       const analise = await buildMateriaAiAnalysis(materia);
-      
+
       // Manter os textos da IA originais, sem limpeza
       let analiseLimpa = {
-        summary: analise.summary || `Análise de ${materia}: Dados em processamento.`,
-        comment: analise.comment || "Análise detalhada será disponibilizada em breve."
+        summary:
+          analise.summary || `Análise de ${materia}: Dados em processamento.`,
+        comment:
+          analise.comment || "Análise detalhada será disponibilizada em breve.",
       };
-      
+
       // Verificar apenas se está vazio, não aplicar limpeza agressiva
       if (!analiseLimpa.summary || analiseLimpa.summary.length < 10) {
         console.warn(`Análise IA vazia para ${materia}, usando fallback`);
-        
+
         // Calcular dados para fallback apenas se necessário
-        const notasMateria = todasNotas.filter(nota => nota.avaliacao && nota.avaliacao.materia === materia);
-        const media = notasMateria.length > 0 ? 
-          (notasMateria.reduce((sum, n) => sum + n.nota, 0) / notasMateria.length).toFixed(2) : 0;
-        const alunosUnicos = [...new Set(notasMateria.map(n => n.aluno_id))];
-        const alunosAprovados = alunosUnicos.filter(alunoId => {
-          const notasAluno = notasMateria.filter(n => n.aluno_id === alunoId);
-          const mediaAluno = notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length;
+        const notasMateria = todasNotas.filter(
+          (nota) => nota.avaliacao && nota.avaliacao.materia === materia
+        );
+        const media =
+          notasMateria.length > 0
+            ? (
+                notasMateria.reduce((sum, n) => sum + n.nota, 0) /
+                notasMateria.length
+              ).toFixed(2)
+            : 0;
+        const alunosUnicos = [...new Set(notasMateria.map((n) => n.aluno_id))];
+        const alunosAprovados = alunosUnicos.filter((alunoId) => {
+          const notasAluno = notasMateria.filter((n) => n.aluno_id === alunoId);
+          const mediaAluno =
+            notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length;
           return mediaAluno >= 6;
         }).length;
-        const percentualAprovacao = alunosUnicos.length > 0 ? 
-          ((alunosAprovados / alunosUnicos.length) * 100).toFixed(1) : 0;
-        
-        analiseLimpa = gerarAnaliseFallback('materia', materia, {
+        const percentualAprovacao =
+          alunosUnicos.length > 0
+            ? ((alunosAprovados / alunosUnicos.length) * 100).toFixed(1)
+            : 0;
+
+        analiseLimpa = gerarAnaliseFallback("materia", materia, {
           media: parseFloat(media),
           totalAlunos: alunosUnicos.length,
-          percentualAprovacao: parseFloat(percentualAprovacao)
+          percentualAprovacao: parseFloat(percentualAprovacao),
         });
       }
-      
+
       analisesMateria[materia] = analiseLimpa;
     } catch (error) {
       console.warn(`Erro ao gerar análise para ${materia}:`, error);
-      analisesMateria[materia] = gerarAnaliseFallback('materia', materia);
+      analisesMateria[materia] = gerarAnaliseFallback("materia", materia);
     }
   }
 
@@ -939,44 +1099,62 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
   const alunosParaAnalise = alunos.slice(0, 10); // Limitar a 10 alunos para não sobrecarregar
   for (let i = 0; i < alunosParaAnalise.length; i++) {
     const aluno = alunosParaAnalise[i];
-    
+
     // LIMPAR O NOME DO ALUNO usando a função específica
     const nomeAlunoLimpo = limparNome(aluno.nome);
-    
-    updateProgress(`Analisando ${nomeAlunoLimpo} (${i + 1}/${alunosParaAnalise.length})...`);
+
+    updateProgress(
+      `Analisando ${nomeAlunoLimpo} (${i + 1}/${alunosParaAnalise.length})...`
+    );
     try {
       const analise = await buildAlunoAiAnalysis(aluno.id);
-      
+
       // Manter os textos da IA originais, sem limpeza
       let analiseLimpa = {
-        summary: analise.summary || `Análise do aluno ${nomeAlunoLimpo}: Dados em processamento.`,
-        comment: analise.comment || "Análise detalhada será disponibilizada em breve.",
-        nome: nomeAlunoLimpo // Usar o nome limpo
+        summary:
+          analise.summary ||
+          `Análise do aluno ${nomeAlunoLimpo}: Dados em processamento.`,
+        comment:
+          analise.comment || "Análise detalhada será disponibilizada em breve.",
+        nome: nomeAlunoLimpo, // Usar o nome limpo
       };
-      
+
       // Verificar apenas se está vazio, não aplicar limpeza no texto da IA
       if (!analiseLimpa.summary || analiseLimpa.summary.length < 10) {
-        console.warn(`Análise IA vazia para ${nomeAlunoLimpo}, usando fallback`);
-        
+        console.warn(
+          `Análise IA vazia para ${nomeAlunoLimpo}, usando fallback`
+        );
+
         // Calcular dados para fallback apenas se necessário
-        const notasAluno = todasNotas.filter(nota => nota.aluno_id === aluno.id);
-        const mediaGeral = notasAluno.length > 0 ? 
-          (notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length).toFixed(2) : 0;
-        const situacao = parseFloat(mediaGeral) >= 6 ? "Aprovado" : "Em recuperação";
-        
-        analiseLimpa = gerarAnaliseFallback('aluno', nomeAlunoLimpo, {
+        const notasAluno = todasNotas.filter(
+          (nota) => nota.aluno_id === aluno.id
+        );
+        const mediaGeral =
+          notasAluno.length > 0
+            ? (
+                notasAluno.reduce((sum, n) => sum + n.nota, 0) /
+                notasAluno.length
+              ).toFixed(2)
+            : 0;
+        const situacao =
+          parseFloat(mediaGeral) >= 6 ? "Aprovado" : "Em recuperação";
+
+        analiseLimpa = gerarAnaliseFallback("aluno", nomeAlunoLimpo, {
           mediaGeral: parseFloat(mediaGeral),
-          situacao: situacao
+          situacao: situacao,
         });
         analiseLimpa.nome = nomeAlunoLimpo;
       }
-      
+
       analisesAluno[aluno.id] = analiseLimpa;
     } catch (error) {
-      console.warn(`Erro ao gerar análise para aluno ${nomeAlunoLimpo}:`, error);
+      console.warn(
+        `Erro ao gerar análise para aluno ${nomeAlunoLimpo}:`,
+        error
+      );
       analisesAluno[aluno.id] = {
-        ...gerarAnaliseFallback('aluno', nomeAlunoLimpo),
-        nome: nomeAlunoLimpo
+        ...gerarAnaliseFallback("aluno", nomeAlunoLimpo),
+        nome: nomeAlunoLimpo,
       };
     }
   }
@@ -1051,7 +1229,22 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
   doc.text("Relatório Educacional Avançado", pageWidth / 2, y, {
     align: "center",
   });
-  y += 15;
+  y += 5;
+
+  // Data de geração
+  const dataGeracao = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  doc.setTextColor(120, 120, 120);
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(9);
+  doc.text(`Gerado em: ${dataGeracao}`, pageWidth / 2, y, {
+    align: "center",
+  });
+  y += 2;
 
   // Estatísticas gerais na capa
   doc.setTextColor(44, 62, 80);
@@ -1137,19 +1330,16 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
     todasNotas.length,
     analisesMateria
   );
-  
-  // Manter o texto original da IA, sem limpeza agressiva
-  const textoLimpo = analiseEstatisticas || "Análise estatística em processamento.";
 
-  // Calcular dimensões do texto
+  // Formatar o texto da IA adequadamente para PDF
+  const textoLimpo = formatarTextoIAParaPDF(
+    analiseEstatisticas || "Análise estatística em processamento."
+  );
+
+  // Calcular dimensões baseadas no texto formatado
   const textWidth = pageWidth - margin * 2 - 10;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  const linhasAnalise = doc.splitTextToSize(textoLimpo, textWidth);
-
-  // Usar todas as linhas necessárias (sem limite artificial)
-  const linhasTexto = linhasAnalise.length;
-  const analiseHeight = Math.max(60, 25 + linhasTexto * 4.5); // Altura baseada no conteúdo real
+  const linhasTexto = textoLimpo.split("\n").length;
+  const analiseHeight = Math.max(60, linhasTexto * 5 + 25); // Altura baseada no conteúdo formatado
 
   // Verificar se precisa de nova página
   if (y + analiseHeight > 270) {
@@ -1192,7 +1382,7 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
   doc.setTextColor(74, 144, 226);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Análise Inteligente:", margin + 18, y + 8);
+  doc.text("Análise Inteligente dos Dados Educacionais:", margin + 18, y + 8);
 
   // Texto da análise IA
   doc.setTextColor(44, 62, 80);
@@ -1203,8 +1393,8 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
   const textX = margin + 5; // Posição X do texto
   const textY = y + 18; // Posição Y do texto
 
-  // Renderizar todo o texto sem limitação artificial
-  drawJustifiedText(doc, textoLimpo, textX, textY, textWidth, 4.5);
+  // Renderizar todo o texto formatado usando a nova função
+  renderTextoFormatado(doc, textoLimpo, textX, textY, textWidth, 4.5);
 
   y += analiseHeight + 15;
 
@@ -1502,24 +1692,29 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
 
   // Insights das análises de IA
   const materiasProblematicas = Object.entries(analisesMateria)
-    .filter(([materia, analise]) => 
-      analise.summary.toLowerCase().includes('necessita atenção') || 
-      analise.summary.toLowerCase().includes('regular')
+    .filter(
+      ([materia, analise]) =>
+        analise.summary.toLowerCase().includes("necessita atenção") ||
+        analise.summary.toLowerCase().includes("regular")
     )
     .map(([materia]) => materia);
 
   const materiasExcelentes = Object.entries(analisesMateria)
-    .filter(([materia, analise]) => 
-      analise.summary.toLowerCase().includes('excelente')
+    .filter(([materia, analise]) =>
+      analise.summary.toLowerCase().includes("excelente")
     )
     .map(([materia]) => materia);
 
   if (materiasExcelentes.length > 0) {
-    insights.push(`• Matérias com desempenho excelente: ${materiasExcelentes.join(', ')}`);
+    insights.push(
+      `• Matérias com desempenho excelente: ${materiasExcelentes.join(", ")}`
+    );
   }
 
   if (materiasProblematicas.length > 0) {
-    insights.push(`• Matérias que requerem intervenção: ${materiasProblematicas.join(', ')}`);
+    insights.push(
+      `• Matérias que requerem intervenção: ${materiasProblematicas.join(", ")}`
+    );
   }
 
   if (insights.length === 0) {
@@ -1572,9 +1767,9 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
     // Renderizar análise usando a função auxiliar
     y = renderAiAnalysis(doc, analise, margin, y, pageWidth - margin * 2, {
       header: [155, 89, 182],
-      text: [44, 62, 80]
+      text: [44, 62, 80],
     });
-    
+
     y += 5; // Espaçamento entre matérias
   }
 
@@ -1613,9 +1808,9 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
     // Renderizar análise usando a função auxiliar
     y = renderAiAnalysis(doc, analise, margin, y, pageWidth - margin * 2, {
       header: [46, 204, 113],
-      text: [44, 62, 80]
+      text: [44, 62, 80],
     });
-    
+
     y += 5; // Espaçamento entre alunos
   }
 
@@ -1627,6 +1822,6 @@ export const handleDownloadRelatorio = async (onProgress = null) => {
 
   updateProgress("Finalizando e salvando o relatório...");
   doc.save(`relatorio-avancado-${new Date().toISOString().split("T")[0]}.pdf`);
-  
+
   updateProgress("Relatório gerado com sucesso!");
 };
