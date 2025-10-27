@@ -469,6 +469,7 @@ export const useAlunoData = (alunoNome) => {
     setEvolucaoData,
     setNotasValues,
     setNotasDetalhadas,
+    setMediasPorBimestre,
   };
 };
 
