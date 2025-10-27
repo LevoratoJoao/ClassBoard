@@ -5,6 +5,75 @@ import {
 } from "../services/aiService";
 import { getAllAlunos } from "../services/alunosService";
 import { notasAPI, avaliacoesAPI } from "../services/apiService";
+import cerebroIcon from "../assets/images/cerebro.webp";
+
+// Função para justificar texto no PDF
+const drawJustifiedText = (doc, text, x, y, maxWidth, lineHeight = 4.5) => {
+  const lines = doc.splitTextToSize(text, maxWidth);
+  let currentY = y;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const isLastLine = i === lines.length - 1;
+    const words = line.split(" ").filter((word) => word.length > 0);
+
+    // Se a linha está vazia ou tem apenas uma palavra, não justificar
+    if (words.length <= 1 || isLastLine) {
+      doc.text(line, x, currentY);
+    } else {
+      // Calcular largura total das palavras
+      const wordsWidth =
+        words.reduce((sum, word) => sum + doc.getTextWidth(word + " "), 0) -
+        doc.getTextWidth(" ");
+
+      // Se a linha é muito curta comparada ao maxWidth, não justificar
+      if (wordsWidth < maxWidth * 0.7) {
+        doc.text(line, x, currentY);
+      } else {
+        // Justificar distribuindo espaços
+        const totalSpaceNeeded = maxWidth - wordsWidth;
+        const spaceBetweenWords = totalSpaceNeeded / (words.length - 1);
+
+        let currentX = x;
+        for (let j = 0; j < words.length; j++) {
+          doc.text(words[j], currentX, currentY);
+          if (j < words.length - 1) {
+            currentX +=
+              doc.getTextWidth(words[j]) +
+              spaceBetweenWords +
+              doc.getTextWidth(" ");
+          }
+        }
+      }
+    }
+    currentY += lineHeight;
+  }
+
+  return currentY;
+};
+
+// Função para converter imagem para base64
+const imageToBase64 = (imageUrl) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      try {
+        const dataURL = canvas.toDataURL("image/png");
+        resolve(dataURL);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = reject;
+    img.src = imageUrl;
+  });
+};
 
 // Funções estatísticas simples (sem biblioteca externa)
 const calculateStats = (valores) => {
@@ -194,7 +263,7 @@ export const handleDownloadRelatorio = async () => {
   const estatisticasMaterias = {};
   const dadosGrafico = { labels: [], values: [], title: "Médias por Matéria" };
 
-  materias.forEach((materia) => {
+  materias.forEach(async (materia) => {
     const notasMateria = todasNotas.filter(
       (nota) => nota.avaliacao && nota.avaliacao.materia === materia
     );
@@ -202,15 +271,31 @@ export const handleDownloadRelatorio = async () => {
     if (notasMateria.length > 0) {
       const valores = notasMateria.map((n) => n.nota);
       const stats = calculateStats(valores);
-      const aprovados = valores.filter((nota) => nota >= 6).length;
-      const percentualAprovacao = ((aprovados / valores.length) * 100).toFixed(
-        1
-      );
+
+      // Calcular alunos aprovados (média >= 6) por matéria
+      const alunosUnicos = [...new Set(notasMateria.map((n) => n.aluno_id))];
+      let alunosAprovados = 0;
+
+      for (const alunoId of alunosUnicos) {
+        const notasDoAluno = notasMateria.filter((n) => n.aluno_id === alunoId);
+        const mediaAluno =
+          notasDoAluno.reduce((sum, n) => sum + n.nota, 0) /
+          notasDoAluno.length;
+        if (mediaAluno >= 6) {
+          alunosAprovados++;
+        }
+      }
+
+      const percentualAprovacao = (
+        (alunosAprovados / alunosUnicos.length) *
+        100
+      ).toFixed(1);
 
       estatisticasMaterias[materia] = {
         ...stats,
         total: valores.length,
-        aprovados,
+        aprovados: alunosAprovados,
+        totalAlunos: alunosUnicos.length,
         percentualAprovacao,
       };
 
@@ -237,7 +322,7 @@ export const handleDownloadRelatorio = async () => {
   doc.text("Relatório Educacional Avançado", pageWidth / 2, y, {
     align: "center",
   });
-  y += 25;
+  y += 15;
 
   // Estatísticas gerais na capa
   doc.setTextColor(44, 62, 80);
@@ -329,14 +414,15 @@ export const handleDownloadRelatorio = async () => {
     .replace(/\*\*/g, "") // Remove markdown bold
     .trim();
 
-  const linhasAnalise = doc.splitTextToSize(
-    textoLimpo,
-    pageWidth - margin * 2 - 10
-  );
+  // Calcular dimensões do texto
+  const textWidth = pageWidth - margin * 2 - 10;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  const linhasAnalise = doc.splitTextToSize(textoLimpo, textWidth);
 
-  // Calcular altura necessária baseada no número de linhas
-  const linhasTexto = Math.min(linhasAnalise.length, 12); // Máximo 12 linhas
-  const analiseHeight = Math.max(50, 20 + linhasTexto * 4.5); // Altura mínima 50, ajustável
+  // Usar todas as linhas necessárias (sem limite artificial)
+  const linhasTexto = linhasAnalise.length;
+  const analiseHeight = Math.max(60, 25 + linhasTexto * 4.5); // Altura baseada no conteúdo real
 
   // Verificar se precisa de nova página
   if (y + analiseHeight > 270) {
@@ -357,29 +443,41 @@ export const handleDownloadRelatorio = async () => {
   doc.setLineWidth(0.5);
   doc.roundedRect(margin, y, pageWidth - margin * 2, analiseHeight, 3, 3, "FD");
 
-  // Ícone de IA
-  doc.setFillColor(74, 144, 226);
-  doc.circle(margin + 8, y + 8, 3, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text("IA", margin + 8, y + 10, { align: "center" });
+  // Ícone do cérebro (IA)
+  try {
+    const cerebroBase64 = await imageToBase64(cerebroIcon);
+    doc.addImage(cerebroBase64, "PNG", margin + 3, y + 3, 10, 10);
+  } catch (error) {
+    console.warn(
+      "Erro ao carregar imagem do cérebro, usando ícone padrão:",
+      error
+    );
+    // Fallback para o círculo original
+    doc.setFillColor(74, 144, 226);
+    doc.circle(margin + 8, y + 8, 3, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("IA", margin + 8, y + 10, { align: "center" });
+  }
 
   // Título da análise
   doc.setTextColor(74, 144, 226);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Análise Inteligente:", margin + 15, y + 8);
+  doc.text("Análise Inteligente:", margin + 18, y + 8);
 
   // Texto da análise IA
   doc.setTextColor(44, 62, 80);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9); // Fonte ligeiramente menor para caber mais texto
 
-  // Usar todas as linhas disponíveis (limitadas no máximo)
-  const linhasFinais = linhasAnalise.slice(0, linhasTexto);
+  // Usar texto justificado
+  const textX = margin + 5; // Posição X do texto
+  const textY = y + 18; // Posição Y do texto
 
-  doc.text(linhasFinais, margin + 5, y + 18);
+  // Renderizar todo o texto sem limitação artificial
+  drawJustifiedText(doc, textoLimpo, textX, textY, textWidth, 4.5);
 
   y += analiseHeight + 15;
 
@@ -393,7 +491,7 @@ export const handleDownloadRelatorio = async () => {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Análise Visual das Médias", pageWidth / 2, y, {
+    doc.text("Análise Visual das Matérias", pageWidth / 2, y, {
       align: "center",
     });
     y += 25;
@@ -410,8 +508,6 @@ export const handleDownloadRelatorio = async () => {
   doc.setTextColor(44, 62, 80);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("Estatísticas Detalhadas por Matéria:", margin, y);
-  y += 15;
 
   Object.entries(estatisticasMaterias).forEach(([materia, stats]) => {
     if (y > 180) {
@@ -470,7 +566,7 @@ export const handleDownloadRelatorio = async () => {
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.text(
-      `Min: ${stats.minimo} | Max: ${stats.maximo} | Total: ${stats.total} notas | Aprovados: ${stats.aprovados}`,
+      `Min: ${stats.minimo} | Max: ${stats.maximo} | Total: ${stats.total} notas | Aprovados: ${stats.aprovados}/${stats.totalAlunos} alunos`,
       margin + 3,
       y + 25
     );

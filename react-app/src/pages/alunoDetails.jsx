@@ -27,6 +27,7 @@ const AlunoDetails = () => {
   const {
     alunoData,
     mediasMaterias,
+    mediasPorBimestre,
     mediaTurma,
     evolucaoData,
     notasValues,
@@ -152,6 +153,72 @@ const AlunoDetails = () => {
     );
   };
 
+  const renderTabelaMediasPorBimestre = () => {
+    const materias = Object.keys(mediasPorBimestre);
+    if (materias.length === 0) {
+      return (
+        <div className="text-center text-muted">
+          <p>Nenhum dado disponível</p>
+        </div>
+      );
+    }
+
+    return (
+      <table className="table table-bordered table-sm" style={{ marginTop: "12px", tableLayout: "fixed" }}>
+        <thead>
+          <tr>
+            <th className="montserrat" style={{ fontWeight: "500", width: "40%", fontSize: "0.9rem", padding: "8px" }}>
+              Matéria
+            </th>
+            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+              1º Bim
+            </th>
+            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+              2º Bim
+            </th>
+            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+              3º Bim
+            </th>
+            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+              4º Bim
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {materias.map((materia) => {
+            return (
+              <tr key={materia}>
+                <td style={{ fontWeight: "500", fontSize: "0.9rem", padding: "8px" }}>{materia}</td>
+                {[1, 2, 3, 4].map((bimestre) => {
+                  const bimestreKey = `bimestre${bimestre}`;
+                  const mediaBim = mediasPorBimestre[materia]?.[bimestreKey] || "N/A";
+                  const isNABim = mediaBim === "N/A";
+                  const mediaNum = isNABim ? 0 : parseFloat(mediaBim);
+                  
+                  return (
+                    <td 
+                      key={bimestre} 
+                      style={{ 
+                        textAlign: "center",
+                        color: isNABim ? "#6c757d" : mediaNum >= 6 ? "#1976d2" : "#d32f2f",
+                        fontWeight: isNABim ? "normal" : "500",
+                        fontStyle: isNABim ? "italic" : "normal",
+                        fontSize: "0.9rem",
+                        padding: "8px"
+                      }}
+                    >
+                      {isNABim ? "N/A" : mediaBim}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  };
+
   if (dataLoading || rankingLoading) {
     return (
       <>
@@ -192,33 +259,16 @@ const AlunoDetails = () => {
         <h1 className="mb-4 text-center">{alunoData.nome}</h1>
 
         <div className="row mb-4">
-          <div className="col-md-6">
-            <div className="card mb-3">
+          <div className="col-md-7">
+            <div className="card mb-3 h-100">
               <div className="card-body">
-                <h5 className="card-title">Nota média em cada Matéria</h5>
-                <ul className="list-group">
-                  {Object.entries(mediasMaterias).map(([materia, media]) => {
-                    const isNA = media === "N/A";
-                    return (
-                      <li key={materia} className="list-group-item">
-                        <span>{materia}: </span>
-                        <span
-                          style={{
-                            color: isNA ? "#6c757d" : "inherit",
-                            fontStyle: isNA ? "italic" : "normal",
-                          }}
-                        >
-                          {isNA ? "Sem dados" : media}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <h5 className="card-title">Médias por Bimestre</h5>
+                {renderTabelaMediasPorBimestre()}
               </div>
             </div>
           </div>
-          <div className="col-md-6">
-            <div className="card mb-3">
+          <div className="col-md-5">
+            <div className="card mb-3 h-100">
               <div className="card-body">
                 <h5 className="card-title">Aprovação anual por matéria</h5>
                 {renderTabelaAprovacao()}

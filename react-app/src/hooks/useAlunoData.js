@@ -6,6 +6,61 @@ import {
   avaliacoesAPI,
 } from "../services/apiService";
 
+// Função para calcular médias por bimestre
+const calcularMediasPorBimestre = async (notasAluno, todasAvaliacoes) => {
+  try {
+    // Criar mapa de notas existentes
+    const notasMap = {};
+    notasAluno.forEach((nota) => {
+      notasMap[nota.avaliacao.id] = nota.nota;
+    });
+
+    // Estrutura: { materia: { bimestre1: media, bimestre2: media, ... } }
+    const mediasPorMateriaBimestre = {};
+
+    // Agrupar avaliações por matéria e bimestre
+    todasAvaliacoes.forEach((avaliacao) => {
+      const materiaKey = avaliacao.materia;
+      const bimestreKey = `bimestre${avaliacao.bimestre}`;
+
+      if (!mediasPorMateriaBimestre[materiaKey]) {
+        mediasPorMateriaBimestre[materiaKey] = {};
+      }
+
+      if (!mediasPorMateriaBimestre[materiaKey][bimestreKey]) {
+        mediasPorMateriaBimestre[materiaKey][bimestreKey] = { 
+          somaNotas: 0, 
+          totalAvaliacoes: 0 
+        };
+      }
+
+      // Usar nota existente ou 0 se não foi feita
+      const nota = notasMap[avaliacao.id] || 0;
+      mediasPorMateriaBimestre[materiaKey][bimestreKey].somaNotas += nota;
+      mediasPorMateriaBimestre[materiaKey][bimestreKey].totalAvaliacoes += 1;
+    });
+
+    // Calcular médias finais
+    const resultado = {};
+    Object.keys(mediasPorMateriaBimestre).forEach((materia) => {
+      resultado[materia] = {};
+      Object.keys(mediasPorMateriaBimestre[materia]).forEach((bimestre) => {
+        const dados = mediasPorMateriaBimestre[materia][bimestre];
+        if (dados.totalAvaliacoes > 0) {
+          resultado[materia][bimestre] = (dados.somaNotas / dados.totalAvaliacoes).toFixed(2);
+        } else {
+          resultado[materia][bimestre] = "N/A";
+        }
+      });
+    });
+
+    return resultado;
+  } catch (error) {
+    console.error("Erro ao calcular médias por bimestre:", error);
+    return {};
+  }
+};
+
 // Função helper para calcular média correta considerando todas as avaliações obrigatórias
 const calcularMediaCorretaAlunoData = async (
   notasAluno,
@@ -241,6 +296,7 @@ const calcularMediaCorretaTurma = async (
 export const useAlunoData = (alunoNome) => {
   const [alunoData, setAlunoData] = useState(null);
   const [mediasMaterias, setMediasMaterias] = useState({});
+  const [mediasPorBimestre, setMediasPorBimestre] = useState({});
   const [mediaTurma, setMediaTurma] = useState({});
   const [evolucaoData, setEvolucaoData] = useState([]);
   const [notasValues, setNotasValues] = useState([]);
@@ -293,6 +349,13 @@ export const useAlunoData = (alunoNome) => {
           alunoObj.id
         );
         setMediasMaterias(mediasAlunoMaterias);
+
+        // Calcular médias por bimestre
+        const mediasBimestre = await calcularMediasPorBimestre(
+          notasAluno,
+          todasAvaliacoes
+        );
+        setMediasPorBimestre(mediasBimestre);
 
         // Calcular médias corretas da turma usando método simples
         const mediasTurmaMaterias = await calcularMediaTurmaSimples(
@@ -388,6 +451,7 @@ export const useAlunoData = (alunoNome) => {
   return {
     alunoData,
     mediasMaterias,
+    mediasPorBimestre,
     mediaTurma,
     evolucaoData,
     notasValues,
