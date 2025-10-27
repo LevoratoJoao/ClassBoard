@@ -8,8 +8,6 @@ const EvolucaoNotasChart = ({ evolucaoData = [] }) => {
   const chartInstance = useRef(null);
 
   useEffect(() => {
-    console.log("Dados de evolução recebidos:", evolucaoData);
-
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }

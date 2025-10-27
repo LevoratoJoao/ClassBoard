@@ -8,8 +8,6 @@ const NotasIndividuaisChart = ({ notasDetalhadas = [] }) => {
   const chartInstance = useRef(null);
 
   useEffect(() => {
-    console.log("Notas detalhadas recebidas:", notasDetalhadas);
-
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }

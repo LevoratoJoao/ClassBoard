@@ -8,13 +8,8 @@ const ComparacaoTurmaChart = ({ mediasMaterias = {}, mediasTurma = {} }) => {
   const chartInstance = useRef(null);
 
   useEffect(() => {
-    console.log("ComparacaoTurmaChart - Recebendo dados:");
-    console.log("mediasMaterias:", mediasMaterias);
-    console.log("mediasTurma:", mediasTurma);
-
     // Verificar se temos dados válidos
     if (!mediasMaterias || Object.keys(mediasMaterias).length === 0) {
-      console.log("mediasMaterias está vazio ou indefinido");
       return;
     }
 
@@ -32,12 +27,10 @@ const ComparacaoTurmaChart = ({ mediasMaterias = {}, mediasTurma = {} }) => {
     ]);
 
     const labels = Array.from(todasMaterias);
-    console.log("Labels das matérias finais:", labels);
 
     const dadosAluno = labels.map((materia) => {
       const media = mediasMaterias[materia];
       const valor = media === "N/A" ? 0 : parseFloat(media) || 0;
-      console.log(`Aluno - ${materia}: ${media} -> ${valor}`);
       return valor;
     });
 
@@ -49,16 +42,11 @@ const ComparacaoTurmaChart = ({ mediasMaterias = {}, mediasTurma = {} }) => {
         valor = parseFloat(mediaTurmaMateria) || 0;
       }
 
-      console.log(`Turma - ${materia}: ${mediaTurmaMateria} -> ${valor}`);
       return valor;
     });
 
-    console.log("Dados finais aluno:", dadosAluno);
-    console.log("Dados finais turma:", dadosTurma);
-
     // Verificar se temos dados válidos antes de criar o gráfico
     if (labels.length === 0) {
-      console.warn("ComparacaoTurmaChart: Nenhuma matéria encontrada");
       return;
     }
 
