@@ -152,10 +152,10 @@ export const useAlunoFilters = (alunoNome) => {
     try {
       console.log("=== BUSCANDO ALUNO ===");
       console.log("Nome recebido:", nome);
-      
+
       const alunos = await alunosAPI.getAllAlunos();
       console.log("Total de alunos encontrados:", alunos.length);
-      
+
       // Função para normalizar nomes (remover acentos e converter para minúsculo)
       const normalizarNome = (str) => {
         return str
@@ -164,17 +164,23 @@ export const useAlunoFilters = (alunoNome) => {
           .replace(/[\u0300-\u036f]/g, "") // Remove diacríticos (acentos)
           .trim();
       };
-      
+
       const nomeBuscaNormalizado = normalizarNome(nome);
       console.log("Nome de busca normalizado:", nomeBuscaNormalizado);
-      
+
       const aluno = alunos.find((a) => {
         const nomeAlunoNormalizado = normalizarNome(a.nome);
-        console.log(`Comparando: "${nomeAlunoNormalizado}" === "${nomeBuscaNormalizado}" ?`, nomeAlunoNormalizado === nomeBuscaNormalizado);
+        console.log(
+          `Comparando: "${nomeAlunoNormalizado}" === "${nomeBuscaNormalizado}" ?`,
+          nomeAlunoNormalizado === nomeBuscaNormalizado
+        );
         return nomeAlunoNormalizado === nomeBuscaNormalizado;
       });
-      
-      console.log("Aluno encontrado:", aluno ? `${aluno.nome} (ID: ${aluno.id})` : "NENHUM");
+
+      console.log(
+        "Aluno encontrado:",
+        aluno ? `${aluno.nome} (ID: ${aluno.id})` : "NENHUM"
+      );
       return aluno?.id;
     } catch (error) {
       console.error("Erro ao buscar aluno:", error);
@@ -189,17 +195,25 @@ export const useAlunoFilters = (alunoNome) => {
         console.log("=== CALCULANDO MÉDIAS POR MATÉRIA ===");
         console.log("Aluno ID:", alunoId);
         console.log("Filtros:", { materia, tipo, bimestre });
-        
+
         // Buscar todas as notas do aluno
         const notasAluno = await notasAPI.getNotasByAluno(alunoId);
-        console.log(`Notas encontradas para aluno ${alunoId}:`, notasAluno.length);
-        
+        console.log(
+          `Notas encontradas para aluno ${alunoId}:`,
+          notasAluno.length
+        );
+
         if (notasAluno.length === 0) {
           console.warn(`NENHUMA NOTA encontrada para aluno ${alunoId}`);
         }
 
         // Usar a função helper para cálculo correto
-        const resultado = await calcularMediaCorreta(notasAluno, materia, bimestre, tipo);
+        const resultado = await calcularMediaCorreta(
+          notasAluno,
+          materia,
+          bimestre,
+          tipo
+        );
         console.log("Resultado calcularMediasPorMateria:", resultado);
         return resultado;
       } catch (error) {
@@ -466,7 +480,7 @@ export const useAlunoFilters = (alunoNome) => {
           console.error("Aluno não encontrado");
           return;
         }
-        
+
         console.log("Aluno ID encontrado:", alunoId);
 
         // IMPORTANTE: Sempre calcular médias da turma SEM filtros para comparação
