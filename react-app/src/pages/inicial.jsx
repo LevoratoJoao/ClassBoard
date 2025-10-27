@@ -66,7 +66,7 @@ const Inicial = () => {
 
                     <div className="col">
                         <div className="position-relative d-block" role="button" tabIndex={0} onClick={handleDownloadRelatorio}>
-                            <div className="card h-100 rounded-4 card-zoom" id="cards-col-1">
+                            <div className="card h-100 rounded-4 card-zoom" id="cards-col-4">
                                 <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-4">
                                     <img src={relatorioImg} alt="Relatório" style={imgStyle} className="mb-3" />
                                     <span className="montserrat-bold fs-3 text-white">Relatório</span>

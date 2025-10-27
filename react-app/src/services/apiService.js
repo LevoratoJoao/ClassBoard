@@ -99,3 +99,15 @@ export const faltasAPI = {
   getTotalFaltasByAluno: (aluno_id) =>
     apiService.get(`/faltas/${aluno_id}/total`),
 };
+
+export const materiasAPI = {
+  getAll: () => apiService.get("/materias"),
+};
+
+export const turmaAPI = {
+  list: () => apiService.get("/turma"),
+  getById: (turma_id) => apiService.get(`/turma/${turma_id}`),
+};
+
+export const getMaterias = () => materiasAPI.getAll();
+export const getTurma = (id = 1) => turmaAPI.getById(id);

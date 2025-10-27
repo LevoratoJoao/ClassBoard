@@ -1,8 +1,9 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Optional
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import date
 
 class Token(BaseModel):
     access_token: str
@@ -56,3 +57,19 @@ class Falta(BaseModel):
     data: str
     materia: Materia
     tipo: str
+
+class MateriaItem(BaseModel):
+    id: str
+    label: str
+
+class TurmaAluno(Aluno):
+    notas: Dict[str, float] = Field(default_factory=dict)
+    frequencia: Dict[str, float] = Field(default_factory=dict)
+    faltas: List[date] = Field(default_factory=list)
+
+class Turma(BaseModel):
+    id: int
+    nome: str
+    turno: str
+    materias: List[MateriaItem] = Field(default_factory=list)
+    alunos: List[TurmaAluno] = Field(default_factory=list)  
