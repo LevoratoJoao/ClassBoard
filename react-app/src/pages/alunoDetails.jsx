@@ -68,7 +68,18 @@ const AlunoDetails = () => {
     };
   }, [alunoData, dataLoading]);
 
+  // Monitor para mudanças no mediaTurma
+  useEffect(() => {
+    console.log("=== MUDANÇA NO MEDIA TURMA ===");
+    console.log("mediaTurma atualizado:", mediaTurma);
+    console.log("Tipo:", typeof mediaTurma, "Keys:", Object.keys(mediaTurma));
+  }, [mediaTurma]);
+
   const handleFiltersChange = async (newFilters) => {
+    console.log("=== APLICANDO FILTROS ===");
+    console.log("Filtros recebidos:", newFilters);
+    console.log("mediaTurma antes dos filtros:", mediaTurma);
+
     setFilterLoading(true);
     try {
       await applyFilters(
@@ -79,6 +90,8 @@ const AlunoDetails = () => {
         setNotasValues,
         setNotasDetalhadas
       );
+
+      console.log("Filtros aplicados com sucesso");
     } catch (error) {
       console.error("Erro ao aplicar filtros:", error);
     } finally {

@@ -314,8 +314,6 @@ export const handleDownloadRelatorio = async () => {
   doc.setTextColor(44, 62, 80);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("Análise IA das Estatísticas:", margin, y);
-  y += 10;
 
   // Buscar análise IA das estatísticas usando função auxiliar
   const analiseEstatisticas = await generateStatsAnalysis(

@@ -9,8 +9,19 @@ const calcularMediaCorreta = async (
   tipo = null
 ) => {
   try {
+    console.log("calcularMediaCorreta - Parâmetros:", {
+      materia,
+      bimestre,
+      tipo,
+    });
+    console.log("calcularMediaCorreta - Notas do aluno:", notasAluno.length);
+
     // Buscar todas as avaliações do sistema
     const todasAvaliacoes = await avaliacoesAPI.getAllAvaliacoes();
+    console.log(
+      "calcularMediaCorreta - Total de avaliações:",
+      todasAvaliacoes.length
+    );
 
     // Filtrar avaliações baseado nos critérios
     let avaliacoesFiltradas = todasAvaliacoes;
@@ -19,11 +30,18 @@ const calcularMediaCorreta = async (
       avaliacoesFiltradas = avaliacoesFiltradas.filter(
         (av) => av.materia === materia
       );
+      console.log(
+        `Filtro matéria ${materia}: ${avaliacoesFiltradas.length} avaliações`
+      );
     }
 
     if (bimestre && bimestre !== "All") {
+      const bimestreNum = parseInt(bimestre);
       avaliacoesFiltradas = avaliacoesFiltradas.filter(
-        (av) => av.bimestre === parseInt(bimestre)
+        (av) => av.bimestre === bimestreNum
+      );
+      console.log(
+        `Filtro bimestre ${bimestreNum}: ${avaliacoesFiltradas.length} avaliações`
       );
     }
 
@@ -31,13 +49,53 @@ const calcularMediaCorreta = async (
       avaliacoesFiltradas = avaliacoesFiltradas.filter(
         (av) => av.tipo === tipo
       );
+      console.log(
+        `Filtro tipo ${tipo}: ${avaliacoesFiltradas.length} avaliações`
+      );
+    }
+
+    console.log("Avaliações após filtros:", avaliacoesFiltradas.length);
+
+    // Se não há avaliações após filtros, retornar objeto vazio ou valores padrão
+    if (avaliacoesFiltradas.length === 0) {
+      console.log("Nenhuma avaliação encontrada após filtros");
+
+      // Se foi aplicado um filtro específico de matéria, retornar essa matéria com 0
+      if (materia && materia !== "All") {
+        return { [materia]: "0.00" };
+      }
+
+      // Senão, retornar todas as matérias que o aluno tem notas
+      const materiasDoAluno = [
+        ...new Set(
+          notasAluno
+            .filter((nota) => nota.avaliacao && nota.avaliacao.materia)
+            .map((nota) => nota.avaliacao.materia)
+        ),
+      ];
+
+      const resultado = {};
+      materiasDoAluno.forEach((mat) => {
+        resultado[mat] = "0.00";
+      });
+
+      console.log("Retornando matérias com 0.00:", resultado);
+      return resultado;
     }
 
     // Criar mapa de notas existentes
     const notasMap = {};
     notasAluno.forEach((nota) => {
-      notasMap[nota.avaliacao.id] = nota.nota;
+      if (nota.avaliacao && nota.avaliacao.id) {
+        notasMap[nota.avaliacao.id] = nota.nota;
+      }
     });
+
+    console.log(
+      "Mapa de notas criado:",
+      Object.keys(notasMap).length,
+      "entradas"
+    );
 
     // Agrupar por matéria e calcular médias
     const mediasPorMateria = {};
@@ -53,19 +111,28 @@ const calcularMediaCorreta = async (
       const nota = notasMap[avaliacao.id] || 0;
       mediasPorMateria[materiaKey].somaNotas += nota;
       mediasPorMateria[materiaKey].totalAvaliacoes += 1;
+
+      console.log(`Avaliação ${avaliacao.id} (${materiaKey}): nota ${nota}`);
     });
+
+    console.log("Médias por matéria calculadas:", mediasPorMateria);
 
     // Calcular médias finais
     const resultado = {};
     Object.keys(mediasPorMateria).forEach((mat) => {
       const dados = mediasPorMateria[mat];
       if (dados.totalAvaliacoes > 0) {
-        resultado[mat] = (dados.somaNotas / dados.totalAvaliacoes).toFixed(2);
+        const media = (dados.somaNotas / dados.totalAvaliacoes).toFixed(2);
+        resultado[mat] = media;
+        console.log(
+          `${mat}: ${dados.somaNotas}/${dados.totalAvaliacoes} = ${media}`
+        );
       } else {
-        resultado[mat] = "N/A";
+        resultado[mat] = "0.00";
       }
     });
 
+    console.log("Resultado final calcularMediaCorreta:", resultado);
     return resultado;
   } catch (error) {
     console.error("Erro ao calcular média correta:", error);
@@ -119,54 +186,78 @@ export const useAlunoFilters = (alunoNome) => {
     []
   );
 
-  // Função para calcular médias da turma com filtros
+  // Função para calcular médias da turma com filtros (versão corrigida)
   const calcularMediasTurma = useCallback(async (materia, tipo, bimestre) => {
     try {
+      console.log("calcularMediasTurma - Filtros aplicados:", {
+        materia,
+        tipo,
+        bimestre,
+      });
+
       // Buscar todas as notas da turma
       const todasNotas = await notasAPI.getAllNotas();
-
-      // Buscar todos os alunos
       const todosAlunos = await alunosAPI.getAllAlunos();
 
-      // Calcular média correta para cada aluno e depois fazer média da turma
-      const mediasAlunosPorMateria = {};
+      console.log("Total de notas:", todasNotas.length);
+      console.log("Total de alunos:", todosAlunos.length);
 
+      // IMPORTANTE: Calcular médias da turma para TODAS as matérias,
+      // não apenas as filtradas. O filtro é aplicado ao aluno,
+      // mas a comparação deve ser com a turma completa
+
+      const mediasTurmaFinal = {};
+
+      // Primeiro, vamos calcular média da turma SEM filtros para todas as matérias
       for (const aluno of todosAlunos) {
         const notasAluno = todasNotas.filter(
           (nota) => nota.aluno_id === aluno.id
         );
         const mediasAluno = await calcularMediaCorreta(
           notasAluno,
-          materia,
-          bimestre,
-          tipo
-        );
+          null,
+          null,
+          null
+        ); // SEM filtros
+
+        console.log(`Médias COMPLETAS do aluno ${aluno.nome}:`, mediasAluno);
 
         // Adicionar às médias da turma
         Object.keys(mediasAluno).forEach((mat) => {
-          if (mediasAluno[mat] !== "N/A") {
-            if (!mediasAlunosPorMateria[mat]) {
-              mediasAlunosPorMateria[mat] = [];
+          if (mediasAluno[mat] !== "N/A" && mediasAluno[mat] !== "0.00") {
+            if (!mediasTurmaFinal[mat]) {
+              mediasTurmaFinal[mat] = [];
             }
-            mediasAlunosPorMateria[mat].push(parseFloat(mediasAluno[mat]));
+            const media = parseFloat(mediasAluno[mat]);
+            if (!isNaN(media) && media > 0) {
+              mediasTurmaFinal[mat].push(media);
+            }
           }
         });
       }
 
+      console.log("Médias da turma coletadas (sem filtros):", mediasTurmaFinal);
+
       // Calcular média final da turma por matéria
-      const mediasTurma = {};
-      Object.keys(mediasAlunosPorMateria).forEach((mat) => {
-        const medias = mediasAlunosPorMateria[mat];
-        if (medias.length > 0) {
-          mediasTurma[mat] = (
+      const resultadoFinal = {};
+      Object.keys(mediasTurmaFinal).forEach((mat) => {
+        const medias = mediasTurmaFinal[mat];
+        if (medias && medias.length > 0) {
+          const mediaFinal = (
             medias.reduce((a, b) => a + b, 0) / medias.length
           ).toFixed(2);
-        } else {
-          mediasTurma[mat] = "N/A";
+          resultadoFinal[mat] = mediaFinal;
+          console.log(
+            `Média da turma em ${mat}: ${mediaFinal} (${medias.length} alunos)`
+          );
         }
       });
 
-      return mediasTurma;
+      console.log(
+        "Resultado final médias da turma (TODAS as matérias):",
+        resultadoFinal
+      );
+      return resultadoFinal;
     } catch (error) {
       console.error("Erro ao calcular médias da turma:", error);
       return {};
@@ -352,53 +443,59 @@ export const useAlunoFilters = (alunoNome) => {
           return;
         }
 
-        // Aplicar filtros e calcular novos dados
-        const [
-          mediasMaterias,
-          mediasTurma,
-          evolucaoData,
-          notasValues,
-          notasDetalhadas,
-        ] = await Promise.all([
-          calcularMediasPorMateria(
-            alunoId,
-            newFilters.materia,
-            newFilters.tipo,
-            newFilters.bimestre
-          ),
-          calcularMediasTurma(
-            newFilters.materia,
-            newFilters.tipo,
-            newFilters.bimestre
-          ),
-          processarEvolucaoData(
-            alunoId,
-            newFilters.materia,
-            newFilters.tipo,
-            newFilters.bimestre
-          ),
-          extrairValoresNotas(
-            alunoId,
-            newFilters.materia,
-            newFilters.tipo,
-            newFilters.bimestre
-          ),
-          extrairNotasDetalhadas(
-            alunoId,
-            newFilters.materia,
-            newFilters.tipo,
-            newFilters.bimestre
-          ),
-        ]);
+        // IMPORTANTE: Sempre calcular médias da turma SEM filtros para comparação
+        const mediasTurmaCompletas = await calcularMediasTurma(
+          null,
+          null,
+          null
+        );
+
+        // Aplicar filtros apenas aos dados do aluno
+        const [mediasMaterias, evolucaoData, notasValues, notasDetalhadas] =
+          await Promise.all([
+            calcularMediasPorMateria(
+              alunoId,
+              newFilters.materia,
+              newFilters.tipo,
+              newFilters.bimestre
+            ),
+            processarEvolucaoData(
+              alunoId,
+              newFilters.materia,
+              newFilters.tipo,
+              newFilters.bimestre
+            ),
+            extrairValoresNotas(
+              alunoId,
+              newFilters.materia,
+              newFilters.tipo,
+              newFilters.bimestre
+            ),
+            extrairNotasDetalhadas(
+              alunoId,
+              newFilters.materia,
+              newFilters.tipo,
+              newFilters.bimestre
+            ),
+          ]);
 
         // Atualizar estados
+        console.log("=== ATUALIZANDO ESTADOS ===");
+        console.log("mediasMaterias calculadas:", mediasMaterias);
+        console.log(
+          "mediasTurma calculadas (COMPLETAS):",
+          mediasTurmaCompletas
+        );
+
         setMediasMaterias(mediasMaterias);
-        setMediaTurma(mediasTurma);
+        setMediaTurma(mediasTurmaCompletas); // SEMPRE usar médias completas da turma
         setEvolucaoData(evolucaoData);
         setNotasValues(notasValues);
         if (setNotasDetalhadas) {
           setNotasDetalhadas(notasDetalhadas);
         }
+
+        console.log("Estados atualizados com sucesso");
       } catch (error) {
         console.error("Erro ao aplicar filtros:", error);
       }
