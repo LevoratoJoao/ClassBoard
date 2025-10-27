@@ -16,8 +16,23 @@ const ComparacaoTurmaChart = ({ mediasMaterias = {}, mediasTurma = {} }) => {
     if (!ctx) return;
 
     const labels = Object.keys(mediasMaterias);
-    const dadosAluno = Object.values(mediasMaterias);
-    const dadosTurma = labels.map((label) => mediasTurma[label] || 0);
+    const dadosAluno = Object.values(mediasMaterias).map((media) => {
+      // Converter string para número, se "N/A" retorna 0
+      return media === "N/A" ? 0 : parseFloat(media) || 0;
+    });
+
+    const dadosTurma = labels.map((label) => {
+      // Converter string para número, garantindo que não seja NaN
+      const mediaTurmaMateria = mediasTurma[label];
+      if (!mediaTurmaMateria || mediaTurmaMateria === "N/A") return 0;
+      return parseFloat(mediaTurmaMateria) || 0;
+    });
+
+    // Verificar se temos dados válidos antes de criar o gráfico
+    if (labels.length === 0) {
+      console.warn("ComparacaoTurmaChart: Nenhuma matéria encontrada");
+      return;
+    }
 
     chartInstance.current = new Chart(ctx, {
       type: "bar",

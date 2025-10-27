@@ -105,30 +105,103 @@ const calcularEvolucaoCorreta = (notasAluno, todasAvaliacoes) => {
   }
 };
 
-// Função para calcular médias da turma considerando avaliações obrigatórias
+// Função alternativa mais simples para calcular médias da turma
+const calcularMediaTurmaSimples = async (todasNotas, todosAlunos) => {
+  try {
+    console.log("calcularMediaTurmaSimples - Iniciando cálculo");
+
+    const materias = [
+      "Matematica",
+      "Portugues",
+      "Historia",
+      "Geografia",
+      "Ciencias",
+      "Artes",
+    ];
+    const mediasTurma = {};
+
+    materias.forEach((materia) => {
+      // Filtrar todas as notas da matéria
+      const notasMateria = todasNotas.filter(
+        (nota) => nota.avaliacao && nota.avaliacao.materia === materia
+      );
+
+      if (notasMateria.length > 0) {
+        // Agrupar por aluno e calcular média individual
+        const mediasPorAluno = {};
+        notasMateria.forEach((nota) => {
+          if (!mediasPorAluno[nota.aluno_id]) {
+            mediasPorAluno[nota.aluno_id] = { soma: 0, count: 0 };
+          }
+          mediasPorAluno[nota.aluno_id].soma += nota.nota;
+          mediasPorAluno[nota.aluno_id].count += 1;
+        });
+
+        // Calcular média de cada aluno na matéria
+        const mediasAlunosMateria = Object.values(mediasPorAluno).map(
+          (dados) => dados.soma / dados.count
+        );
+
+        // Calcular média geral da turma na matéria
+        if (mediasAlunosMateria.length > 0) {
+          const mediaTurmaMateria =
+            mediasAlunosMateria.reduce((a, b) => a + b, 0) /
+            mediasAlunosMateria.length;
+          mediasTurma[materia] = mediaTurmaMateria.toFixed(2);
+          console.log(
+            `${materia}: Média da turma = ${mediaTurmaMateria.toFixed(
+              2
+            )} (baseada em ${mediasAlunosMateria.length} alunos)`
+          );
+        } else {
+          mediasTurma[materia] = "0.00";
+        }
+      } else {
+        mediasTurma[materia] = "0.00";
+        console.log(`${materia}: Nenhuma nota encontrada`);
+      }
+    });
+
+    console.log("Médias da turma (método simples):", mediasTurma);
+    return mediasTurma;
+  } catch (error) {
+    console.error("Erro ao calcular média da turma (método simples):", error);
+    return {};
+  }
+};
 const calcularMediaCorretaTurma = async (
   todasNotas,
   todasAvaliacoes,
   todosAlunos
 ) => {
   try {
+    console.log("calcularMediaCorretaTurma - Iniciando cálculo");
+    console.log("Total de notas:", todasNotas.length);
+    console.log("Total de avaliações:", todasAvaliacoes.length);
+    console.log("Total de alunos:", todosAlunos.length);
+
     const mediasAlunosPorMateria = {};
 
-    // Para cada aluno, calcular sua média correta
+    // Para cada aluno, calcular sua média correta (aguardando cada cálculo)
     for (const aluno of todosAlunos) {
       const notasAluno = todasNotas.filter(
         (nota) => nota.aluno_id === aluno.id
       );
+
+      // Aguardar o cálculo da média do aluno
       const mediasAluno = await calcularMediaCorretaAlunoData(
         notasAluno,
         todasAvaliacoes,
         aluno.id
       );
 
+      console.log(`Médias do aluno ${aluno.nome}:`, mediasAluno);
+
       // Adicionar às médias da turma
       Object.keys(mediasAluno).forEach((mat) => {
         const media = parseFloat(mediasAluno[mat]);
-        if (!isNaN(media)) {
+        if (!isNaN(media) && media > 0) {
+          // Só considera médias válidas e maiores que 0
           if (!mediasAlunosPorMateria[mat]) {
             mediasAlunosPorMateria[mat] = [];
           }
@@ -137,19 +210,27 @@ const calcularMediaCorretaTurma = async (
       });
     }
 
+    console.log("Médias por matéria coletadas:", mediasAlunosPorMateria);
+
     // Calcular média final da turma por matéria
     const mediasTurma = {};
     Object.keys(mediasAlunosPorMateria).forEach((mat) => {
       const medias = mediasAlunosPorMateria[mat];
       if (medias.length > 0) {
-        mediasTurma[mat] = (
+        const mediaFinal = (
           medias.reduce((a, b) => a + b, 0) / medias.length
         ).toFixed(2);
+        mediasTurma[mat] = mediaFinal;
+        console.log(
+          `Média da turma em ${mat}: ${mediaFinal} (baseada em ${medias.length} alunos)`
+        );
       } else {
         mediasTurma[mat] = "0.00";
+        console.log(`Nenhuma média válida encontrada para ${mat}`);
       }
     });
 
+    console.log("Médias finais da turma:", mediasTurma);
     return mediasTurma;
   } catch (error) {
     console.error("Erro ao calcular média correta da turma:", error);
@@ -213,10 +294,9 @@ export const useAlunoData = (alunoNome) => {
         );
         setMediasMaterias(mediasAlunoMaterias);
 
-        // Calcular médias corretas da turma usando a função helper
-        const mediasTurmaMaterias = await calcularMediaCorretaTurma(
+        // Calcular médias corretas da turma usando método simples
+        const mediasTurmaMaterias = await calcularMediaTurmaSimples(
           todasNotas,
-          todasAvaliacoes,
           todosAlunos
         );
         setMediaTurma(mediasTurmaMaterias);
@@ -282,10 +362,9 @@ export const useAlunoData = (alunoNome) => {
         );
         setMediasMaterias(mediasAlunoMaterias);
 
-        // Recalcular médias corretas da turma
-        const mediasTurmaMaterias = await calcularMediaCorretaTurma(
+        // Recalcular médias da turma usando método simples
+        const mediasTurmaMaterias = await calcularMediaTurmaSimples(
           todasNotas,
-          todasAvaliacoes,
           todosAlunos
         );
         setMediaTurma(mediasTurmaMaterias);
