@@ -1,55 +1,276 @@
 import jsPDF from "jspdf";
-import {
-  buildAlunoAiAnalysis,
-  buildMateriaAiAnalysis,
-} from "../services/aiService";
 import { getAllAlunos } from "../services/alunosService";
 import { notasAPI, avaliacoesAPI } from "../services/apiService";
+import {
+  buildMateriaAiAnalysis,
+  buildAlunoAiAnalysis,
+} from "../services/aiService";
 import cerebroIcon from "../assets/images/cerebro.webp";
+
+// Função específica para limpar nomes de pessoas (alunos, etc)
+const limparNome = (nome) => {
+  if (!nome) return "Nome não disponível";
+  
+  return String(nome)
+    .replace(/Ø=Ü./g, '')
+    .replace(/Ø=Ü/g, '')
+    .replace(/ÃƒÂ/g, '')
+    .replace(/[ÃØÜ]/g, '')
+    .replace(/[^\x20-\x7E\u00C0-\u00FF]/g, '') // Manter apenas ASCII + acentos latinos
+    .replace(/\s+/g, ' ') // Normalizar espaços
+    .trim();
+};
+
+// Função para gerar análise de fallback baseada em dados estatísticos
+const gerarAnaliseFallback = (tipo, nome, dados = {}) => {
+  if (tipo === 'materia') {
+    const { media = 0, totalAlunos = 0, percentualAprovacao = 0 } = dados;
+    
+    let classificacao = "Regular";
+    let recomendacao = "Manter acompanhamento.";
+    
+    if (media >= 8) {
+      classificacao = "Excelente";
+      recomendacao = "Continuar com as estratégias atuais.";
+    } else if (media >= 7) {
+      classificacao = "Bom";
+      recomendacao = "Pequenos ajustes para melhorar ainda mais.";
+    } else if (media >= 6) {
+      classificacao = "Satisfatório";
+      recomendacao = "Identificar pontos de melhoria específicos.";
+    } else if (media < 5) {
+      classificacao = "Necessita Atenção";
+      recomendacao = "Intervenção pedagógica urgente recomendada.";
+    }
+    
+    return {
+      summary: `Análise de ${nome}: ${classificacao} (Média: ${media}).`,
+      comment: `A matéria ${nome} apresenta média de ${media} pontos com ${percentualAprovacao}% de aprovação entre ${totalAlunos} alunos. ${recomendacao} O desempenho indica ${classificacao.toLowerCase()} rendimento da turma nesta disciplina.`
+    };
+  } else if (tipo === 'aluno') {
+    const { mediaGeral = 0, situacao = "Em avaliação" } = dados;
+    
+    let status = "Regular";
+    let orientacao = "Acompanhar desenvolvimento.";
+    
+    if (mediaGeral >= 8) {
+      status = "Excelente";
+      orientacao = "Manter o bom desempenho e servir de exemplo.";
+    } else if (mediaGeral >= 7) {
+      status = "Bom";
+      orientacao = "Pequenos ajustes podem levar à excelência.";
+    } else if (mediaGeral >= 6) {
+      status = "Satisfatório";
+      orientacao = "Foco em matérias com menor desempenho.";
+    } else if (mediaGeral < 6) {
+      status = "Necessita Apoio";
+      orientacao = "Reforço escolar e acompanhamento próximo recomendados.";
+    }
+    
+    return {
+      summary: `Análise do aluno ${nome}: ${status} (Média geral: ${mediaGeral}).`,
+      comment: `O estudante ${nome} apresenta média geral de ${mediaGeral} pontos, situação acadêmica ${situacao}. ${orientacao} O desempenho demonstra necessidade de ${status.toLowerCase()} acompanhamento pedagógico.`
+    };
+  }
+  
+  return {
+    summary: `Análise de ${nome}: Dados em processamento.`,
+    comment: "Análise detalhada será disponibilizada em breve com base nos dados coletados."
+  };
+};
+
+// Função ultra-agressiva para limpar texto da IA
+const limparTextoIA = (texto) => {
+  if (!texto) return "Análise não disponível.";
+  
+  try {
+    let textoProcessado = String(texto);
+    
+    // ETAPA 1: Remover TODOS os caracteres problemáticos conhecidos
+    textoProcessado = textoProcessado
+      // Remover sequências específicas problemáticas
+      .replace(/Ø=Ü[^\s]*/g, '')
+      .replace(/Ø=Ü/g, '')
+      .replace(/ÃƒÂ[^\s]*/g, '')
+      .replace(/ÃƒÂ/g, '')
+      .replace(/Ã[^aeiou\s]/g, '') // Remove Ã seguido de qualquer coisa que não seja vogal
+      .replace(/[ÃØÜ][^\w\s]/g, '') // Remove sequências problemáticas
+      .replace(/[ÃØÜ]/g, '') // Remove os caracteres individuais
+      // Caracteres específicos de encoding problemático
+      .replace(/â€[™œ¢"]/g, '')
+      .replace(/â€"/g, '-')
+      .replace(/[â€]/g, '')
+      
+    // ETAPA 2: Forçar remoção de TUDO que não é ASCII básico + acentos portugueses essenciais
+    textoProcessado = textoProcessado.replace(/[^\x20-\x7E\u00E0-\u00E9\u00EC-\u00ED\u00F2-\u00F5\u00F9-\u00FA\u00E7\u00C0-\u00C9\u00CC-\u00CD\u00D2-\u00D5\u00D9-\u00DA\u00C7]/g, '');
+    
+    // ETAPA 3: Limpeza de markdown e HTML
+    textoProcessado = textoProcessado
+      .replace(/<[^>]*>/g, '') // Remove HTML
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove markdown bold mas mantém conteúdo
+      .replace(/\*([^*]+)\*/g, '$1') // Remove markdown italic mas mantém conteúdo
+      .replace(/#{1,6}\s*/g, '') // Remove headers markdown
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .replace(/`([^`]*)`/g, '$1') // Remove inline code, mantém conteúdo
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Remove links, mantém texto
+      
+    // ETAPA 4: Normalizar espaços e quebras
+    textoProcessado = textoProcessado
+      .replace(/\s{2,}/g, ' ') // Normaliza espaços múltiplos
+      .replace(/\n\s*\n/g, '\n') // Remove quebras múltiplas
+      .replace(/^\s+|\s+$/g, '') // Remove espaços do início e fim
+      .trim();
+    
+    // ETAPA 5: Validação final
+    if (!textoProcessado || textoProcessado.length < 10) {
+      return "Análise educacional não disponível para este item.";
+    }
+    
+    // ETAPA 6: Verificação de caracteres remanescentes problemáticos
+    if (/[ÃØÜ]/.test(textoProcessado)) {
+      console.warn("Caracteres problemáticos ainda presentes, aplicando limpeza final");
+      textoProcessado = textoProcessado.replace(/[ÃØÜ]/g, '').trim();
+    }
+    
+    return textoProcessado;
+    
+  } catch (error) {
+    console.error("Erro crítico ao processar texto da IA:", error);
+    return "Erro na análise - conteúdo indisponível.";
+  }
+};
 
 // Função para limpar texto de caracteres problemáticos de encoding e markdown
 const limparTexto = (texto) => {
   if (!texto) return "";
-  return texto
+  
+  // Primeiro, remover TODOS os caracteres problemáticos conhecidos
+  let textoLimpo = String(texto)
+    .replace(/Ø=Ü./g, "") // Remove caracteres específicos problemáticos
+    .replace(/Ø=Ü/g, "")
+    .replace(/ÃƒÂ/g, "") 
+    .replace(/â€™/g, "'") 
+    .replace(/â€œ/g, '"') 
+    .replace(/â€/g, '"') 
+    .replace(/â€¢/g, "•") 
+    .replace(/â€"/g, "-") 
+    .replace(/Ã§/g, "ç") 
+    .replace(/Ã£/g, "ã") 
+    .replace(/Ã¡/g, "á") 
+    .replace(/Ã©/g, "é") 
+    .replace(/Ã­/g, "í") 
+    .replace(/Ã³/g, "ó") 
+    .replace(/Ãº/g, "ú") 
+    .replace(/Ã /g, "à") 
+    .replace(/Ãª/g, "ê") 
+    .replace(/Ã´/g, "ô") 
+    .replace(/Ãµ/g, "õ") 
+    .replace(/Ã¢/g, "â") 
+    .replace(/Ã¯/g, "ï") 
+    .replace(/Ã¼/g, "ü") 
+    .replace(/Ã¶/g, "ö") 
+    .replace(/Ã¤/g, "ä")
+    // Remover qualquer sequência que pareça encoding problemático
+    .replace(/[ÃØÜ][^\w\s]/g, "")
+    .replace(/[^\x00-\x7F\u00C0-\u00FF]/g, ""); // Remover tudo que não é ASCII ou Latin-1
+
+  return textoLimpo
     .replace(/<[^>]+>/g, "") // Remove HTML tags
     .replace(/```[^`]*```/g, "") // Remove code blocks
     .replace(/\*\*/g, "") // Remove markdown bold
+    .replace(/\*/g, "") // Remove markdown asteriscos
     .replace(/##\s*/g, "") // Remove markdown headers
-    .replace(/Ø=Ü./g, "") // Remove caracteres de encoding problemático
-    .replace(/[^\x00-\x7F]/g, (char) => {
-      // Substitui caracteres não-ASCII por equivalentes ou remove
-      const replacements = {
-        ü: "u",
-        ï: "i",
-        ö: "o",
-        ä: "a",
-        é: "e",
-        ê: "e",
-        à: "a",
-        á: "a",
-        ã: "a",
-        ç: "c",
-        õ: "o",
-        ó: "o",
-        í: "i",
-        ú: "u",
-        "•": "-",
-        "–": "-",
-        "—": "-",
-        '"': '"',
-        '"': '"',
-        "…": "...",
-        "™": "",
-        "®": "",
-        "©": "",
-        "€": "EUR",
-        "£": "GBP",
-        "¥": "JPY",
-      };
-      return replacements[char] || "";
-    })
+    .replace(/#\s*/g, "") // Remove markdown headers simples
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links markdown, mantém texto
     .replace(/\s+/g, " ") // Normaliza espaços múltiplos
+    .replace(/^\s+|\s+$/g, "") // Remove espaços do início e fim
     .trim();
+};
+
+// Função para renderizar análise de IA com formatação melhorada
+const renderAiAnalysis = (doc, analise, x, y, maxWidth, colors = { header: [52, 152, 219], text: [44, 62, 80] }) => {
+  let currentY = y;
+  
+  // Limpar e processar os textos com validação extra
+  let summaryLimpo = "";
+  let comentarioLimpo = "";
+  
+  try {
+    // Manter o texto da IA original, sem limpeza agressiva
+    summaryLimpo = analise.summary || "Análise disponível: Desempenho em avaliação.";
+    comentarioLimpo = analise.comment || "Análise detalhada em processamento. Dados estatísticos disponíveis no relatório.";
+    
+    // Se após verificação o texto ficou vazio ou muito pequeno, usar fallback
+    if (!summaryLimpo || summaryLimpo.length < 10) {
+      summaryLimpo = "Análise disponível: Desempenho em avaliação.";
+    }
+    
+    if (!comentarioLimpo || comentarioLimpo.length < 20) {
+      comentarioLimpo = "Análise detalhada em processamento. Dados estatísticos disponíveis no relatório.";
+    }
+    
+  } catch (error) {
+    console.warn("Erro ao processar texto da IA:", error);
+    summaryLimpo = "Análise indisponível no momento.";
+    comentarioLimpo = "Erro ao processar análise da IA.";
+  }
+  
+  // Renderizar summary com estilo destacado
+  doc.setFillColor(colors.header[0], colors.header[1], colors.header[2]);
+  doc.setDrawColor(colors.header[0] - 20, colors.header[1] - 20, colors.header[2] - 20);
+  
+  // Calcular altura necessária para o summary
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  const linhasSummary = doc.splitTextToSize(summaryLimpo, maxWidth - 20);
+  const summaryHeight = Math.max(15, linhasSummary.length * 4.5 + 8);
+  
+  // Caixa para o summary
+  doc.roundedRect(x, currentY, maxWidth, summaryHeight, 2, 2, "FD");
+  
+  // Ícone de IA
+  doc.setFillColor(255, 255, 255);
+  doc.circle(x + 8, currentY + 8, 3, "F");
+  doc.setTextColor(colors.header[0], colors.header[1], colors.header[2]);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6);
+  doc.text("IA", x + 8, currentY + 10, { align: "center" });
+  
+  // Texto do summary
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  
+  linhasSummary.forEach((linha, index) => {
+    doc.text(linha, x + 18, currentY + 8 + (index * 4.5));
+  });
+  
+  currentY += summaryHeight + 5;
+  
+  // Renderizar comentário detalhado
+  if (comentarioLimpo && comentarioLimpo.trim()) {
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    
+    const linhasComentario = doc.splitTextToSize(comentarioLimpo, maxWidth - 10);
+    
+    // Caixa sutil para o comentário
+    const comentarioHeight = linhasComentario.length * 4.5 + 10;
+    doc.setFillColor(248, 249, 250);
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(x, currentY, maxWidth, comentarioHeight, 2, 2, "FD");
+    
+    // Renderizar linhas do comentário
+    linhasComentario.forEach((linha, index) => {
+      doc.text(linha, x + 5, currentY + 8 + (index * 4.5));
+    });
+    
+    currentY += comentarioHeight;
+  }
+  
+  return currentY + 5; // Retorna a nova posição Y
 };
 
 // Função para justificar texto no PDF
@@ -146,7 +367,20 @@ const calculateStats = (valores) => {
 };
 
 // Função para gerar análise IA das estatísticas
-const generateStatsAnalysis = async (estatisticas, totalAlunos, totalNotas) => {
+const generateStatsAnalysis = async (estatisticas, totalAlunos, totalNotas, analisesMateria) => {
+  // Extrair insights das análises de matérias
+  const materiasComProblemas = [];
+  const materiasExcelentes = [];
+  
+  Object.entries(analisesMateria).forEach(([materia, analise]) => {
+    const summary = analise.summary.toLowerCase();
+    if (summary.includes('necessita atenção') || summary.includes('regular')) {
+      materiasComProblemas.push(materia);
+    } else if (summary.includes('excelente') || summary.includes('bom')) {
+      materiasExcelentes.push(materia);
+    }
+  });
+
   const prompt = `Analise estas estatísticas educacionais e forneça insights importantes em português brasileiro:
   
   - Total de Alunos: ${totalAlunos}
@@ -156,8 +390,11 @@ const generateStatsAnalysis = async (estatisticas, totalAlunos, totalNotas) => {
   - Desvio Padrão: ${estatisticas.desvio}
   - Nota Mínima: ${estatisticas.minimo}
   - Nota Máxima: ${estatisticas.maximo}
+  - Matérias com bom desempenho: ${materiasExcelentes.join(', ') || 'Nenhuma identificada'}
+  - Matérias que necessitam atenção: ${materiasComProblemas.join(', ') || 'Nenhuma identificada'}
   
-  Forneça uma análise breve (máximo 3 parágrafos) sobre o desempenho geral, variabilidade e recomendações. Seja direto e objetivo.`;
+  Forneça uma análise integrada considerando tanto as estatísticas quanto o desempenho por matéria. 
+  Seja direto e objetivo em máximo 4 parágrafos. Inclua recomendações práticas para a gestão escolar.`;
 
   try {
     // Usar a mesma estrutura do aiService.js
@@ -224,14 +461,19 @@ const generateStatsAnalysis = async (estatisticas, totalAlunos, totalNotas) => {
 const generateSimpleChart = async (data, type = "bar") => {
   try {
     const canvas = document.createElement("canvas");
-    canvas.width = 400;
-    canvas.height = 250;
+    canvas.width = 500;
+    // Aumentar altura para gráficos com legendas
+    canvas.height = type === "comparison" || type === "bimestral" ? 380 : 300;
     const ctx = canvas.getContext("2d");
 
     // Configurações do gráfico
-    const padding = 40;
+    const padding = 50;
     const chartWidth = canvas.width - 2 * padding;
-    const chartHeight = canvas.height - 2 * padding;
+    // Ajustar altura do gráfico para deixar mais espaço para legendas
+    const chartHeight =
+      type === "comparison" || type === "bimestral"
+        ? canvas.height - 2 * padding - 80
+        : canvas.height - 2 * padding;
 
     // Limpar canvas
     ctx.fillStyle = "#ffffff";
@@ -273,7 +515,342 @@ const generateSimpleChart = async (data, type = "bar") => {
       ctx.fillStyle = "#2c3e50";
       ctx.font = "bold 16px Arial";
       ctx.textAlign = "center";
-      ctx.fillText(data.title || "Gráfico", canvas.width / 2, 25);
+      ctx.fillText(
+        data.title || "Gráfico Prova X Trabalho",
+        canvas.width / 2,
+        25
+      );
+    }
+
+    // Gráfico de pizza
+    if (type === "pie" && data.labels && data.values) {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(chartWidth, chartHeight) / 2 - 20;
+      const total = data.values.reduce((sum, val) => sum + val, 0);
+
+      let currentAngle = -Math.PI / 2; // Começar do topo
+
+      const colors = ["#2ecc71", "#3498db", "#f39c12", "#e74c3c", "#9b59b6"];
+
+      data.values.forEach((value, index) => {
+        const sliceAngle = (value / total) * 2 * Math.PI;
+
+        // Desenhar fatia
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(
+          centerX,
+          centerY,
+          radius,
+          currentAngle,
+          currentAngle + sliceAngle
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Desenhar borda
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Label e percentual
+        const labelAngle = currentAngle + sliceAngle / 2;
+        const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+        const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+
+        const percentage = ((value / total) * 100).toFixed(1);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(`${percentage}%`, labelX, labelY);
+
+        currentAngle += sliceAngle;
+      });
+
+      // Legenda
+      data.labels.forEach((label, index) => {
+        const legendX = padding;
+        const legendY = padding + index * 20;
+
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fillRect(legendX, legendY, 12, 12);
+
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(label, legendX + 18, legendY + 9);
+      });
+
+      // Título
+      ctx.fillStyle = "#2c3e50";
+      ctx.font = "bold 16px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        data.title || "Gráfico Prova X Trabalho",
+        canvas.width / 2,
+        25
+      );
+    }
+
+    // Gráfico de barras comparativas (prova vs trabalho)
+    if (type === "comparison" && data.labels && data.datasets) {
+      const maxValue = Math.max(...data.datasets.flatMap((d) => d.values));
+      const groupWidth = chartWidth / data.labels.length;
+      const barWidth = (groupWidth / data.datasets.length) * 0.8;
+
+      data.datasets.forEach((dataset, datasetIndex) => {
+        const color =
+          dataset.color || (datasetIndex === 0 ? "#3498db" : "#e74c3c");
+
+        dataset.values.forEach((value, index) => {
+          const barHeight = (value / maxValue) * chartHeight;
+          const x =
+            padding +
+            index * groupWidth +
+            datasetIndex * barWidth +
+            groupWidth * 0.1;
+          const y = padding + chartHeight - barHeight;
+
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, barWidth, barHeight);
+
+          // Valor
+          ctx.fillStyle = "#2c3e50";
+          ctx.font = "10px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(value.toFixed(1), x + barWidth / 2, y - 5);
+        });
+
+        // Legenda
+        const legendY = padding + chartHeight + 50 + datasetIndex * 18;
+        ctx.fillStyle = color;
+        ctx.fillRect(padding, legendY, 12, 12);
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(dataset.label, padding + 18, legendY + 9);
+      });
+
+      // Labels das matérias
+      data.labels.forEach((label, index) => {
+        const x = padding + index * groupWidth + groupWidth / 2;
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.save();
+        ctx.translate(x, padding + chartHeight + 25);
+        ctx.rotate(-Math.PI / 6);
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+
+      // Título
+      ctx.fillStyle = "#2c3e50";
+      ctx.font = "bold 16px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        data.title || "Gráfico Prova X Trabalho",
+        canvas.width / 2,
+        25
+      );
+    }
+
+    // Gráfico de barras comparando bimestres
+    if (type === "bimestral" && data.labels && data.datasets) {
+      const maxValue = Math.max(...data.datasets.flatMap((d) => d.values));
+      const groupWidth = chartWidth / data.labels.length;
+      const barWidth = (groupWidth / data.datasets.length) * 0.8;
+
+      data.datasets.forEach((dataset, datasetIndex) => {
+        const colors = ["#3498db", "#e74c3c", "#2ecc71"];
+        const color = dataset.color || colors[datasetIndex % colors.length];
+
+        dataset.values.forEach((value, index) => {
+          const barHeight = (value / maxValue) * chartHeight;
+          const x =
+            padding +
+            index * groupWidth +
+            datasetIndex * barWidth +
+            groupWidth * 0.1;
+          const y = padding + chartHeight - barHeight;
+
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, barWidth, barHeight);
+
+          // Valor
+          ctx.fillStyle = "#2c3e50";
+          ctx.font = "10px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(value.toFixed(1), x + barWidth / 2, y - 5);
+        });
+
+        // Legenda
+        const legendY = padding + chartHeight + 50 + datasetIndex * 18;
+        ctx.fillStyle = color;
+        ctx.fillRect(padding, legendY, 12, 12);
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(dataset.label, padding + 18, legendY + 9);
+      });
+
+      // Labels das matérias
+      data.labels.forEach((label, index) => {
+        const x = padding + index * groupWidth + groupWidth / 2;
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.save();
+        ctx.translate(x, padding + chartHeight + 25);
+        ctx.rotate(-Math.PI / 6);
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+
+      // Título
+      ctx.fillStyle = "#2c3e50";
+      ctx.font = "bold 16px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(data.title || "Comparação Bimestral", canvas.width / 2, 25);
+    }
+
+    // Heatmap de correlação entre matérias
+    if (type === "heatmap" && data.matrix && data.labels) {
+      const cellSize = Math.min(chartWidth, chartHeight) / data.labels.length;
+      const startX = padding + (chartWidth - cellSize * data.labels.length) / 2;
+      const startY =
+        padding + (chartHeight - cellSize * data.labels.length) / 2;
+
+      // Encontrar min e max para normalização
+      const values = data.matrix.flat();
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
+
+      // Desenhar células do heatmap
+      data.matrix.forEach((row, i) => {
+        row.forEach((value, j) => {
+          const x = startX + j * cellSize;
+          const y = startY + i * cellSize;
+
+          // Normalizar valor para cor (0-1)
+          const normalizedValue = (value - minVal) / (maxVal - minVal);
+
+          // Cor baseada no valor (azul fraco para vermelho forte)
+          const red = Math.floor(255 * normalizedValue);
+          const blue = Math.floor(255 * (1 - normalizedValue));
+          ctx.fillStyle = `rgb(${red}, 50, ${blue})`;
+
+          ctx.fillRect(x, y, cellSize, cellSize);
+
+          // Borda
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, cellSize, cellSize);
+
+          // Valor na célula
+          ctx.fillStyle = normalizedValue > 0.5 ? "#ffffff" : "#000000";
+          ctx.font = "10px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            value.toFixed(2),
+            x + cellSize / 2,
+            y + cellSize / 2 + 3
+          );
+        });
+      });
+
+      // Labels das matérias (eixo X)
+      data.labels.forEach((label, index) => {
+        const x = startX + index * cellSize + cellSize / 2;
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        ctx.save();
+        ctx.translate(x, startY - 10);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+
+      // Labels das matérias (eixo Y)
+      data.labels.forEach((label, index) => {
+        const y = startY + index * cellSize + cellSize / 2;
+        ctx.fillStyle = "#2c3e50";
+        ctx.font = "10px Arial";
+        ctx.textAlign = "right";
+        ctx.fillText(label, startX - 5, y + 3);
+      });
+
+      // Título
+      ctx.fillStyle = "#2c3e50";
+      ctx.font = "bold 16px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(data.title || "Heatmap de Correlação", canvas.width / 2, 25);
+    }
+
+    // Gráfico de dispersão
+    if (type === "scatter" && data.points) {
+      const xValues = data.points.map((p) => p.x);
+      const yValues = data.points.map((p) => p.y);
+      const minX = Math.min(...xValues);
+      const maxX = Math.max(...xValues);
+      const minY = Math.min(...yValues);
+      const maxY = Math.max(...yValues);
+
+      // Desenhar pontos
+      data.points.forEach((point) => {
+        const x = padding + ((point.x - minX) / (maxX - minX)) * chartWidth;
+        const y =
+          padding +
+          chartHeight -
+          ((point.y - minY) / (maxY - minY)) * chartHeight;
+
+        ctx.fillStyle = point.color || "#3498db";
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Label do ponto se disponível
+        if (point.label) {
+          ctx.fillStyle = "#2c3e50";
+          ctx.font = "8px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(point.label, x, y - 8);
+        }
+      });
+
+      // Eixos
+      ctx.strokeStyle = "#2c3e50";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding + chartHeight);
+      ctx.lineTo(padding + chartWidth, padding + chartHeight);
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, padding + chartHeight);
+      ctx.stroke();
+
+      // Labels dos eixos
+      ctx.fillStyle = "#2c3e50";
+      ctx.font = "12px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        data.xLabel || "X",
+        padding + chartWidth / 2,
+        padding + chartHeight + 30
+      );
+      ctx.save();
+      ctx.translate(15, padding + chartHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(data.yLabel || "Y", 0, 0);
+      ctx.restore();
+
+      // Título
+      ctx.fillStyle = "#2c3e50";
+      ctx.font = "bold 16px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(data.title || "Dispersão", canvas.width / 2, 25);
     }
 
     // Aguardar renderização
@@ -286,7 +863,16 @@ const generateSimpleChart = async (data, type = "bar") => {
   }
 };
 
-export const handleDownloadRelatorio = async () => {
+export const handleDownloadRelatorio = async (onProgress = null) => {
+  // Callback para atualizar progresso se fornecido
+  const updateProgress = (message) => {
+    if (onProgress && typeof onProgress === 'function') {
+      onProgress(message);
+    }
+    console.log(message);
+  };
+
+  updateProgress("Carregando dados básicos...");
   // Buscar dados da API
   const alunos = await getAllAlunos();
   const todasNotas = await notasAPI.getAllNotas();
@@ -300,6 +886,102 @@ export const handleDownloadRelatorio = async () => {
     "Ciencias",
     "Artes",
   ];
+
+  // Gerar análises de IA para todas as matérias
+  updateProgress("Gerando análises de IA para matérias...");
+  const analisesMateria = {};
+  for (let i = 0; i < materias.length; i++) {
+    const materia = materias[i];
+    updateProgress(`Analisando ${materia} (${i + 1}/${materias.length})...`);
+    try {
+      const analise = await buildMateriaAiAnalysis(materia);
+      
+      // Manter os textos da IA originais, sem limpeza
+      let analiseLimpa = {
+        summary: analise.summary || `Análise de ${materia}: Dados em processamento.`,
+        comment: analise.comment || "Análise detalhada será disponibilizada em breve."
+      };
+      
+      // Verificar apenas se está vazio, não aplicar limpeza agressiva
+      if (!analiseLimpa.summary || analiseLimpa.summary.length < 10) {
+        console.warn(`Análise IA vazia para ${materia}, usando fallback`);
+        
+        // Calcular dados para fallback apenas se necessário
+        const notasMateria = todasNotas.filter(nota => nota.avaliacao && nota.avaliacao.materia === materia);
+        const media = notasMateria.length > 0 ? 
+          (notasMateria.reduce((sum, n) => sum + n.nota, 0) / notasMateria.length).toFixed(2) : 0;
+        const alunosUnicos = [...new Set(notasMateria.map(n => n.aluno_id))];
+        const alunosAprovados = alunosUnicos.filter(alunoId => {
+          const notasAluno = notasMateria.filter(n => n.aluno_id === alunoId);
+          const mediaAluno = notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length;
+          return mediaAluno >= 6;
+        }).length;
+        const percentualAprovacao = alunosUnicos.length > 0 ? 
+          ((alunosAprovados / alunosUnicos.length) * 100).toFixed(1) : 0;
+        
+        analiseLimpa = gerarAnaliseFallback('materia', materia, {
+          media: parseFloat(media),
+          totalAlunos: alunosUnicos.length,
+          percentualAprovacao: parseFloat(percentualAprovacao)
+        });
+      }
+      
+      analisesMateria[materia] = analiseLimpa;
+    } catch (error) {
+      console.warn(`Erro ao gerar análise para ${materia}:`, error);
+      analisesMateria[materia] = gerarAnaliseFallback('materia', materia);
+    }
+  }
+
+  // Gerar análises de IA para alunos (limitando para evitar muitas chamadas)
+  updateProgress("Gerando análises de IA para alunos...");
+  const analisesAluno = {};
+  const alunosParaAnalise = alunos.slice(0, 10); // Limitar a 10 alunos para não sobrecarregar
+  for (let i = 0; i < alunosParaAnalise.length; i++) {
+    const aluno = alunosParaAnalise[i];
+    
+    // LIMPAR O NOME DO ALUNO usando a função específica
+    const nomeAlunoLimpo = limparNome(aluno.nome);
+    
+    updateProgress(`Analisando ${nomeAlunoLimpo} (${i + 1}/${alunosParaAnalise.length})...`);
+    try {
+      const analise = await buildAlunoAiAnalysis(aluno.id);
+      
+      // Manter os textos da IA originais, sem limpeza
+      let analiseLimpa = {
+        summary: analise.summary || `Análise do aluno ${nomeAlunoLimpo}: Dados em processamento.`,
+        comment: analise.comment || "Análise detalhada será disponibilizada em breve.",
+        nome: nomeAlunoLimpo // Usar o nome limpo
+      };
+      
+      // Verificar apenas se está vazio, não aplicar limpeza no texto da IA
+      if (!analiseLimpa.summary || analiseLimpa.summary.length < 10) {
+        console.warn(`Análise IA vazia para ${nomeAlunoLimpo}, usando fallback`);
+        
+        // Calcular dados para fallback apenas se necessário
+        const notasAluno = todasNotas.filter(nota => nota.aluno_id === aluno.id);
+        const mediaGeral = notasAluno.length > 0 ? 
+          (notasAluno.reduce((sum, n) => sum + n.nota, 0) / notasAluno.length).toFixed(2) : 0;
+        const situacao = parseFloat(mediaGeral) >= 6 ? "Aprovado" : "Em recuperação";
+        
+        analiseLimpa = gerarAnaliseFallback('aluno', nomeAlunoLimpo, {
+          mediaGeral: parseFloat(mediaGeral),
+          situacao: situacao
+        });
+        analiseLimpa.nome = nomeAlunoLimpo;
+      }
+      
+      analisesAluno[aluno.id] = analiseLimpa;
+    } catch (error) {
+      console.warn(`Erro ao gerar análise para aluno ${nomeAlunoLimpo}:`, error);
+      analisesAluno[aluno.id] = {
+        ...gerarAnaliseFallback('aluno', nomeAlunoLimpo),
+        nome: nomeAlunoLimpo
+      };
+    }
+  }
+
+  updateProgress("Processando estatísticas...");
 
   // Calcular estatísticas avançadas
   const estatisticasGerais = calculateStats(todasNotas.map((n) => n.nota));
@@ -349,9 +1031,11 @@ export const handleDownloadRelatorio = async () => {
     }
   });
 
+  updateProgress("Gerando gráficos...");
   // Gerar gráfico
   const chartImage = await generateSimpleChart(dadosGrafico, "bar");
 
+  updateProgress("Criando documento PDF...");
   const doc = new jsPDF();
   let y = 20;
   const margin = 10;
@@ -377,7 +1061,7 @@ export const handleDownloadRelatorio = async () => {
   // Criar caixas de estatísticas em grid 2x3
   const boxWidth = (pageWidth - margin * 2 - 15) / 2; // 2 colunas
   const boxHeight = 25;
-  const boxSpacing = 5;
+  const boxSpacing = 1;
 
   const estatisticas = [
     { valor: alunos.length, label: "Total de Alunos", cor: [52, 152, 219] },
@@ -445,15 +1129,17 @@ export const handleDownloadRelatorio = async () => {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
 
+  updateProgress("Gerando análise geral das estatísticas...");
   // Buscar análise IA das estatísticas usando função auxiliar
   const analiseEstatisticas = await generateStatsAnalysis(
     estatisticasGerais,
     alunos.length,
-    todasNotas.length
+    todasNotas.length,
+    analisesMateria
   );
-
-  // Limpar e formatar o texto da análise primeiro para calcular altura
-  const textoLimpo = limparTexto(analiseEstatisticas);
+  
+  // Manter o texto original da IA, sem limpeza agressiva
+  const textoLimpo = analiseEstatisticas || "Análise estatística em processamento.";
 
   // Calcular dimensões do texto
   const textWidth = pageWidth - margin * 2 - 10;
@@ -522,300 +1208,29 @@ export const handleDownloadRelatorio = async () => {
 
   y += analiseHeight + 15;
 
-  // ========================= PÁGINA DE GRÁFICO =========================
-  if (chartImage) {
-    doc.addPage();
-    y = 20;
-
-    doc.setFillColor(52, 152, 219);
-    doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Análise Visual das Matérias", pageWidth / 2, y, {
-      align: "center",
-    });
-    y += 25;
-
-    // Adicionar gráfico
-    const imgWidth = 120;
-    const imgHeight = 75;
-    const imgX = (pageWidth - imgWidth) / 2;
-    doc.addImage(chartImage, "PNG", imgX, y, imgWidth, imgHeight);
-    y += imgHeight + 15;
-  }
-
-  // ========================= ANÁLISES IA - ALUNOS =========================
+  // ========================= SEÇÃO DE GRÁFICOS IMPORTANTES =========================
+  // Nova página para gráficos
   doc.addPage();
   y = 20;
 
-  doc.setFillColor(41, 128, 185);
+  // Definir dimensões dos gráficos para layout 2x2
+  const chartWidthSide = 90; // Largura mais proporcional
+  const chartHeightSide = 70; // Altura aumentada para melhor proporção
+  const spacing = 1; // Espaçamento reduzido entre gráficos
+
+  // Cabeçalho da seção de gráficos
+  doc.setFillColor(155, 89, 182);
   doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("Análises IA - Desempenho Individual", pageWidth / 2, y, {
+  doc.text("Gráficos Importantes", pageWidth / 2, y, {
     align: "center",
   });
   y += 25;
 
-  // Processar alunos sequencialmente para aguardar análises IA
-  for (const aluno of alunos) {
-    if (y > 220) {
-      doc.addPage();
-      y = 20;
-    }
-
-    doc.setFillColor(230, 240, 255);
-    doc.roundedRect(margin, y - 4, pageWidth - margin * 2, 55, 3, 3, "F");
-    doc.setTextColor(44, 62, 80);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`${aluno.nome}`, margin + 3, y + 3);
-
-    // Estatísticas rápidas do aluno
-    const notasAluno = todasNotas.filter((nota) => nota.aluno_id === aluno.id);
-    const statsAluno = calculateStats(notasAluno.map((n) => n.nota));
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-
-    // Análise IA com fallback garantido
-    let analysis;
-
-    try {
-      analysis = await buildAlunoAiAnalysis(aluno.id || aluno.nome);
-
-      // Se não recebeu análise válida, criar fallback
-      if (!analysis || (!analysis.summary && !analysis.comment)) {
-        analysis = {
-          summary: `Análise do aluno ${aluno.nome}: Análise automática indisponível.`,
-          comment: `Este aluno requer análise manual dos dados de desempenho. Verifique as notas e estatísticas para uma avaliação completa.`,
-        };
-      }
-    } catch (error) {
-      // Fallback em caso de erro
-      analysis = {
-        summary: `Análise do aluno ${aluno.nome}: Erro no processamento.`,
-        comment: `Não foi possível gerar a análise automática. Recomenda-se análise manual dos dados de desempenho deste aluno.`,
-      };
-    }
-
-    // Verificar se há dados para análise
-    if (!analysis || (!analysis.summary && !analysis.comment)) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Dados indisponíveis para análise", margin + 3, y + 20);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        "Não foi possível analisar os dados do aluno no momento.",
-        margin + 3,
-        y + 32
-      );
-
-      y += 50;
-      return;
-    }
-
-    // Conteúdo da análise
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(44, 62, 80);
-    let lines = doc.splitTextToSize(analysis.summary, maxWidth - 6);
-    doc.text(lines, margin + 3, y + 28);
-
-    let currentY = y + 28 + lines.length * 4.5 + 8;
-
-    // Comentários detalhados (se existirem)
-    if (analysis.comment && analysis.comment.trim()) {
-      let commentLines = [];
-      analysis.comment.split("<br>").forEach((c) => {
-        const cleanLine = limparTexto(c);
-        if (cleanLine) {
-          commentLines = commentLines.concat(
-            doc.splitTextToSize(cleanLine, maxWidth - 6)
-          );
-        }
-      });
-
-      if (commentLines.length > 0) {
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(8);
-        doc.setTextColor(52, 73, 94);
-        doc.text(commentLines, margin + 3, currentY);
-        currentY += commentLines.length * 3.5;
-      }
-    }
-
-    y = currentY + 15;
-  }
-
-  // ========================= ANÁLISES IA - MATÉRIAS =========================
-  doc.addPage();
-  y = 20;
-
-  doc.setFillColor(230, 126, 34);
-  doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("Análises IA - Desempenho por Matéria", pageWidth / 2, y, {
-    align: "center",
-  });
-  y += 25;
-
-  // Processar matérias sequencialmente para aguardar análises IA
-  for (const materia of materias) {
-    if (y > 220) {
-      doc.addPage();
-      y = 20;
-    }
-
-    doc.setFillColor(255, 245, 225);
-
-    // Calcular altura necessária dinamicamente
-    let materiaAnalysis;
-
-    try {
-      materiaAnalysis = await buildMateriaAiAnalysis(materia);
-
-      // Se não recebeu análise válida, criar fallback imediatamente
-      if (
-        !materiaAnalysis ||
-        (!materiaAnalysis.summary && !materiaAnalysis.comment)
-      ) {
-        materiaAnalysis = {
-          summary: `Análise de desempenho para ${materia}: Análise automática indisponível.`,
-          comment: `Esta matéria requer análise manual dos dados de desempenho. Verifique as estatísticas e gráficos para uma avaliação completa.`,
-        };
-      }
-    } catch (error) {
-      // Fallback em caso de erro
-      materiaAnalysis = {
-        summary: `Análise de desempenho para ${materia}: Erro no processamento.`,
-        comment: `Não foi possível gerar a análise automática. Recomenda-se análise manual dos dados de desempenho desta matéria.`,
-      };
-    }
-
-    let boxHeight = 35;
-
-    if (materiaAnalysis && materiaAnalysis.summary) {
-      const summaryLines = doc.splitTextToSize(
-        materiaAnalysis.summary,
-        maxWidth - 6
-      );
-      let commentLinesCount = 0;
-
-      if (materiaAnalysis.comment && materiaAnalysis.comment.trim()) {
-        materiaAnalysis.comment.split("<br>").forEach((c) => {
-          const cleanLine = limparTexto(c);
-          if (cleanLine) {
-            commentLinesCount += doc.splitTextToSize(
-              cleanLine,
-              maxWidth - 6
-            ).length;
-          }
-        });
-      }
-
-      boxHeight = Math.max(
-        35,
-        20 + summaryLines.length * 4 + commentLinesCount * 3.5 + 10
-      );
-    }
-
-    doc.roundedRect(
-      margin,
-      y - 4,
-      pageWidth - margin * 2,
-      boxHeight,
-      3,
-      3,
-      "F"
-    );
-    doc.setTextColor(211, 84, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`${materia}`, margin + 3, y + 8);
-
-    if (
-      !materiaAnalysis ||
-      (!materiaAnalysis.summary && !materiaAnalysis.comment)
-    ) {
-      console.warn(`⚠️ Análise vazia para ${materia}:`, materiaAnalysis);
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Dados indisponíveis para análise", margin + 3, y + 20);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        "A análise IA não pôde ser gerada para esta matéria.",
-        margin + 3,
-        y + 32
-      );
-
-      y += boxHeight + 10;
-      continue;
-    }
-
-    // Summary da análise (sempre mostrar se existir)
-    let currentY = y + 18;
-
-    if (materiaAnalysis.summary && materiaAnalysis.summary.trim()) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(44, 62, 80);
-      let lines = doc.splitTextToSize(materiaAnalysis.summary, maxWidth - 6);
-      doc.text(lines, margin + 3, currentY);
-      currentY += lines.length * 4 + 3;
-    }
-
-    // Comentários detalhados
-    if (materiaAnalysis.comment && materiaAnalysis.comment.trim()) {
-      let commentLines = [];
-      materiaAnalysis.comment.split("<br>").forEach((c) => {
-        const cleanLine = limparTexto(c);
-        if (cleanLine) {
-          commentLines = commentLines.concat(
-            doc.splitTextToSize(cleanLine, maxWidth - 6)
-          );
-        }
-      });
-
-      if (commentLines.length > 0) {
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(8);
-        doc.setTextColor(52, 73, 94);
-        doc.text(commentLines, margin + 3, currentY);
-      }
-    }
-
-    y += boxHeight + 15;
-  }
-
-  // ========================= INSIGHTS ESTATÍSTICOS =========================
-  doc.addPage();
-  y = 20;
-
-  doc.setFillColor(46, 204, 113);
-  doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("Insights Estatísticos Avançados", pageWidth / 2, y, {
-    align: "center",
-  });
-  y += 25;
-
-  // Análise de distribuição
+  // ========================= PREPARAR DADOS DE DISTRIBUIÇÃO =========================
+  // Análise de distribuição (movido para cá para ser usado nos gráficos)
   const distribuicao = {
     "Excelente (9-10)": 0,
     "Bom (7-8.9)": 0,
@@ -832,6 +1247,159 @@ export const handleDownloadRelatorio = async () => {
     else distribuicao["Ruim (0-3.9)"]++;
   });
 
+  // Calcular posições para layout 2x2
+  const leftColX = margin + 5; // Margem esquerda otimizada
+  const rightColX = margin + chartWidthSide + spacing + 12; // Coluna direita com espaçamento reduzido
+  const topRowY = y;
+  const bottomRowY = y + chartHeightSide + spacing + 15; // Espaçamento vertical reduzido
+
+  // ========================= GRÁFICO 1: Médias por Matéria (SUPERIOR ESQUERDO) =========================
+  if (chartImage) {
+    // Adicionar gráfico
+    doc.addImage(
+      chartImage,
+      "PNG",
+      leftColX,
+      topRowY,
+      chartWidthSide,
+      chartHeightSide
+    );
+  }
+
+  // ========================= GRÁFICO 2: Prova vs Trabalho =========================
+  // Preparar dados de comparação prova vs trabalho
+  const provaTrabalhoData = {
+    labels: materias,
+    datasets: [
+      { label: "Prova", values: [], color: "#3498db" },
+      { label: "Trabalho", values: [], color: "#e74c3c" },
+    ],
+  };
+
+  materias.forEach((materia) => {
+    const notasProva = todasNotas.filter(
+      (nota) =>
+        nota.avaliacao &&
+        nota.avaliacao.materia === materia &&
+        nota.avaliacao.tipo === "Prova"
+    );
+    const notasTrabalho = todasNotas.filter(
+      (nota) =>
+        nota.avaliacao &&
+        nota.avaliacao.materia === materia &&
+        nota.avaliacao.tipo === "Trabalho"
+    );
+
+    const mediaProva =
+      notasProva.length > 0
+        ? notasProva.reduce((sum, n) => sum + n.nota, 0) / notasProva.length
+        : 0;
+    const mediaTrabalho =
+      notasTrabalho.length > 0
+        ? notasTrabalho.reduce((sum, n) => sum + n.nota, 0) /
+          notasTrabalho.length
+        : 0;
+
+    provaTrabalhoData.datasets[0].values.push(mediaProva);
+    provaTrabalhoData.datasets[1].values.push(mediaTrabalho);
+  });
+
+  const comparisonChart = await generateSimpleChart(
+    provaTrabalhoData,
+    "comparison"
+  );
+
+  if (comparisonChart) {
+    doc.addImage(
+      comparisonChart,
+      "PNG",
+      rightColX,
+      topRowY,
+      chartWidthSide,
+      chartHeightSide
+    );
+  }
+
+  // ========================= GRÁFICO 3: Pizza - Distribuição de Notas (INFERIOR ESQUERDO) =========================
+  // Preparar dados do gráfico de pizza usando a distribuição já calculada
+  const pizzaData = {
+    labels: Object.keys(distribuicao),
+    values: Object.values(distribuicao),
+    title: "Distribuição de Notas",
+  };
+
+  const pizzaChart = await generateSimpleChart(pizzaData, "pie");
+
+  if (pizzaChart) {
+    doc.addImage(
+      pizzaChart,
+      "PNG",
+      leftColX,
+      bottomRowY,
+      chartWidthSide,
+      chartHeightSide
+    );
+  }
+
+  // ========================= GRÁFICO 4: Comparação Bimestral (INFERIOR DIREITO) =========================
+  // Preparar dados de comparação por bimestre
+  const bimestralData = {
+    labels: materias,
+    datasets: [
+      { label: "Bimestre 1", values: [], color: "#3498db" },
+      { label: "Bimestre 2", values: [], color: "#e74c3c" },
+      { label: "Bimestre 3", values: [], color: "#2ecc71" },
+    ],
+  };
+
+  // Calcular médias por matéria e bimestre
+  materias.forEach((materia) => {
+    for (let bimestre = 1; bimestre <= 3; bimestre++) {
+      const notasBimestre = todasNotas.filter(
+        (nota) =>
+          nota.avaliacao &&
+          nota.avaliacao.materia === materia &&
+          nota.avaliacao.bimestre === bimestre
+      );
+
+      const media =
+        notasBimestre.length > 0
+          ? notasBimestre.reduce((sum, n) => sum + n.nota, 0) /
+            notasBimestre.length
+          : 0;
+
+      bimestralData.datasets[bimestre - 1].values.push(media);
+    }
+  });
+
+  const bimestralChart = await generateSimpleChart(bimestralData, "bimestral");
+
+  if (bimestralChart) {
+    doc.addImage(
+      bimestralChart,
+      "PNG",
+      rightColX,
+      bottomRowY,
+      chartWidthSide,
+      chartHeightSide
+    );
+  }
+
+  // ========================= INSIGHTS ESTATÍSTICOS =========================
+  doc.addPage();
+  y = 20;
+
+  doc.setFillColor(46, 204, 113);
+  doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("Insights Estatísticos Avançados", pageWidth / 2, y, {
+    align: "center",
+  });
+  y += 25;
+
+  // Usar a distribuição já calculada anteriormente
   doc.setTextColor(44, 62, 80);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -932,6 +1500,28 @@ export const handleDownloadRelatorio = async () => {
     }
   });
 
+  // Insights das análises de IA
+  const materiasProblematicas = Object.entries(analisesMateria)
+    .filter(([materia, analise]) => 
+      analise.summary.toLowerCase().includes('necessita atenção') || 
+      analise.summary.toLowerCase().includes('regular')
+    )
+    .map(([materia]) => materia);
+
+  const materiasExcelentes = Object.entries(analisesMateria)
+    .filter(([materia, analise]) => 
+      analise.summary.toLowerCase().includes('excelente')
+    )
+    .map(([materia]) => materia);
+
+  if (materiasExcelentes.length > 0) {
+    insights.push(`• Matérias com desempenho excelente: ${materiasExcelentes.join(', ')}`);
+  }
+
+  if (materiasProblematicas.length > 0) {
+    insights.push(`• Matérias que requerem intervenção: ${materiasProblematicas.join(', ')}`);
+  }
+
   if (insights.length === 0) {
     insights.push("• Desempenho geral dentro dos padrões esperados");
   }
@@ -947,11 +1537,96 @@ export const handleDownloadRelatorio = async () => {
     y += 8;
   });
 
+  // ========================= ANÁLISES DE IA DAS MATÉRIAS =========================
+  doc.addPage();
+  y = 20;
+
+  doc.setFillColor(155, 89, 182);
+  doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("Análises de IA por Matéria", pageWidth / 2, y, {
+    align: "center",
+  });
+  y += 25;
+
+  // Renderizar análises de cada matéria com a nova função
+  for (const [materia, analise] of Object.entries(analisesMateria)) {
+    // Verificar se precisa de nova página (estimativa conservadora)
+    if (y > 200) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Limpar o nome da matéria também
+    const nomeMaterieLimpo = limparNome(materia);
+
+    // Título da matéria
+    doc.setTextColor(155, 89, 182);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text(`📚 ${nomeMaterieLimpo}`, margin, y);
+    y += 10;
+
+    // Renderizar análise usando a função auxiliar
+    y = renderAiAnalysis(doc, analise, margin, y, pageWidth - margin * 2, {
+      header: [155, 89, 182],
+      text: [44, 62, 80]
+    });
+    
+    y += 5; // Espaçamento entre matérias
+  }
+
+  // ========================= ANÁLISES DE IA DOS ALUNOS =========================
+  doc.addPage();
+  y = 20;
+
+  doc.setFillColor(46, 204, 113);
+  doc.rect(margin, y - 10, pageWidth - margin * 2, 14, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("Análises de IA dos Alunos (Top 10)", pageWidth / 2, y, {
+    align: "center",
+  });
+  y += 25;
+
+  // Renderizar análises dos alunos com a nova função
+  for (const [alunoId, analise] of Object.entries(analisesAluno)) {
+    // Verificar se precisa de nova página (estimativa conservadora)
+    if (y > 200) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Limpar o nome do aluno antes de renderizar
+    const nomeAlunoLimpo = limparNome(analise.nome || "Aluno");
+
+    // Título do aluno
+    doc.setTextColor(46, 204, 113);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text(`👤 ${nomeAlunoLimpo}`, margin, y);
+    y += 10;
+
+    // Renderizar análise usando a função auxiliar
+    y = renderAiAnalysis(doc, analise, margin, y, pageWidth - margin * 2, {
+      header: [46, 204, 113],
+      text: [44, 62, 80]
+    });
+    
+    y += 5; // Espaçamento entre alunos
+  }
+
   // Rodapé com timestamp
   const timestamp = new Date().toLocaleString("pt-BR");
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text(`Relatório gerado em: ${timestamp}`, margin, 285);
 
+  updateProgress("Finalizando e salvando o relatório...");
   doc.save(`relatorio-avancado-${new Date().toISOString().split("T")[0]}.pdf`);
+  
+  updateProgress("Relatório gerado com sucesso!");
 };

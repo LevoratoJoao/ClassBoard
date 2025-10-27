@@ -2,8 +2,13 @@ import React from "react";
 import { useDownload } from "../context/DownloadContext";
 
 const GlobalDownloadPopup = () => {
-  const { showDownloadPopup, downloadProgress, downloadType, cancelDownload } =
-    useDownload();
+  const { 
+    showDownloadPopup, 
+    downloadProgress, 
+    downloadType, 
+    downloadMessage, 
+    cancelDownload 
+  } = useDownload();
 
   if (!showDownloadPopup) return null;
 
@@ -20,6 +25,12 @@ const GlobalDownloadPopup = () => {
     if (downloadProgress === 100) {
       return "✅ Concluído!";
     }
+    
+    // Se há uma mensagem específica, usar ela
+    if (downloadMessage && downloadMessage.trim()) {
+      return downloadMessage;
+    }
+    
     return `Progresso: ${downloadProgress}%`;
   };
 

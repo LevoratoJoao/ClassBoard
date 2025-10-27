@@ -16,6 +16,7 @@ export const DownloadProvider = ({ children }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadType, setDownloadType] = useState("relatorio");
+  const [downloadMessage, setDownloadMessage] = useState("");
 
   // Função de download com pop-up global
   const startDownload = async (type = "relatorio") => {
@@ -25,38 +26,57 @@ export const DownloadProvider = ({ children }) => {
     setIsDownloading(true);
     setShowDownloadPopup(true);
     setDownloadProgress(0);
+    setDownloadMessage("Iniciando download...");
 
     try {
-      // Simular progresso de download
-      const progressInterval = setInterval(() => {
-        setDownloadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
       // Executar download baseado no tipo
       if (type === "relatorio") {
-        await handleDownloadRelatorio();
+        await handleDownloadRelatorio((message) => {
+          setDownloadMessage(message);
+          
+          // Atualizar progresso baseado na mensagem
+          if (message.includes("Carregando dados")) {
+            setDownloadProgress(10);
+          } else if (message.includes("análises de IA para matérias")) {
+            setDownloadProgress(20);
+          } else if (message.includes("Analisando") && message.includes("matérias")) {
+            setDownloadProgress(30);
+          } else if (message.includes("análises de IA para alunos")) {
+            setDownloadProgress(50);
+          } else if (message.includes("Analisando") && message.includes("alunos")) {
+            setDownloadProgress(60);
+          } else if (message.includes("estatísticas")) {
+            setDownloadProgress(70);
+          } else if (message.includes("gráficos")) {
+            setDownloadProgress(80);
+          } else if (message.includes("documento PDF")) {
+            setDownloadProgress(85);
+          } else if (message.includes("análise geral")) {
+            setDownloadProgress(90);
+          } else if (message.includes("Finalizando")) {
+            setDownloadProgress(95);
+          } else if (message.includes("sucesso")) {
+            setDownloadProgress(100);
+          }
+        });
       }
 
       // Finalizar progresso
-      clearInterval(progressInterval);
       setDownloadProgress(100);
+      setDownloadMessage("Download concluído com sucesso!");
 
       // Mostrar sucesso por um momento antes de fechar
       setTimeout(() => {
         setShowDownloadPopup(false);
         setIsDownloading(false);
         setDownloadProgress(0);
+        setDownloadMessage("");
       }, 1500);
     } catch (error) {
       setShowDownloadPopup(false);
       setIsDownloading(false);
       setDownloadProgress(0);
+      setDownloadMessage("");
       throw error; // Repassar erro para que o componente possa tratar
     }
   };
@@ -66,6 +86,7 @@ export const DownloadProvider = ({ children }) => {
     setShowDownloadPopup(false);
     setIsDownloading(false);
     setDownloadProgress(0);
+    setDownloadMessage("");
   };
 
   const value = {
@@ -73,6 +94,7 @@ export const DownloadProvider = ({ children }) => {
     downloadProgress,
     isDownloading,
     downloadType,
+    downloadMessage,
     startDownload,
     cancelDownload,
   };
