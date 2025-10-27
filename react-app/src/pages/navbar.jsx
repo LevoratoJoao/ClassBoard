@@ -30,6 +30,28 @@ const Navbar = ({ currentMateria }) => {
   const showUploadNotaButton = location.pathname.includes("/materia/");
   const showUploadAlunoButton = location.pathname === "/alunos";
 
+  // Função para determinar se um link está ativo
+  const isActiveLink = (path) => {
+    if (path === "/inicial") {
+      return location.pathname === "/inicial";
+    }
+    if (path === "/turma") {
+      return location.pathname === "/turma";
+    }
+    if (path === "/materias") {
+      return (
+        location.pathname === "/materias" ||
+        location.pathname.includes("/materia/")
+      );
+    }
+    if (path === "/alunos") {
+      return (
+        location.pathname === "/alunos" || location.pathname.includes("/aluno/")
+      );
+    }
+    return false;
+  };
+
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
   };
@@ -120,20 +142,45 @@ const Navbar = ({ currentMateria }) => {
           <ul className="nav nav-fill fs-5">
             <li className="nav-item">
               <Link
-                className="nav-link active montserrat-bold"
-                aria-current="page"
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/inicial") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/inicial") ? "page" : undefined}
+                to="/inicial"
+              >
+                Inicial
+              </Link>
+            </li>
+            <li className="nav-item ms-3">
+              <Link
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/turma") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/turma") ? "page" : undefined}
                 to="/turma"
               >
                 Turma
               </Link>
             </li>
             <li className="nav-item ms-3">
-              <Link className="nav-link montserrat-bold" to="/materias">
+              <Link
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/materias") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/materias") ? "page" : undefined}
+                to="/materias"
+              >
                 Matéria
               </Link>
             </li>
             <li className="nav-item ms-3">
-              <Link className="nav-link montserrat-bold" to="/alunos">
+              <Link
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/alunos") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/alunos") ? "page" : undefined}
+                to="/alunos"
+              >
                 Alunos
               </Link>
             </li>

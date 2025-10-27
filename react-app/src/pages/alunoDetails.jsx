@@ -27,6 +27,7 @@ const AlunoDetails = () => {
   const {
     alunoData,
     mediasMaterias,
+    mediasPorBimestre,
     mediaTurma,
     evolucaoData,
     notasValues,
@@ -39,6 +40,7 @@ const AlunoDetails = () => {
     setEvolucaoData,
     setNotasValues,
     setNotasDetalhadas,
+    setMediasPorBimestre,
   } = useAlunoData(alunoNome);
   const { ranking, loading: rankingLoading } = useRanking(alunoNome);
 
@@ -69,6 +71,7 @@ const AlunoDetails = () => {
   }, [alunoData, dataLoading]);
 
   const handleFiltersChange = async (newFilters) => {
+    
     setFilterLoading(true);
     try {
       await applyFilters(
@@ -77,8 +80,11 @@ const AlunoDetails = () => {
         setMediaTurma,
         setEvolucaoData,
         setNotasValues,
-        setNotasDetalhadas
+        setNotasDetalhadas,
+        setMediasPorBimestre
       );
+
+      console.log("Filtros aplicados com sucesso");
     } catch (error) {
       console.error("Erro ao aplicar filtros:", error);
     } finally {
@@ -88,54 +94,245 @@ const AlunoDetails = () => {
 
   const renderTabelaAprovacao = () => {
     return (
-      <table
-        className="table table-bordered table-sm"
-        style={{ marginTop: "12px" }}
+      <div
+        style={{ minHeight: "280px", display: "flex", flexDirection: "column" }}
       >
-        <thead>
-          <tr>
-            <th className="montserrat" style={{ fontWeight: "500" }}>
-              Matéria
-            </th>
-            <th className="montserrat" style={{ fontWeight: "500" }}>
-              Média anual
-            </th>
-            <th className="montserrat" style={{ fontWeight: "500" }}>
-              Situação
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(mediasMaterias).map(([materia, media]) => {
-            const isNA = media === "N/A";
-            const mediaNum = isNA ? 0 : parseFloat(media);
-            const aprovado = mediaNum >= 6;
-
-            return (
-              <tr key={materia}>
-                <td>{materia}</td>
-                <td
+        <div className="table-responsive" style={{ flex: 1 }}>
+          <table
+            className="table table-bordered table-sm"
+            style={{ marginTop: "12px", tableLayout: "fixed" }}
+          >
+            <thead>
+              <tr>
+                <th
+                  className="montserrat"
                   style={{
-                    color: isNA ? "#6c757d" : "inherit",
-                    fontStyle: isNA ? "italic" : "normal",
+                    fontWeight: "500",
+                    width: "40%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
                   }}
                 >
-                  {isNA ? "Sem dados" : media}
-                </td>
-                <td
+                  Matéria
+                </th>
+                <th
+                  className="montserrat"
                   style={{
-                    color: isNA ? "#6c757d" : aprovado ? "#1976d2" : "#d32f2f",
-                    fontWeight: "bold",
-                    fontStyle: isNA ? "italic" : "normal",
+                    fontWeight: "500",
+                    textAlign: "center",
+                    width: "30%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
                   }}
                 >
-                  {isNA ? "N/A" : aprovado ? "Aprovado" : "Reprovado"}
-                </td>
+                  Média anual
+                </th>
+                <th
+                  className="montserrat"
+                  style={{
+                    fontWeight: "500",
+                    textAlign: "center",
+                    width: "30%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  Situação
+                </th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {Object.entries(mediasMaterias).map(([materia, media]) => {
+                const isNA = media === "N/A";
+                const mediaNum = isNA ? 0 : parseFloat(media);
+                const aprovado = mediaNum >= 6;
+
+                return (
+                  <tr key={materia}>
+                    <td
+                      style={{
+                        fontWeight: "500",
+                        fontSize: "0.9rem",
+                        padding: "8px",
+                      }}
+                    >
+                      {materia}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "center",
+                        color: isNA ? "#6c757d" : "inherit",
+                        fontWeight: isNA ? "normal" : "500",
+                        fontStyle: isNA ? "italic" : "normal",
+                        fontSize: "0.9rem",
+                        padding: "8px",
+                      }}
+                    >
+                      {isNA ? "N/A" : media}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "center",
+                        color: isNA
+                          ? "#6c757d"
+                          : aprovado
+                          ? "#1976d2"
+                          : "#d32f2f",
+                        fontWeight: isNA ? "normal" : "500",
+                        fontStyle: isNA ? "italic" : "normal",
+                        fontSize: "0.9rem",
+                        padding: "8px",
+                      }}
+                    >
+                      {isNA ? "N/A" : aprovado ? "Aprovado" : "Reprovado"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTabelaMediasPorBimestre = () => {
+    const materias = Object.keys(mediasPorBimestre);
+    if (materias.length === 0) {
+      return (
+        <div
+          className="text-center text-muted"
+          style={{
+            minHeight: "280px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <p>Nenhum dado disponível</p>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        style={{ minHeight: "280px", display: "flex", flexDirection: "column" }}
+      >
+        <div className="table-responsive" style={{ flex: 1 }}>
+          <table
+            className="table table-bordered table-sm"
+            style={{ marginTop: "12px", tableLayout: "fixed" }}
+          >
+            <thead>
+              <tr>
+                <th
+                  className="montserrat"
+                  style={{
+                    fontWeight: "500",
+                    width: "40%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  Matéria
+                </th>
+                <th
+                  className="montserrat"
+                  style={{
+                    fontWeight: "500",
+                    textAlign: "center",
+                    width: "15%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  1º Bim
+                </th>
+                <th
+                  className="montserrat"
+                  style={{
+                    fontWeight: "500",
+                    textAlign: "center",
+                    width: "15%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  2º Bim
+                </th>
+                <th
+                  className="montserrat"
+                  style={{
+                    fontWeight: "500",
+                    textAlign: "center",
+                    width: "15%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  3º Bim
+                </th>
+                <th
+                  className="montserrat"
+                  style={{
+                    fontWeight: "500",
+                    textAlign: "center",
+                    width: "15%",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  4º Bim
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {materias.map((materia) => {
+                return (
+                  <tr key={materia}>
+                    <td
+                      style={{
+                        fontWeight: "500",
+                        fontSize: "0.9rem",
+                        padding: "8px",
+                      }}
+                    >
+                      {materia}
+                    </td>
+                    {[1, 2, 3, 4].map((bimestre) => {
+                      const bimestreKey = `bimestre${bimestre}`;
+                      const mediaBim =
+                        mediasPorBimestre[materia]?.[bimestreKey] || "N/A";
+                      const isNABim = mediaBim === "N/A";
+                      const mediaNum = isNABim ? 0 : parseFloat(mediaBim);
+
+                      return (
+                        <td
+                          key={bimestre}
+                          style={{
+                            textAlign: "center",
+                            color: isNABim
+                              ? "#6c757d"
+                              : mediaNum >= 6
+                              ? "#1976d2"
+                              : "#d32f2f",
+                            fontWeight: isNABim ? "normal" : "500",
+                            fontStyle: isNABim ? "italic" : "normal",
+                            fontSize: "0.9rem",
+                            padding: "8px",
+                          }}
+                        >
+                          {isNABim ? "N/A" : mediaBim}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     );
   };
 
@@ -179,33 +376,16 @@ const AlunoDetails = () => {
         <h1 className="mb-4 text-center">{alunoData.nome}</h1>
 
         <div className="row mb-4">
-          <div className="col-md-6">
-            <div className="card mb-3">
+          <div className="col-lg-7 col-md-6 mb-3">
+            <div className="card h-100">
               <div className="card-body">
-                <h5 className="card-title">Nota média em cada Matéria</h5>
-                <ul className="list-group">
-                  {Object.entries(mediasMaterias).map(([materia, media]) => {
-                    const isNA = media === "N/A";
-                    return (
-                      <li key={materia} className="list-group-item">
-                        <span>{materia}: </span>
-                        <span
-                          style={{
-                            color: isNA ? "#6c757d" : "inherit",
-                            fontStyle: isNA ? "italic" : "normal",
-                          }}
-                        >
-                          {isNA ? "Sem dados" : media}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <h5 className="card-title">Médias por Bimestre</h5>
+                {renderTabelaMediasPorBimestre()}
               </div>
             </div>
           </div>
-          <div className="col-md-6">
-            <div className="card mb-3">
+          <div className="col-lg-5 col-md-6 mb-3">
+            <div className="card h-100">
               <div className="card-body">
                 <h5 className="card-title">Aprovação anual por matéria</h5>
                 {renderTabelaAprovacao()}

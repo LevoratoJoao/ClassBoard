@@ -8,6 +8,16 @@ const ComparacaoTurmaChart = ({ mediasMaterias = {}, mediasTurma = {} }) => {
   const chartInstance = useRef(null);
 
   useEffect(() => {
+    console.log("ComparacaoTurmaChart - Recebendo dados:");
+    console.log("mediasMaterias:", mediasMaterias);
+    console.log("mediasTurma:", mediasTurma);
+
+    // Verificar se temos dados válidos
+    if (!mediasMaterias || Object.keys(mediasMaterias).length === 0) {
+      console.log("mediasMaterias está vazio ou indefinido");
+      return;
+    }
+
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
@@ -15,9 +25,42 @@ const ComparacaoTurmaChart = ({ mediasMaterias = {}, mediasTurma = {} }) => {
     const ctx = chartRef.current?.getContext("2d");
     if (!ctx) return;
 
-    const labels = Object.keys(mediasMaterias);
-    const dadosAluno = Object.values(mediasMaterias);
-    const dadosTurma = labels.map((label) => mediasTurma[label] || 0);
+    // Obter todas as matérias únicas de ambos os objetos
+    const todasMaterias = new Set([
+      ...Object.keys(mediasMaterias),
+      ...Object.keys(mediasTurma || {}),
+    ]);
+
+    const labels = Array.from(todasMaterias);
+    console.log("Labels das matérias finais:", labels);
+
+    const dadosAluno = labels.map((materia) => {
+      const media = mediasMaterias[materia];
+      const valor = media === "N/A" ? 0 : parseFloat(media) || 0;
+      console.log(`Aluno - ${materia}: ${media} -> ${valor}`);
+      return valor;
+    });
+
+    const dadosTurma = labels.map((materia) => {
+      const mediaTurmaMateria = mediasTurma[materia];
+      let valor = 0;
+
+      if (mediaTurmaMateria && mediaTurmaMateria !== "N/A") {
+        valor = parseFloat(mediaTurmaMateria) || 0;
+      }
+
+      console.log(`Turma - ${materia}: ${mediaTurmaMateria} -> ${valor}`);
+      return valor;
+    });
+
+    console.log("Dados finais aluno:", dadosAluno);
+    console.log("Dados finais turma:", dadosTurma);
+
+    // Verificar se temos dados válidos antes de criar o gráfico
+    if (labels.length === 0) {
+      console.warn("ComparacaoTurmaChart: Nenhuma matéria encontrada");
+      return;
+    }
 
     chartInstance.current = new Chart(ctx, {
       type: "bar",

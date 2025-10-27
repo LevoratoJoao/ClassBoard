@@ -84,11 +84,10 @@ export const useMediaByMateria = (materia, tipo = null, bimestre = null) => {
   useEffect(() => {
     const fetchMedia = async () => {
       setLoading(true);
-      const mediaCalculada = await calcularMediaCorretaPorMateria(
-        materia,
-        tipo,
-        bimestre
-      );
+      const notas = await notasAPI.filterNotas(materia, tipo, bimestre)
+      const somaNotas = notas.reduce((acc, nota) => acc + nota.nota, 0);
+      const mediaCalculada =
+        notas.length > 0 ? (somaNotas / notas.length).toFixed(2) : null;
       setMedia(mediaCalculada);
       setLoading(false);
     };
