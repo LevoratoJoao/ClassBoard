@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleGenAI } from "@google/genai";
-import { notasAPI, avaliacoesAPI } from "./apiService";
+import { notasAPI, avaliacoesAPI, alunosAPI } from "./apiService";
 import {
   formatAiResponse,
   buildMateriaPrompt,
@@ -120,21 +120,22 @@ export const buildMateriaAiAnalysis = async (materia) => {
       };
     }
 
+    const alunos = await alunosAPI.getAllAlunos();
+
     const mediaGeral = (
       notasMateria.reduce((sum, n) => sum + n.nota, 0) / notasMateria.length
     ).toFixed(2);
 
-    const totalAlunos = new Set(notasMateria.map((n) => n.aluno_id)).size;
     const alunosAprovados = notasMateria.filter((n) => n.nota >= 6).length;
     const percentualAprovacao = (
-      (alunosAprovados / notasMateria.length) *
+      (alunosAprovados / alunos.length) *
       100
     ).toFixed(1);
 
     const prompt = buildMateriaPrompt(
       materia,
       mediaGeral,
-      totalAlunos,
+      alunos.length,
       percentualAprovacao
     );
 
