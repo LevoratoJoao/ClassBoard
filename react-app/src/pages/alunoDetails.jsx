@@ -164,22 +164,69 @@ const AlunoDetails = () => {
     }
 
     return (
-      <table className="table table-bordered table-sm" style={{ marginTop: "12px", tableLayout: "fixed" }}>
+      <table
+        className="table table-bordered table-sm"
+        style={{ marginTop: "12px", tableLayout: "fixed" }}
+      >
         <thead>
           <tr>
-            <th className="montserrat" style={{ fontWeight: "500", width: "40%", fontSize: "0.9rem", padding: "8px" }}>
+            <th
+              className="montserrat"
+              style={{
+                fontWeight: "500",
+                width: "40%",
+                fontSize: "0.9rem",
+                padding: "8px",
+              }}
+            >
               Matéria
             </th>
-            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+            <th
+              className="montserrat"
+              style={{
+                fontWeight: "500",
+                textAlign: "center",
+                width: "15%",
+                fontSize: "0.9rem",
+                padding: "8px",
+              }}
+            >
               1º Bim
             </th>
-            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+            <th
+              className="montserrat"
+              style={{
+                fontWeight: "500",
+                textAlign: "center",
+                width: "15%",
+                fontSize: "0.9rem",
+                padding: "8px",
+              }}
+            >
               2º Bim
             </th>
-            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+            <th
+              className="montserrat"
+              style={{
+                fontWeight: "500",
+                textAlign: "center",
+                width: "15%",
+                fontSize: "0.9rem",
+                padding: "8px",
+              }}
+            >
               3º Bim
             </th>
-            <th className="montserrat" style={{ fontWeight: "500", textAlign: "center", width: "15%", fontSize: "0.9rem", padding: "8px" }}>
+            <th
+              className="montserrat"
+              style={{
+                fontWeight: "500",
+                textAlign: "center",
+                width: "15%",
+                fontSize: "0.9rem",
+                padding: "8px",
+              }}
+            >
               4º Bim
             </th>
           </tr>
@@ -188,23 +235,36 @@ const AlunoDetails = () => {
           {materias.map((materia) => {
             return (
               <tr key={materia}>
-                <td style={{ fontWeight: "500", fontSize: "0.9rem", padding: "8px" }}>{materia}</td>
+                <td
+                  style={{
+                    fontWeight: "500",
+                    fontSize: "0.9rem",
+                    padding: "8px",
+                  }}
+                >
+                  {materia}
+                </td>
                 {[1, 2, 3, 4].map((bimestre) => {
                   const bimestreKey = `bimestre${bimestre}`;
-                  const mediaBim = mediasPorBimestre[materia]?.[bimestreKey] || "N/A";
+                  const mediaBim =
+                    mediasPorBimestre[materia]?.[bimestreKey] || "N/A";
                   const isNABim = mediaBim === "N/A";
                   const mediaNum = isNABim ? 0 : parseFloat(mediaBim);
-                  
+
                   return (
-                    <td 
-                      key={bimestre} 
-                      style={{ 
+                    <td
+                      key={bimestre}
+                      style={{
                         textAlign: "center",
-                        color: isNABim ? "#6c757d" : mediaNum >= 6 ? "#1976d2" : "#d32f2f",
+                        color: isNABim
+                          ? "#6c757d"
+                          : mediaNum >= 6
+                          ? "#1976d2"
+                          : "#d32f2f",
                         fontWeight: isNABim ? "normal" : "500",
                         fontStyle: isNABim ? "italic" : "normal",
                         fontSize: "0.9rem",
-                        padding: "8px"
+                        padding: "8px",
                       }}
                     >
                       {isNABim ? "N/A" : mediaBim}

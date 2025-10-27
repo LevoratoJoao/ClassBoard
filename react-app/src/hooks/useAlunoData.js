@@ -28,9 +28,9 @@ const calcularMediasPorBimestre = async (notasAluno, todasAvaliacoes) => {
       }
 
       if (!mediasPorMateriaBimestre[materiaKey][bimestreKey]) {
-        mediasPorMateriaBimestre[materiaKey][bimestreKey] = { 
-          somaNotas: 0, 
-          totalAvaliacoes: 0 
+        mediasPorMateriaBimestre[materiaKey][bimestreKey] = {
+          somaNotas: 0,
+          totalAvaliacoes: 0,
         };
       }
 
@@ -47,7 +47,9 @@ const calcularMediasPorBimestre = async (notasAluno, todasAvaliacoes) => {
       Object.keys(mediasPorMateriaBimestre[materia]).forEach((bimestre) => {
         const dados = mediasPorMateriaBimestre[materia][bimestre];
         if (dados.totalAvaliacoes > 0) {
-          resultado[materia][bimestre] = (dados.somaNotas / dados.totalAvaliacoes).toFixed(2);
+          resultado[materia][bimestre] = (
+            dados.somaNotas / dados.totalAvaliacoes
+          ).toFixed(2);
         } else {
           resultado[materia][bimestre] = "N/A";
         }
