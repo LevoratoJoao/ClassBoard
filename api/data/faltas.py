@@ -2,22 +2,14 @@ from models.models import Falta
 
 faltas_por_aluno = [
     {
-        "aluno_id": 0,  # João
-        "faltas": [
-            {"data": "2024-03-15", "materia": "Matematica", "tipo": "Aula"},
-            {"data": "2024-04-20", "materia": "Portugues", "tipo": "Aula"},
-            {"data": "2024-05-10", "materia": "Historia", "tipo": "Prova"},
-        ]
-    },
-    {
-        "aluno_id": 1,  # Maria
+        "aluno_id": 0,  # Maria
         "faltas": [
             {"data": "2024-02-28", "materia": "Ciencias", "tipo": "Aula"},
             {"data": "2024-03-25", "materia": "Geografia", "tipo": "Aula"},
         ]
     },
     {
-        "aluno_id": 2,  # José
+        "aluno_id": 1,  # José
         "faltas": [
             {"data": "2024-01-15", "materia": "Matematica", "tipo": "Aula"},
             {"data": "2024-02-10", "materia": "Portugues", "tipo": "Aula"},
@@ -27,13 +19,13 @@ faltas_por_aluno = [
         ]
     },
     {
-        "aluno_id": 3,  # Ana
+        "aluno_id": 2,  # Ana
         "faltas": [
             {"data": "2024-03-20", "materia": "Artes", "tipo": "Aula"},
         ]
     },
     {
-        "aluno_id": 4,  # Pedro
+        "aluno_id": 3,  # Pedro
         "faltas": [
             {"data": "2024-02-14", "materia": "Matematica", "tipo": "Aula"},
             {"data": "2024-04-18", "materia": "Historia", "tipo": "Aula"},

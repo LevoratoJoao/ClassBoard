@@ -9,19 +9,8 @@ const calcularMediaCorreta = async (
   tipo = null
 ) => {
   try {
-    console.log("calcularMediaCorreta - Parâmetros:", {
-      materia,
-      bimestre,
-      tipo,
-    });
-    console.log("calcularMediaCorreta - Notas do aluno:", notasAluno.length);
-
     // Buscar todas as avaliações do sistema
     const todasAvaliacoes = await avaliacoesAPI.getAllAvaliacoes();
-    console.log(
-      "calcularMediaCorreta - Total de avaliações:",
-      todasAvaliacoes.length
-    );
 
     // Filtrar avaliações baseado nos critérios
     let avaliacoesFiltradas = todasAvaliacoes;
@@ -54,12 +43,8 @@ const calcularMediaCorreta = async (
       );
     }
 
-    console.log("Avaliações após filtros:", avaliacoesFiltradas.length);
-
     // Se não há avaliações após filtros, retornar objeto vazio ou valores padrão
     if (avaliacoesFiltradas.length === 0) {
-      console.log("Nenhuma avaliação encontrada após filtros");
-
       // Se foi aplicado um filtro específico de matéria, retornar essa matéria com 0
       if (materia && materia !== "All") {
         return { [materia]: "0.00" };

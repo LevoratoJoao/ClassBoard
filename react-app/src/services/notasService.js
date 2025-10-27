@@ -4,7 +4,7 @@ import { notasAPI } from "./apiService";
 export const getNotasByAlunoFromAPI = async (alunoNome) => {
   try {
     // Mapear nome do aluno para ID
-    const alunoIndex = ["João", "Maria", "José", "Ana", "Pedro"].indexOf(
+    const alunoIndex = ["Maria", "José", "Ana", "Pedro"].indexOf(
       alunoNome
     );
     if (alunoIndex === -1) {

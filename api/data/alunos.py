@@ -4,27 +4,21 @@ from data.avaliacoes import avaliacoes
 alunos = [
     Aluno(
         id=0,
-        nome="João",
-        sexo="masculino",
+        nome="Maria",
+        sexo="feminino",
     ),
     Aluno(
         id=1,
-        nome="Maria",
-        sexo="feminino",
-
-    ),
-    Aluno(
-        id=2,
         nome="José",
         sexo="masculino",
     ),
     Aluno(
-        id=3,
+        id=2,
         nome="Ana",
         sexo="feminino",
     ),
     Aluno(
-        id=4,
+        id=3,
         nome="Pedro",
         sexo="masculino",
     ),

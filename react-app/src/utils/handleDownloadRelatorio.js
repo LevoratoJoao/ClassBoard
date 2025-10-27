@@ -7,6 +7,51 @@ import { getAllAlunos } from "../services/alunosService";
 import { notasAPI, avaliacoesAPI } from "../services/apiService";
 import cerebroIcon from "../assets/images/cerebro.webp";
 
+// Função para limpar texto de caracteres problemáticos de encoding e markdown
+const limparTexto = (texto) => {
+  if (!texto) return "";
+  return texto
+    .replace(/<[^>]+>/g, "") // Remove HTML tags
+    .replace(/```[^`]*```/g, "") // Remove code blocks
+    .replace(/\*\*/g, "") // Remove markdown bold
+    .replace(/##\s*/g, "") // Remove markdown headers
+    .replace(/Ø=Ü./g, "") // Remove caracteres de encoding problemático
+    .replace(/[^\x00-\x7F]/g, (char) => {
+      // Substitui caracteres não-ASCII por equivalentes ou remove
+      const replacements = {
+        ü: "u",
+        ï: "i",
+        ö: "o",
+        ä: "a",
+        é: "e",
+        ê: "e",
+        à: "a",
+        á: "a",
+        ã: "a",
+        ç: "c",
+        õ: "o",
+        ó: "o",
+        í: "i",
+        ú: "u",
+        "•": "-",
+        "–": "-",
+        "—": "-",
+        '"': '"',
+        '"': '"',
+        "…": "...",
+        "™": "",
+        "®": "",
+        "©": "",
+        "€": "EUR",
+        "£": "GBP",
+        "¥": "JPY",
+      };
+      return replacements[char] || "";
+    })
+    .replace(/\s+/g, " ") // Normaliza espaços múltiplos
+    .trim();
+};
+
 // Função para justificar texto no PDF
 const drawJustifiedText = (doc, text, x, y, maxWidth, lineHeight = 4.5) => {
   const lines = doc.splitTextToSize(text, maxWidth);
@@ -408,11 +453,7 @@ export const handleDownloadRelatorio = async () => {
   );
 
   // Limpar e formatar o texto da análise primeiro para calcular altura
-  const textoLimpo = analiseEstatisticas
-    .replace(/<[^>]+>/g, "") // Remove HTML tags
-    .replace(/```[^`]*```/g, "") // Remove code blocks
-    .replace(/\*\*/g, "") // Remove markdown bold
-    .trim();
+  const textoLimpo = limparTexto(analiseEstatisticas);
 
   // Calcular dimensões do texto
   const textWidth = pageWidth - margin * 2 - 10;
@@ -504,76 +545,6 @@ export const handleDownloadRelatorio = async () => {
     y += imgHeight + 15;
   }
 
-  // Estatísticas detalhadas por matéria
-  doc.setTextColor(44, 62, 80);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-
-  Object.entries(estatisticasMaterias).forEach(([materia, stats]) => {
-    if (y > 180) {
-      doc.addPage();
-      y = 20;
-    }
-
-    // Cabeçalho da matéria
-    doc.setFillColor(240, 248, 255);
-    doc.roundedRect(margin, y - 4, pageWidth - margin * 2, 8, 2, 2, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(41, 128, 185);
-    doc.text(materia, margin + 3, y + 2);
-    y += 12;
-
-    // Mini caixas para estatísticas da matéria
-    const miniBoxWidth = (pageWidth - margin * 2 - 20) / 3; // 3 colunas
-    const miniBoxHeight = 18;
-
-    const statsMateria = [
-      { valor: stats.media, label: "Média", cor: [52, 152, 219] },
-      {
-        valor: `${stats.percentualAprovacao}%`,
-        label: "Aprovação",
-        cor: [46, 204, 113],
-      },
-      { valor: stats.desvio, label: "Desvio", cor: [230, 126, 34] },
-    ];
-
-    statsMateria.forEach((stat, index) => {
-      const miniBoxX = margin + 3 + index * (miniBoxWidth + 5);
-
-      // Caixa colorida
-      doc.setFillColor(stat.cor[0], stat.cor[1], stat.cor[2]);
-      doc.roundedRect(miniBoxX, y, miniBoxWidth, miniBoxHeight, 2, 2, "F");
-
-      // Valor em branco
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text(String(stat.valor), miniBoxX + miniBoxWidth / 2, y + 8, {
-        align: "center",
-      });
-
-      // Label embaixo
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.text(stat.label, miniBoxX + miniBoxWidth / 2, y + 15, {
-        align: "center",
-      });
-    });
-
-    // Informações adicionais em texto menor
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      `Min: ${stats.minimo} | Max: ${stats.maximo} | Total: ${stats.total} notas | Aprovados: ${stats.aprovados}/${stats.totalAlunos} alunos`,
-      margin + 3,
-      y + 25
-    );
-
-    y += 35;
-  });
-
   // ========================= ANÁLISES IA - ALUNOS =========================
   doc.addPage();
   y = 20;
@@ -609,34 +580,79 @@ export const handleDownloadRelatorio = async () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text(
-      `Média: ${statsAluno.media} | Mediana: ${statsAluno.mediana} | Desvio: ${statsAluno.desvio}`,
-      margin + 3,
-      y + 10
-    );
 
-    // Análise IA
-    const analysis = await buildAlunoAiAnalysis(aluno.id || aluno.nome);
+    // Análise IA com fallback garantido
+    let analysis;
+
+    try {
+      analysis = await buildAlunoAiAnalysis(aluno.id || aluno.nome);
+
+      // Se não recebeu análise válida, criar fallback
+      if (!analysis || (!analysis.summary && !analysis.comment)) {
+        analysis = {
+          summary: `Análise do aluno ${aluno.nome}: Análise automática indisponível.`,
+          comment: `Este aluno requer análise manual dos dados de desempenho. Verifique as notas e estatísticas para uma avaliação completa.`,
+        };
+      }
+    } catch (error) {
+      // Fallback em caso de erro
+      analysis = {
+        summary: `Análise do aluno ${aluno.nome}: Erro no processamento.`,
+        comment: `Não foi possível gerar a análise automática. Recomenda-se análise manual dos dados de desempenho deste aluno.`,
+      };
+    }
+
+    // Verificar se há dados para análise
+    if (!analysis || (!analysis.summary && !analysis.comment)) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text("Dados indisponíveis para análise", margin + 3, y + 20);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        "Não foi possível analisar os dados do aluno no momento.",
+        margin + 3,
+        y + 32
+      );
+
+      y += 50;
+      return;
+    }
+
+    // Conteúdo da análise
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setTextColor(44, 62, 80);
     let lines = doc.splitTextToSize(analysis.summary, maxWidth - 6);
-    doc.text(lines, margin + 3, y + 18);
+    doc.text(lines, margin + 3, y + 28);
 
-    let commentLines = [];
-    analysis.comment.split("<br>").forEach((c) => {
-      const cleanLine = c.replace(/<[^>]+>/g, "").trim();
-      if (cleanLine) {
-        commentLines = commentLines.concat(
-          doc.splitTextToSize(cleanLine, maxWidth - 6)
-        );
+    let currentY = y + 28 + lines.length * 4.5 + 8;
+
+    // Comentários detalhados (se existirem)
+    if (analysis.comment && analysis.comment.trim()) {
+      let commentLines = [];
+      analysis.comment.split("<br>").forEach((c) => {
+        const cleanLine = limparTexto(c);
+        if (cleanLine) {
+          commentLines = commentLines.concat(
+            doc.splitTextToSize(cleanLine, maxWidth - 6)
+          );
+        }
+      });
+
+      if (commentLines.length > 0) {
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(52, 73, 94);
+        doc.text(commentLines, margin + 3, currentY);
+        currentY += commentLines.length * 3.5;
       }
-    });
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(52, 73, 94);
-    doc.text(commentLines, margin + 3, y + 25 + lines.length * 5);
+    }
 
-    y += 35 + (lines.length + commentLines.length - 1) * 5;
+    y = currentY + 15;
   }
 
   // ========================= ANÁLISES IA - MATÉRIAS =========================
@@ -661,46 +677,128 @@ export const handleDownloadRelatorio = async () => {
     }
 
     doc.setFillColor(255, 245, 225);
-    doc.roundedRect(margin, y - 4, pageWidth - margin * 2, 60, 3, 3, "F");
-    doc.setTextColor(211, 84, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`${materia}`, margin + 3, y + 3);
 
-    // Estatísticas da matéria
-    const stats = estatisticasMaterias[materia];
-    if (stats) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        `Média: ${stats.media} | Aprovação: ${stats.percentualAprovacao}% | Desvio: ${stats.desvio}`,
-        margin + 3,
-        y + 10
+    // Calcular altura necessária dinamicamente
+    let materiaAnalysis;
+
+    try {
+      materiaAnalysis = await buildMateriaAiAnalysis(materia);
+
+      // Se não recebeu análise válida, criar fallback imediatamente
+      if (
+        !materiaAnalysis ||
+        (!materiaAnalysis.summary && !materiaAnalysis.comment)
+      ) {
+        materiaAnalysis = {
+          summary: `Análise de desempenho para ${materia}: Análise automática indisponível.`,
+          comment: `Esta matéria requer análise manual dos dados de desempenho. Verifique as estatísticas e gráficos para uma avaliação completa.`,
+        };
+      }
+    } catch (error) {
+      // Fallback em caso de erro
+      materiaAnalysis = {
+        summary: `Análise de desempenho para ${materia}: Erro no processamento.`,
+        comment: `Não foi possível gerar a análise automática. Recomenda-se análise manual dos dados de desempenho desta matéria.`,
+      };
+    }
+
+    let boxHeight = 35;
+
+    if (materiaAnalysis && materiaAnalysis.summary) {
+      const summaryLines = doc.splitTextToSize(
+        materiaAnalysis.summary,
+        maxWidth - 6
+      );
+      let commentLinesCount = 0;
+
+      if (materiaAnalysis.comment && materiaAnalysis.comment.trim()) {
+        materiaAnalysis.comment.split("<br>").forEach((c) => {
+          const cleanLine = limparTexto(c);
+          if (cleanLine) {
+            commentLinesCount += doc.splitTextToSize(
+              cleanLine,
+              maxWidth - 6
+            ).length;
+          }
+        });
+      }
+
+      boxHeight = Math.max(
+        35,
+        20 + summaryLines.length * 4 + commentLinesCount * 3.5 + 10
       );
     }
 
-    const analysis = await buildMateriaAiAnalysis(materia);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(44, 62, 80);
-    let lines = doc.splitTextToSize(analysis.summary, maxWidth - 6);
-    doc.text(lines, margin + 3, y + 18);
+    doc.roundedRect(
+      margin,
+      y - 4,
+      pageWidth - margin * 2,
+      boxHeight,
+      3,
+      3,
+      "F"
+    );
+    doc.setTextColor(211, 84, 0);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(`${materia}`, margin + 3, y + 8);
 
-    let commentLines = [];
-    analysis.comment.split("<br>").forEach((c) => {
-      const cleanLine = c.replace(/<[^>]+>/g, "").trim();
-      if (cleanLine) {
-        commentLines = commentLines.concat(
-          doc.splitTextToSize(cleanLine, maxWidth - 6)
-        );
+    if (
+      !materiaAnalysis ||
+      (!materiaAnalysis.summary && !materiaAnalysis.comment)
+    ) {
+      console.warn(`⚠️ Análise vazia para ${materia}:`, materiaAnalysis);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text("Dados indisponíveis para análise", margin + 3, y + 20);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        "A análise IA não pôde ser gerada para esta matéria.",
+        margin + 3,
+        y + 32
+      );
+
+      y += boxHeight + 10;
+      continue;
+    }
+
+    // Summary da análise (sempre mostrar se existir)
+    let currentY = y + 18;
+
+    if (materiaAnalysis.summary && materiaAnalysis.summary.trim()) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(44, 62, 80);
+      let lines = doc.splitTextToSize(materiaAnalysis.summary, maxWidth - 6);
+      doc.text(lines, margin + 3, currentY);
+      currentY += lines.length * 4 + 3;
+    }
+
+    // Comentários detalhados
+    if (materiaAnalysis.comment && materiaAnalysis.comment.trim()) {
+      let commentLines = [];
+      materiaAnalysis.comment.split("<br>").forEach((c) => {
+        const cleanLine = limparTexto(c);
+        if (cleanLine) {
+          commentLines = commentLines.concat(
+            doc.splitTextToSize(cleanLine, maxWidth - 6)
+          );
+        }
+      });
+
+      if (commentLines.length > 0) {
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(52, 73, 94);
+        doc.text(commentLines, margin + 3, currentY);
       }
-    });
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(52, 73, 94);
-    doc.text(commentLines, margin + 3, y + 25 + lines.length * 5);
+    }
 
-    y += 40 + (lines.length + commentLines.length - 1) * 5;
+    y += boxHeight + 15;
   }
 
   // ========================= INSIGHTS ESTATÍSTICOS =========================
