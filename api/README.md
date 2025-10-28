@@ -18,14 +18,6 @@ pip install -r requirements.txt
 fastapi dev main.py
 ```
 
-## Authentication
-
-A API utiliza autenticação JWT Bearer Token. Para acessar endpoints protegidos, inclua o header:
-
-```
-Authorization: Bearer <your_token>
-```
-
 ### Auth Endpoints
 
 #### POST /auth/token

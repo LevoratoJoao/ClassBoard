@@ -11,6 +11,7 @@ ClassBoard é uma plataforma de gestão educacional desenvolvida para auxiliar p
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Como Executar](#como-executar)
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Doc API](./api/README.md)
 - [Demonstração](#demonstracão)
 
 ---
