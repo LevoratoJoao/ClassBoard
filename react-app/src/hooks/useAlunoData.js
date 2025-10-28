@@ -58,7 +58,6 @@ const calcularMediasPorBimestre = async (notasAluno, todasAvaliacoes) => {
 
     return resultado;
   } catch (error) {
-    console.error("Erro ao calcular médias por bimestre:", error);
     return {};
   }
 };
@@ -105,7 +104,6 @@ const calcularMediaCorretaAlunoData = async (
 
     return resultado;
   } catch (error) {
-    console.error("Erro ao calcular média correta:", error);
     return {};
   }
 };
@@ -157,7 +155,6 @@ const calcularEvolucaoCorreta = (notasAluno, todasAvaliacoes) => {
 
     return Object.values(materiaEvolucao);
   } catch (error) {
-    console.error("Erro ao calcular evolução correta:", error);
     return [];
   }
 };
@@ -165,8 +162,6 @@ const calcularEvolucaoCorreta = (notasAluno, todasAvaliacoes) => {
 // Função alternativa mais simples para calcular médias da turma
 const calcularMediaTurmaSimples = async (todasNotas, todosAlunos) => {
   try {
-    console.log("calcularMediaTurmaSimples - Iniciando cálculo");
-
     const materias = [
       "Matematica",
       "Portugues",
@@ -205,24 +200,16 @@ const calcularMediaTurmaSimples = async (todasNotas, todosAlunos) => {
             mediasAlunosMateria.reduce((a, b) => a + b, 0) /
             mediasAlunosMateria.length;
           mediasTurma[materia] = mediaTurmaMateria.toFixed(2);
-          console.log(
-            `${materia}: Média da turma = ${mediaTurmaMateria.toFixed(
-              2
-            )} (baseada em ${mediasAlunosMateria.length} alunos)`
-          );
         } else {
           mediasTurma[materia] = "0.00";
         }
       } else {
         mediasTurma[materia] = "0.00";
-        console.log(`${materia}: Nenhuma nota encontrada`);
       }
     });
 
-    console.log("Médias da turma (método simples):", mediasTurma);
     return mediasTurma;
   } catch (error) {
-    console.error("Erro ao calcular média da turma (método simples):", error);
     return {};
   }
 };
@@ -232,11 +219,6 @@ const calcularMediaCorretaTurma = async (
   todosAlunos
 ) => {
   try {
-    console.log("calcularMediaCorretaTurma - Iniciando cálculo");
-    console.log("Total de notas:", todasNotas.length);
-    console.log("Total de avaliações:", todasAvaliacoes.length);
-    console.log("Total de alunos:", todosAlunos.length);
-
     const mediasAlunosPorMateria = {};
 
     // Para cada aluno, calcular sua média correta (aguardando cada cálculo)
@@ -252,8 +234,6 @@ const calcularMediaCorretaTurma = async (
         aluno.id
       );
 
-      console.log(`Médias do aluno ${aluno.nome}:`, mediasAluno);
-
       // Adicionar às médias da turma
       Object.keys(mediasAluno).forEach((mat) => {
         const media = parseFloat(mediasAluno[mat]);
@@ -267,8 +247,6 @@ const calcularMediaCorretaTurma = async (
       });
     }
 
-    console.log("Médias por matéria coletadas:", mediasAlunosPorMateria);
-
     // Calcular média final da turma por matéria
     const mediasTurma = {};
     Object.keys(mediasAlunosPorMateria).forEach((mat) => {
@@ -278,19 +256,13 @@ const calcularMediaCorretaTurma = async (
           medias.reduce((a, b) => a + b, 0) / medias.length
         ).toFixed(2);
         mediasTurma[mat] = mediaFinal;
-        console.log(
-          `Média da turma em ${mat}: ${mediaFinal} (baseada em ${medias.length} alunos)`
-        );
       } else {
         mediasTurma[mat] = "0.00";
-        console.log(`Nenhuma média válida encontrada para ${mat}`);
       }
     });
 
-    console.log("Médias finais da turma:", mediasTurma);
     return mediasTurma;
   } catch (error) {
-    console.error("Erro ao calcular média correta da turma:", error);
     return {};
   }
 };
@@ -394,14 +366,12 @@ export const useAlunoData = (alunoNome) => {
           );
           setFaltasTotais(totalFaltas?.total || 0);
         } catch (faltasError) {
-          console.warn("Erro ao buscar faltas:", faltasError);
           setFaltasTotais(0);
         }
 
         // Análise da IA agora é carregada separadamente na página
       } catch (err) {
         setError(err.message || "Erro ao carregar dados do aluno");
-        console.error("Erro no useAlunoData:", err);
       } finally {
         setLoading(false);
       }
@@ -445,7 +415,7 @@ export const useAlunoData = (alunoNome) => {
         const valores = notasAluno.map((nota) => nota.nota);
         setNotasValues(valores);
       } catch (err) {
-        console.error("Erro ao recarregar dados:", err);
+        // Erro silencioso ao recarregar dados
       }
     }
   };
