@@ -11,6 +11,7 @@ ClassBoard é uma plataforma de gestão educacional desenvolvida para auxiliar p
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Como Executar](#como-executar)
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Demonstração](#demonstracão)
 
 ---
 
@@ -107,6 +108,12 @@ Devido a modularização do projeto com scripts separados, siga os passos abaixo
 - **HTML5 & CSS3**
 
 ---
+
+## Demonstracão
+
+[Slides](https://www.canva.com/design/DAG24xqtQ0M/7_ae-hd8f10SjqzLPgbiEg/view?utm_content=DAG24xqtQ0M&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h58df531d81)
+
+https://github.com/user-attachments/assets/173bd27c-e6c1-4e43-be6e-b2c24745f540
 
 **Desenvolvido por**
 
