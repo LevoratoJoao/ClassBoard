@@ -1,7 +1,11 @@
-import React, { useMemo } from "react";
+// src/pages/TurmaDetails.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import Navbar from "./navbar";
-import { getTurma, getMaterias } from "../services/turmaService";
 import detalhesFooter from "../assets/images/detalhes.webp";
+
+// >>> serviços assíncronos (via apiService)
+import { getTurma, getMaterias } from "../services/turmaService";
 
 const NOTA_BAIXA = 6.0;
 
@@ -17,14 +21,44 @@ function ajustarPercentuaisQuatroCategorias(a, b, c, d) {
 }
 
 const TurmaDetails = () => {
-  const turma = useMemo(() => getTurma(), []);
-  const materias = useMemo(() => getMaterias(), []);
+  const { id } = useParams();
+  const turmaId = Number(id || 1);
 
+  const [turma, setTurma] = useState(null);
+  const [materias, setMaterias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  // Carrega dados da API
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setErro(null);
+
+    (async () => {
+      try {
+        const [t, m] = await Promise.all([getTurma(turmaId), getMaterias()]);
+        if (!alive) return;
+        setTurma(t || { alunos: [] });
+        setMaterias(Array.isArray(m) ? m : []);
+      } catch (e) {
+        if (!alive) return;
+        setErro(e?.message || "Falha ao carregar a turma.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => { alive = false; };
+  }, [turmaId]);
+
+  // ===== Cálculos (iguais ao seu JSX, só usando state) =====
   const mediaNotasPorMateria = useMemo(() => {
+    if (!turma || !Array.isArray(turma?.alunos)) return {};
     const out = {};
     materias.forEach(({ id }) => {
       const notas = turma.alunos
-        .map((a) => a.notas[id])
+        .map((a) => a?.notas?.[id])
         .filter((v) => typeof v === "number");
       out[id] = media(notas);
     });
@@ -32,11 +66,12 @@ const TurmaDetails = () => {
   }, [materias, turma]);
 
   const { freqPorMateria, freqGeral } = useMemo(() => {
+    if (!turma || !Array.isArray(turma?.alunos)) return { freqPorMateria: {}, freqGeral: 0 };
     const porMateria = {};
     const all = [];
     materias.forEach(({ id }) => {
       const vals = turma.alunos
-        .map((a) => a.frequencia[id])
+        .map((a) => a?.frequencia?.[id])
         .filter((v) => typeof v === "number");
       porMateria[id] = media(vals);
       all.push(...vals);
@@ -45,12 +80,16 @@ const TurmaDetails = () => {
   }, [materias, turma]);
 
   const topDiasFaltas = useMemo(() => {
+    if (!turma || !Array.isArray(turma?.alunos)) return [];
     const count = new Map();
-    turma.alunos.forEach((a) => (a.faltas || []).forEach((d) => count.set(d, (count.get(d) || 0) + 1)));
+    turma.alunos.forEach((a) =>
+      (a?.faltas || []).forEach((d) => count.set(d, (count.get(d) || 0) + 1))
+    );
     return Array.from(count.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [turma]);
 
   const relacaoMaterias = useMemo(() => {
+    if (!turma || !Array.isArray(turma?.alunos)) return [];
     const out = [];
 
     for (let i = 0; i < materias.length; i++) {
@@ -67,8 +106,8 @@ const TurmaDetails = () => {
         let onlyBBad = 0;
 
         turma.alunos.forEach((al) => {
-          const na = al.notas[A];
-          const nb = al.notas[B];
+          const na = al?.notas?.[A];
+          const nb = al?.notas?.[B];
           if (typeof na !== "number" || typeof nb !== "number") return;
 
           n++;
@@ -111,6 +150,35 @@ const TurmaDetails = () => {
     return out;
   }, [materias, turma]);
 
+  // ===== Estados de carregamento/erro =====
+  if (loading) {
+    return (
+      <>
+        <div className="bg-fundo"></div>
+        <Navbar />
+        <div className="container mt-5">
+          <p>Carregando turma…</p>
+        </div>
+      </>
+    );
+  }
+
+  if (erro) {
+    return (
+      <>
+        <div className="bg-fundo"></div>
+        <Navbar />
+        <div className="container mt-5">
+          <div className="alert alert-danger" role="alert">
+            {erro}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!turma) return null;
+
   return (
     <>
       <div className="bg-fundo"></div>
@@ -146,7 +214,7 @@ const TurmaDetails = () => {
                 <div className="text-muted" style={{ fontSize: ".875rem" }}>
                   Alunos
                 </div>
-                <div className="fs-4 fw-bold">{turma.alunos.length}</div>
+                <div className="fs-4 fw-bold">{turma.alunos?.length || 0}</div>
               </div>
             </div>
           </div>
@@ -181,7 +249,9 @@ const TurmaDetails = () => {
                   {materias.map(({ id, label }) => (
                     <tr key={id}>
                       <td>{label}</td>
-                      <td className="text-end">{mediaNotasPorMateria[id].toFixed(2)}</td>
+                      <td className="text-end">
+                        {(mediaNotasPorMateria[id] ?? 0).toFixed(2)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -212,7 +282,9 @@ const TurmaDetails = () => {
                   {materias.map(({ id, label }) => (
                     <tr key={id}>
                       <td>{label}</td>
-                      <td className="text-end">{(freqPorMateria[id] * 100).toFixed(1)}%</td>
+                      <td className="text-end">
+                        {((freqPorMateria[id] ?? 0) * 100).toFixed(1)}%
+                      </td>
                     </tr>
                   ))}
                 </tbody>

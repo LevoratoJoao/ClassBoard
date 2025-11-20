@@ -27,26 +27,3 @@ export const getAlunosByGender = async (sexo) => {
     return [];
   }
 };
-
-export const searchAlunosByName = async (searchTerm) => {
-  try {
-    const allAlunos = await getAllAlunos();
-    return allAlunos.filter((aluno) =>
-      aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  } catch (error) {
-    console.error("Erro ao buscar alunos por nome:", error);
-    return [];
-  }
-};
-
-// Função para buscar aluno por nome (para compatibilidade)
-export const getAlunoByName = async (nome) => {
-  try {
-    const allAlunos = await getAllAlunos();
-    return allAlunos.find((aluno) => aluno.nome === nome);
-  } catch (error) {
-    console.error("Erro ao buscar aluno por nome:", error);
-    return null;
-  }
-};

@@ -7,70 +7,91 @@ from fastapi.security import OAuth2PasswordBearer
 from data.users import users_db, active_tokens
 from models.models import TokenData, User, UserInDB
 
+# Configurações de segurança - ALTERAR EM PRODUÇÃO
 SECRET_KEY = "your-secret-key-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+# Contexto para hash de senhas usando Argon2
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 def verify_password(plain_password, stored_password):
+    """Verifica se a senha fornecida corresponde à senha armazenada."""
     try:
+        # Tenta verificar usando hash seguro
         return pwd_context.verify(plain_password, stored_password)
     except:
+        # Fallback para comparação simples (não seguro)
         return plain_password == stored_password
 
 def get_user(username: str):
+    """Busca um usuário no banco de dados pelo nome de usuário."""
     if username in users_db:
         return users_db[username]
 
 def authenticate_user(username: str, password: str):
+    """Autentica um usuário verificando credenciais."""
     user = get_user(username)
+    # Verifica se usuário existe e senha está correta
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """Cria um token JWT de acesso com tempo de expiração."""
     to_encode = data.copy()
+    # Define tempo de expiração (padrão: 15 minutos)
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
+
+    # Gera o token JWT
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    # Adiciona token à lista de tokens ativos
     active_tokens.add(token)
     return token
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Obtém o usuário atual baseado no token JWT fornecido."""
+    # Exceção padrão para credenciais inválidas
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    # Verifica se o token está na lista de tokens ativos
     if token not in active_tokens:
         raise credentials_exception
 
     try:
+        # Decodifica o token JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
+        # Token inválido ou expirado
         raise credentials_exception
 
+    # Busca o usuário no banco de dados
     user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 def logout_token(token: str):
+    """Remove um token da lista de tokens ativos (logout)."""
     active_tokens.discard(token)
 
 def create_user(username: str, password: str) -> UserInDB:
+    """Cria um novo usuário com senha hasheada."""
     new_user = UserInDB(
         username=username,
-        hashed_password=pwd_context.hash(password),
+        hashed_password=pwd_context.hash(password),  # Hash seguro da senha
         is_active=True
     )
+    # Adiciona usuário ao banco de dados
     users_db[username] = new_user
     return new_user
-

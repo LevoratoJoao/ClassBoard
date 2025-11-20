@@ -8,8 +8,6 @@ const EvolucaoNotasChart = ({ evolucaoData = [] }) => {
   const chartInstance = useRef(null);
 
   useEffect(() => {
-    console.log("Dados de evolução recebidos:", evolucaoData);
-
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
@@ -82,15 +80,15 @@ const EvolucaoNotasChart = ({ evolucaoData = [] }) => {
 
   return (
     <div className="mb-4 d-flex flex-column align-items-center">
-      <h6>Evolução das notas ao longo do tempo</h6>
+      <h6>Evolução das médias ao longo do tempo</h6>
       {evolucaoData.length === 0 ? (
         <div
           className="alert alert-info text-center"
           style={{ width: "700px" }}
         >
           <i className="bi bi-info-circle me-2"></i>
-          Não há dados suficientes para mostrar a evolução das notas ao longo do
-          tempo.
+          Não há dados suficientes para mostrar a evolução das médias ao longo
+          do tempo.
         </div>
       ) : (
         <canvas ref={chartRef} width="700" height="400"></canvas>

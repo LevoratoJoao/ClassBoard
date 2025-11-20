@@ -13,6 +13,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
+  // Atualiza dados do formulário e limpa erros
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -24,11 +25,13 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validação básica dos campos
     if (!formData.username || !formData.password || !formData.confirmPassword) {
       setErrors({ general: "Todos os campos são obrigatórios" });
       return;
     }
 
+    // Verifica se senhas coincidem
     if (formData.password !== formData.confirmPassword) {
       setErrors({ general: "Senhas não coincidem" });
       return;
@@ -37,6 +40,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
+      // Envia dados para API de registro
       const response = await fetch("http://localhost:8000/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -47,6 +51,7 @@ const Register = () => {
       });
 
       if (response.ok) {
+        // Redireciona para login após sucesso
         navigate("/login");
       } else {
         const error = await response.json();
@@ -66,7 +71,8 @@ const Register = () => {
     >
       <div className="login-container">
         <div className="login-header">
-          <button className="back-button" onClick={() => navigate("/")}>
+          {/* Botão de voltar para login */}
+          <button className="back-button" onClick={() => navigate("/login")}>
             ←
           </button>
           <div className="login-logo">
@@ -77,6 +83,7 @@ const Register = () => {
         <div className="login-form-container">
           <h2>Criar Conta</h2>
 
+          {/* Exibe erros gerais */}
           {errors.general && (
             <div className="error-message general-error">{errors.general}</div>
           )}
@@ -121,6 +128,7 @@ const Register = () => {
               />
             </div>
 
+            {/* Botão com estado de loading */}
             <button
               type="submit"
               className="btn-login-submit"

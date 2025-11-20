@@ -11,7 +11,6 @@ alunos = [
         id=1,
         nome="Maria",
         sexo="feminino",
-
     ),
     Aluno(
         id=2,

@@ -1,9 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { avaliacoesAPI } from "../../services/apiService";
 
 const FilterPanelAluno = ({ onFiltersChange }) => {
   const [materia, setMateria] = useState("All");
   const [bimestre, setBimestre] = useState("All");
   const [tipo, setTipo] = useState("All");
+  const [materias, setMaterias] = useState([]);
+
+  // Buscar matérias disponíveis da API
+  useEffect(() => {
+    const fetchMaterias = async () => {
+      try {
+        // Buscar todas as avaliações para obter todas as matérias disponíveis
+        const todasAvaliacoes = await avaliacoesAPI.getAllAvaliacoes();
+        const materiasUnicas = [
+          ...new Set(todasAvaliacoes.map((avaliacao) => avaliacao.materia)),
+        ];
+        setMaterias(materiasUnicas.sort());
+      } catch (error) {
+        console.error("Erro ao buscar matérias:", error);
+        // Fallback para matérias padrão
+        setMaterias([
+          "Artes",
+          "Ciencias",
+          "Geografia",
+          "Historia",
+          "Matematica",
+          "Portugues",
+        ]);
+      }
+    };
+
+    fetchMaterias();
+  }, []);
 
   const handleApplyFilters = () => {
     onFiltersChange({ materia, bimestre, tipo });
@@ -30,12 +59,11 @@ const FilterPanelAluno = ({ onFiltersChange }) => {
               onChange={(e) => setMateria(e.target.value)}
             >
               <option value="All">Todas</option>
-              <option value="Matematica">Matemática</option>
-              <option value="Portugues">Português</option>
-              <option value="Historia">História</option>
-              <option value="Geografia">Geografia</option>
-              <option value="Ciencias">Ciências</option>
-              <option value="Artes">Artes</option>
+              {materias.map((mat) => (
+                <option key={mat} value={mat}>
+                  {mat}
+                </option>
+              ))}
             </select>
           </div>
           <div className="mb-3 w-100">
@@ -49,6 +77,7 @@ const FilterPanelAluno = ({ onFiltersChange }) => {
               <option value="1">1º Bimestre</option>
               <option value="2">2º Bimestre</option>
               <option value="3">3º Bimestre</option>
+              <option value="4">4º Bimestre</option>
             </select>
           </div>
           <div className="mb-3 w-100">
@@ -61,6 +90,7 @@ const FilterPanelAluno = ({ onFiltersChange }) => {
               <option value="All">Todos</option>
               <option value="Prova">Prova</option>
               <option value="Trabalho">Trabalho</option>
+              <option value="Recuperação">Recuperação</option>
             </select>
           </div>
           <button

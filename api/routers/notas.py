@@ -10,9 +10,7 @@ router = APIRouter()
 
 class NotaCreate(BaseModel):
     aluno_nome: str
-    materia: str
-    tipo: str
-    bimestre: int
+    avaliacao_id: int
     nota: float
 
 @router.get("/notas", response_model=List[Nota])
@@ -21,12 +19,12 @@ def get_notas(current_user: User = Depends(get_current_user)):
 
 @router.post("/notas")
 def create_nota(nota_data: NotaCreate, current_user: User = Depends(get_current_user)):
-    print(nota_data)
     try:
-        service.create_nota(nota_data)
-        return {"message": "Nota criada com sucesso"}
+        service.create_or_update_nota(nota_data)
+        return {"message": "Nota criada/atualizada com sucesso"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.get("/notas/filter", response_model=List[Nota])
 def filter_notas(materia: str = None, tipo: str = None, bimestre: int = None, aluno_id: int = None, current_user: User = Depends(get_current_user)):

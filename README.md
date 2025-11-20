@@ -6,16 +6,13 @@ ClassBoard é uma plataforma de gestão educacional desenvolvida para auxiliar p
 
 ## Sumário
 
-* [Visão Geral](#visão-geral)
-* [Funcionalidades](#funcionalidades)
-* [Estrutura do Projeto](#estrutura-do-projeto)
-* [Como Executar (Frontend)](#como-executar-frontend)
-* [API (FastAPI)](#api-fastapi)
-  * [Padrões de Projeto](#padrões-de-projeto)
-  * [Endpoints](#endpoints)
-  * [Autenticação e CORS](#autenticação-e-cors)
-  * [Instalação e Execução](#instalação-e-execução)
-* [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Visão Geral](#visão-geral)
+- [Funcionalidades](#funcionalidades)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Como Executar](#como-executar)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Doc API](./api/README.md)
+- [Demonstração](#demonstracão)
 
 ---
 
@@ -203,6 +200,12 @@ A API do ClassBoard é construída em **FastAPI** e fornece os dados que abastec
 * **HTML5 & CSS3**
 
 ---
+
+## Demonstracão
+
+[Slides](https://www.canva.com/design/DAG24xqtQ0M/7_ae-hd8f10SjqzLPgbiEg/view?utm_content=DAG24xqtQ0M&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h58df531d81)
+
+https://github.com/user-attachments/assets/173bd27c-e6c1-4e43-be6e-b2c24745f540
 
 **Desenvolvido por**
 

@@ -1,34 +1,109 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import UploadNotaModal from "../components/UploadNotaModal";
+import { useDownload } from "../context/DownloadContext";
+import UploadAlunoModal from "../components/UploadAlunoModal";
+import Toast from "../components/Toast";
 import logo from "../assets/images/logo.png";
 import graficoIcon from "../assets/images/grafico.webp";
 import saidaIcon from "../assets/images/saida.webp";
-import { handleDownloadRelatorio } from "../utils/handleDownloadRelatorio";
+import BulkUploadNotaModal from "../components/BulkUploadNotaModal";
 
 const Navbar = ({ currentMateria }) => {
   const { user, logout } = useAuth();
+  const { startDownload } = useDownload();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showModal, setShowModal] = useState(false);
+  const [showNotaModal, setShowNotaModal] = useState(false);
+  const [showAlunoModal, setShowAlunoModal] = useState(false);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
+  // Verifica se usuário está autenticado
   const isAuthenticated = !!user;
   const logoTo = isAuthenticated ? "/inicial" : "/";
-  const showUploadButton = location.pathname.includes("/materia/");
+
+  // Controla visibilidade dos botões baseado na rota atual
+  const showUploadNotaButton = location.pathname.includes("/materia/");
+  const showUploadAlunoButton = location.pathname === "/alunos";
+
+  // Função para determinar se um link está ativo
+  const isActiveLink = (path) => {
+    if (path === "/inicial") {
+      return location.pathname === "/inicial";
+    }
+    if (path === "/turma") {
+      return location.pathname === "/turma";
+    }
+    if (path === "/materias") {
+      return (
+        location.pathname === "/materias" ||
+        location.pathname.includes("/materia/")
+      );
+    }
+    if (path === "/alunos") {
+      return (
+        location.pathname === "/alunos" || location.pathname.includes("/aluno/")
+      );
+    }
+    return false;
+  };
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+  };
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const handleUploadClick = () => {
-    setShowModal(true);
+  const handleUploadNotaClick = () => {
+    setShowNotaModal(true);
   };
 
-  const handleModalSubmit = async (formData) => {
+  const handleUploadAlunoClick = () => {
+    setShowAlunoModal(true);
+  };
+
+  // Processa envio de múltiplas notas
+  const handleNotaModalSubmit = async (notasData) => {
     try {
-      const response = await fetch("http://localhost:8000/notas", {
+      // Cria promessas para todas as notas
+      const promises = notasData.map((formData) =>
+        fetch("http://localhost:8000/notas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          body: JSON.stringify(formData),
+        })
+      );
+
+      // Aguarda todas as requisições
+      const responses = await Promise.all(promises);
+      const allSuccessful = responses.every((response) => response.ok);
+
+      if (allSuccessful) {
+        showToast(`${notasData.length} notas adicionadas com sucesso!`);
+        setShowNotaModal(false);
+        window.location.reload(); // Recarrega para mostrar novas notas
+      } else {
+        showToast("Erro ao adicionar algumas notas", "error");
+      }
+    } catch (error) {
+      showToast("Erro de conexão", "error");
+    }
+  };
+
+  // Processa envio de novo aluno
+  const handleAlunoModalSubmit = async (formData) => {
+    try {
+      const response = await fetch("http://localhost:8000/alunos", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,49 +113,81 @@ const Navbar = ({ currentMateria }) => {
       });
 
       if (response.ok) {
-        alert("Nota adicionada com sucesso!");
-        setShowModal(false);
-        window.location.reload(); // Refresh to show new data
+        showToast("Aluno adicionado com sucesso!");
+        setShowAlunoModal(false);
+        window.location.reload(); // Recarrega para mostrar novo aluno
       } else {
-        alert("Erro ao adicionar nota");
+        showToast("Erro ao adicionar aluno", "error");
       }
     } catch (error) {
-      alert("Erro de conexão");
+      showToast("Erro de conexão", "error");
     }
+  };
+
+  // Função de download usando contexto global
+  const handleDownloadClick = () => {
+    startDownload();
   };
 
   return (
     <>
       <nav className="navbar bg-body-tertiary navbar-expand-lg py-2">
         <div className="container-fluid">
+          {/* Logo com link dinâmico */}
           <Link to={logoTo} className="navbar-brand">
             <img src={logo} alt="Logo" style={{ height: "50px" }} />
           </Link>
 
+          {/* Menu de navegação principal */}
           <ul className="nav nav-fill fs-5">
             <li className="nav-item">
               <Link
-                className="nav-link active montserrat-bold"
-                aria-current="page"
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/inicial") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/inicial") ? "page" : undefined}
+                to="/inicial"
+              >
+                Inicial
+              </Link>
+            </li>
+            <li className="nav-item ms-3">
+              <Link
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/turma") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/turma") ? "page" : undefined}
                 to="/turma"
               >
                 Turma
               </Link>
             </li>
             <li className="nav-item ms-3">
-              <Link className="nav-link montserrat-bold" to="/materias">
+              <Link
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/materias") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/materias") ? "page" : undefined}
+                to="/materias"
+              >
                 Matéria
               </Link>
             </li>
             <li className="nav-item ms-3">
-              <Link className="nav-link montserrat-bold" to="/alunos">
+              <Link
+                className={`nav-link montserrat-bold ${
+                  isActiveLink("/alunos") ? "active" : ""
+                }`}
+                aria-current={isActiveLink("/alunos") ? "page" : undefined}
+                to="/alunos"
+              >
                 Alunos
               </Link>
             </li>
             <li className="nav-item ms-3">
               <button
                 className="nav-link montserrat-bold btn btn-link"
-                onClick={handleDownloadRelatorio}
+                onClick={handleDownloadClick}
                 style={{ cursor: "pointer" }}
               >
                 Relatório
@@ -88,12 +195,14 @@ const Navbar = ({ currentMateria }) => {
             </li>
           </ul>
 
+          {/* Botões de ação contextuais */}
           <div className="d-flex align-items-center">
-            {showUploadButton && (
+            {/* Botão de upload de notas - só aparece em páginas de matéria */}
+            {showUploadNotaButton && (
               <button
                 type="button"
                 className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
-                onClick={handleUploadClick}
+                onClick={handleUploadNotaClick}
               >
                 <img
                   src={graficoIcon}
@@ -108,6 +217,27 @@ const Navbar = ({ currentMateria }) => {
                 Upload
               </button>
             )}
+            {/* Botão de adicionar aluno - só aparece na página de alunos */}
+            {showUploadAlunoButton && (
+              <button
+                type="button"
+                className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
+                onClick={handleUploadAlunoClick}
+              >
+                <img
+                  src={graficoIcon}
+                  alt="Gráfico"
+                  style={{
+                    height: "32px",
+                    width: "32px",
+                    marginRight: "10px",
+                    verticalAlign: "middle",
+                  }}
+                />
+                Adicionar Aluno
+              </button>
+            )}
+            {/* Botão de logout */}
             <button
               type="button"
               className="btn btn-navbar montserrat-bold fs-5 px-4 py-2 me-2"
@@ -129,14 +259,31 @@ const Navbar = ({ currentMateria }) => {
         </div>
       </nav>
 
-      {showUploadButton && (
-        <UploadNotaModal
-          show={showModal}
-          onClose={() => setShowModal(false)}
-          onSubmit={handleModalSubmit}
+      {/* Modais condicionais */}
+      {showUploadNotaButton && (
+        <BulkUploadNotaModal
+          show={showNotaModal}
+          onClose={() => setShowNotaModal(false)}
+          onSubmit={handleNotaModalSubmit}
           defaultMateria={currentMateria}
         />
       )}
+
+      {showUploadAlunoButton && (
+        <UploadAlunoModal
+          show={showAlunoModal}
+          onClose={() => setShowAlunoModal(false)}
+          onSubmit={handleAlunoModalSubmit}
+        />
+      )}
+
+      {/* Toast para feedback */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </>
   );
 };

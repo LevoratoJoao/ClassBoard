@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from routers import alunos, avaliacoes, notas, faltas, auth
+from routers import alunos, avaliacoes, notas, faltas, auth, materias, turma
 from fastapi.middleware.cors import CORSMiddleware
 
 # Carregar variáveis de ambiente
@@ -28,3 +28,5 @@ app.include_router(alunos.router)
 app.include_router(avaliacoes.router)
 app.include_router(notas.router)
 app.include_router(faltas.router)
+app.include_router(turma.router)
+app.include_router(materias.router)

@@ -63,22 +63,6 @@ export const formatAiResponse = (aiResponse) => {
     );
   });
 
-  // Adicionar ícones aos títulos baseado no conteúdo
-  const iconRules = [
-    { pattern: /(Desempenho\s+Geral|Performance)/i, icon: "📈" },
-    { pattern: /(Pontos?\s+Fortes?|Strengths)/i, icon: "🌟" },
-    {
-      pattern: /(Áreas?\s+de\s+Melhoria|Areas?\s+for\s+Improvement)/i,
-      icon: "📝",
-    },
-    { pattern: /(Recomendações?|Recommendations)/i, icon: "💡" },
-    { pattern: /(Situação\s+Atual|Current\s+Situation)/i, icon: "📊" },
-  ];
-
-  iconRules.forEach((rule) => {
-    const regex = new RegExp(`(<h[3-4][^>]*>)(${rule.pattern.source})`, "gi");
-    formattedResponse = formattedResponse.replace(regex, `$1${rule.icon} $2`);
-  });
 
   return formattedResponse;
 };
@@ -106,12 +90,12 @@ Analise os dados de desempenho da matéria ${materia}:
 Forneça uma análise estruturada seguindo EXATAMENTE este formato HTML:
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">📊 Situação Atual</h4>
+  <h4 class="ai-section-title">Situação Atual</h4>
   <p class="ai-analysis-text">Descreva a situação atual da matéria com base nos dados apresentados. Use <strong class="ai-highlight">palavras-chave importantes</strong> para destacar pontos relevantes.</p>
 </div>
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">💡 Recomendações</h4>
+  <h4 class="ai-section-title">Recomendações</h4>
   <ul class="ai-recommendations-list">
     <li>Primeira recomendação prática e específica</li>
     <li>Segunda recomendação focada em melhorias</li>
@@ -119,11 +103,11 @@ Forneça uma análise estruturada seguindo EXATAMENTE este formato HTML:
 </div>
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">🌟 Pontos Positivos</h4>
+  <h4 class="ai-section-title">Pontos Positivos</h4>
   <p class="ai-analysis-text">Destaque os aspectos positivos que devem ser mantidos e celebrados.</p>
 </div>
 
-Use linguagem educacional e construtiva em português brasileiro.
+Use linguagem educacional e construtiva em português brasileiro e SEM EMOJIS NA RESPOSTA, POR FAVOR.
 `;
 };
 
@@ -146,22 +130,22 @@ Analise o desempenho do aluno com os seguintes dados:
 Forneça uma análise educacional seguindo EXATAMENTE este formato HTML:
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">📈 Desempenho Geral</h4>
+  <h4 class="ai-section-title">Desempenho Geral</h4>
   <p class="ai-analysis-text">Resumo do rendimento do aluno com <strong class="ai-highlight">classificação do desempenho</strong> baseada na média geral.</p>
 </div>
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">🌟 Pontos Fortes</h4>
+  <h4 class="ai-section-title">Pontos Fortes</h4>
   <p class="ai-analysis-text">Matérias e aspectos onde o aluno se destaca. Mencione as <strong class="ai-highlight">matérias com melhor desempenho</strong>.</p>
 </div>
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">📝 Áreas de Melhoria</h4>
+  <h4 class="ai-section-title">Áreas de Melhoria</h4>
   <p class="ai-analysis-text">Matérias que precisam de atenção especial. Identifique <strong class="ai-highlight">oportunidades de crescimento</strong>.</p>
 </div>
 
 <div class="ai-analysis-section">
-  <h4 class="ai-section-title">💡 Recomendações</h4>
+  <h4 class="ai-section-title">Recomendações</h4>
   <ul class="ai-recommendations-list">
     <li>Primeira recomendação específica e prática</li>
     <li>Segunda sugestão para melhorar o desempenho</li>
@@ -169,6 +153,6 @@ Forneça uma análise educacional seguindo EXATAMENTE este formato HTML:
   </ul>
 </div>
 
-Use linguagem encorajadora e educativa em português brasileiro.
+Use linguagem encorajadora e educativa em português brasileiro e SEM EMOJIS NA RESPOSTA, POR FAVOR.
 `;
 };

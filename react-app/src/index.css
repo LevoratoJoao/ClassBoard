@@ -84,7 +84,7 @@ h1 {
 
 #cards-col-2 {
   min-height: 200px;
-  background-color: #f7e06c;
+  background-color:#f6c358;
   box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
@@ -96,9 +96,17 @@ h1 {
   transition: transform 0.3s ease;
 }
 
+#cards-col-4 {
+  min-height: 200px;
+  background-color: #d1495b;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
 #cards-col-1:hover,
 #cards-col-2:hover,
-#cards-col-3:hover {
+#cards-col-3:hover,
+#cards-col-4:hover {
   transform: translateY(-5px);
 }
 
