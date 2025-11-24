@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
+from sqlalchemy.orm import Session
 from models.models import Nota, User
-from data.alunos import alunos
 from services import notas as service
 from services.auth import get_current_user
+from database.config import get_db
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -18,13 +19,12 @@ def get_notas(current_user: User = Depends(get_current_user)):
     return service.get_all_notas()
 
 @router.post("/notas")
-def create_nota(nota_data: NotaCreate, current_user: User = Depends(get_current_user)):
+def create_nota(nota_data: NotaCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        service.create_or_update_nota(nota_data)
+        service.create_or_update_nota(nota_data, db)
         return {"message": "Nota criada/atualizada com sucesso"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @router.get("/notas/filter", response_model=List[Nota])
 def filter_notas(materia: str = None, tipo: str = None, bimestre: int = None, aluno_id: int = None, current_user: User = Depends(get_current_user)):
