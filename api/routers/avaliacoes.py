@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from typing import List
 from models.models import Avaliacao, User
-from data.avaliacoes import avaliacoes
 from services import avaliacoes as avaliacoes_service
 from services.auth import get_current_user
 

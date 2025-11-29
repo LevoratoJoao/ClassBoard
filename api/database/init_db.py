@@ -74,6 +74,17 @@ def init_database():
         ]
         
         db.add_all(notas_data)
+        
+        print("Inserting faltas...")
+        faltas_data = [
+            FaltaTable(aluno_id=1, data=date(2024, 3, 15), materia=Materia.MATEMATICA, tipo="Aula"),
+            FaltaTable(aluno_id=1, data=date(2024, 3, 20), materia=Materia.PORTUGUES, tipo="Aula"),
+            FaltaTable(aluno_id=2, data=date(2024, 3, 18), materia=Materia.CIENCIAS, tipo="Aula"),
+            FaltaTable(aluno_id=3, data=date(2024, 3, 22), materia=Materia.HISTORIA, tipo="Aula"),
+            FaltaTable(aluno_id=3, data=date(2024, 4, 5), materia=Materia.MATEMATICA, tipo="Aula"),
+        ]
+        
+        db.add_all(faltas_data)
         db.commit()
         print("Database initialized successfully!")
 
