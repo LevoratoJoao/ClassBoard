@@ -10,6 +10,7 @@ class AlunoTable(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, index=True)
     sexo = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     notas = relationship("NotaTable", back_populates="aluno")
     faltas = relationship("FaltaTable", back_populates="aluno")
@@ -21,6 +22,7 @@ class AvaliacaoTable(Base):
     materia = Column(SQLEnum(Materia))
     tipo = Column(String)
     bimestre = Column(Integer)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     notas = relationship("NotaTable", back_populates="avaliacao")
 
@@ -31,6 +33,7 @@ class NotaTable(Base):
     aluno_id = Column(Integer, ForeignKey("alunos.id"))
     avaliacao_id = Column(Integer, ForeignKey("avaliacoes.id"))
     nota = Column(Float)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     aluno = relationship("AlunoTable", back_populates="notas")
     avaliacao = relationship("AvaliacaoTable", back_populates="notas")
@@ -43,6 +46,7 @@ class FaltaTable(Base):
     data = Column(Date)
     materia = Column(SQLEnum(Materia))
     tipo = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     aluno = relationship("AlunoTable", back_populates="faltas")
 
@@ -61,3 +65,4 @@ class TurmaTable(Base):
     nome = Column(String)
     turno = Column(String)
     ano = Column(Integer)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)

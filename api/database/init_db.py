@@ -21,12 +21,24 @@ def init_database():
             
         print("Inserting data...")
         
+        # Primeiro, criar o usuário admin
+        default_user = UserTable(
+            username="admin",
+            hashed_password=pwd_context.hash("admin123"),
+            is_active=1
+        )
+        db.add(default_user)
+        db.commit()  # Commit para obter o ID do usuário admin
+        db.refresh(default_user)
+        
+        admin_user_id = default_user.id
+        
         alunos_data = [
-            AlunoTable(nome="João", sexo="masculino"),
-            AlunoTable(nome="Maria", sexo="feminino"),
-            AlunoTable(nome="José", sexo="masculino"),
-            AlunoTable(nome="Ana", sexo="feminino"),
-            AlunoTable(nome="Pedro", sexo="masculino"),
+            AlunoTable(nome="João", sexo="masculino", user_id=admin_user_id),
+            AlunoTable(nome="Maria", sexo="feminino", user_id=admin_user_id),
+            AlunoTable(nome="José", sexo="masculino", user_id=admin_user_id),
+            AlunoTable(nome="Ana", sexo="feminino", user_id=admin_user_id),
+            AlunoTable(nome="Pedro", sexo="masculino", user_id=admin_user_id),
         ]
         db.add_all(alunos_data)
         
@@ -42,46 +54,40 @@ def init_database():
                         id=av_id,
                         materia=materia,
                         tipo=tipo,
-                        bimestre=bimestre
+                        bimestre=bimestre,
+                        user_id=admin_user_id
                     ))
                     av_id += 1
         
         db.add_all(avaliacoes_data)
         
-        turma = TurmaTable(nome="5º Ano A", turno="Manhã", ano=2024)
+        turma = TurmaTable(nome="5º Ano A", turno="Manhã", ano=2024, user_id=admin_user_id)
         db.add(turma)
-        
-        default_user = UserTable(
-            username="admin",
-            hashed_password=pwd_context.hash("admin123"),
-            is_active=1
-        )
-        db.add(default_user)
         
         db.commit()
         print("Basic data inserted, now inserting notas...")
         
         notas_data = [
-            NotaTable(aluno_id=1, avaliacao_id=1, nota=8),
-            NotaTable(aluno_id=1, avaliacao_id=2, nota=9),
-            NotaTable(aluno_id=1, avaliacao_id=3, nota=7),
-            NotaTable(aluno_id=2, avaliacao_id=1, nota=9),
-            NotaTable(aluno_id=2, avaliacao_id=2, nota=10),
-            NotaTable(aluno_id=2, avaliacao_id=3, nota=8),
-            NotaTable(aluno_id=3, avaliacao_id=1, nota=7),
-            NotaTable(aluno_id=3, avaliacao_id=2, nota=8),
-            NotaTable(aluno_id=3, avaliacao_id=3, nota=6),
+            NotaTable(aluno_id=1, avaliacao_id=1, nota=8, user_id=admin_user_id),
+            NotaTable(aluno_id=1, avaliacao_id=2, nota=9, user_id=admin_user_id),
+            NotaTable(aluno_id=1, avaliacao_id=3, nota=7, user_id=admin_user_id),
+            NotaTable(aluno_id=2, avaliacao_id=1, nota=9, user_id=admin_user_id),
+            NotaTable(aluno_id=2, avaliacao_id=2, nota=10, user_id=admin_user_id),
+            NotaTable(aluno_id=2, avaliacao_id=3, nota=8, user_id=admin_user_id),
+            NotaTable(aluno_id=3, avaliacao_id=1, nota=7, user_id=admin_user_id),
+            NotaTable(aluno_id=3, avaliacao_id=2, nota=8, user_id=admin_user_id),
+            NotaTable(aluno_id=3, avaliacao_id=3, nota=6, user_id=admin_user_id),
         ]
         
         db.add_all(notas_data)
         
         print("Inserting faltas...")
         faltas_data = [
-            FaltaTable(aluno_id=1, data=date(2024, 3, 15), materia=Materia.MATEMATICA, tipo="Aula"),
-            FaltaTable(aluno_id=1, data=date(2024, 3, 20), materia=Materia.PORTUGUES, tipo="Aula"),
-            FaltaTable(aluno_id=2, data=date(2024, 3, 18), materia=Materia.CIENCIAS, tipo="Aula"),
-            FaltaTable(aluno_id=3, data=date(2024, 3, 22), materia=Materia.HISTORIA, tipo="Aula"),
-            FaltaTable(aluno_id=3, data=date(2024, 4, 5), materia=Materia.MATEMATICA, tipo="Aula"),
+            FaltaTable(aluno_id=1, data=date(2024, 3, 15), materia=Materia.MATEMATICA, tipo="Aula", user_id=admin_user_id),
+            FaltaTable(aluno_id=1, data=date(2024, 3, 20), materia=Materia.PORTUGUES, tipo="Aula", user_id=admin_user_id),
+            FaltaTable(aluno_id=2, data=date(2024, 3, 18), materia=Materia.CIENCIAS, tipo="Aula", user_id=admin_user_id),
+            FaltaTable(aluno_id=3, data=date(2024, 3, 22), materia=Materia.HISTORIA, tipo="Aula", user_id=admin_user_id),
+            FaltaTable(aluno_id=3, data=date(2024, 4, 5), materia=Materia.MATEMATICA, tipo="Aula", user_id=admin_user_id),
         ]
         
         db.add_all(faltas_data)

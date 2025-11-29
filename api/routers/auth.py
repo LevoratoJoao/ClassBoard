@@ -1,9 +1,11 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 from services.auth import authenticate_user, create_access_token, get_current_user, logout_token, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES, create_user
 from models.models import Token, User, UserLogin
-from data.users import users_db
+from database.models import UserTable
+from database.config import get_db
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -32,8 +34,10 @@ async def logout(token: str = Depends(oauth2_scheme)):
     return {"message": "Successfully logged out"}
 
 @router.post("/register", response_model=User)
-async def register(user_data: UserLogin):
-    if user_data.username in users_db:
+async def register(user_data: UserLogin, db: Session = Depends(get_db)):
+    # Verificar se o usuário já existe no banco de dados
+    existing_user = db.query(UserTable).filter(UserTable.username == user_data.username).first()
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
