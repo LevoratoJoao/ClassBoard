@@ -4,8 +4,8 @@
 
 ClassBoard API é uma API REST desenvolvida com FastAPI para gerenciamento de dados educacionais. A API oferece endpoints para autenticação, gestão de alunos, avaliações, notas, faltas e turmas.
 
-**Base URL:** `http://localhost:8000`
-**Swagger UI:** `http://localhost:8000/docs`
+**Base URL:** `https://classboard-back-aa9y.onrender.com`
+**Swagger UI:** `https://classboard-back-aa9y.onrender.com/docs`
 
 ## Installation
 

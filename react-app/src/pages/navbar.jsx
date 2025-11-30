@@ -74,7 +74,7 @@ const Navbar = ({ currentMateria }) => {
     try {
       // Cria promessas para todas as notas
       const promises = notasData.map((formData) =>
-        fetch("http://localhost:8000/notas", {
+        fetch("https://classboard-back-aa9y.onrender.com/notas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -103,14 +103,17 @@ const Navbar = ({ currentMateria }) => {
   // Processa envio de novo aluno
   const handleAlunoModalSubmit = async (formData) => {
     try {
-      const response = await fetch("http://localhost:8000/alunos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        "https://classboard-back-aa9y.onrender.com/alunos",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (response.ok) {
         showToast("Aluno adicionado com sucesso!");

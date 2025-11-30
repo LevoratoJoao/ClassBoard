@@ -41,14 +41,17 @@ const Register = () => {
 
     try {
       // Envia dados para API de registro
-      const response = await fetch("http://localhost:8000/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
-      });
+      const response = await fetch(
+        "https://classboard-back-aa9y.onrender.com/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
+        }
+      );
 
       if (response.ok) {
         // Redireciona para login após sucesso

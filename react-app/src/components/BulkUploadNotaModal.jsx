@@ -6,7 +6,7 @@ const BulkUploadNotaModal = ({ show, onClose, onSubmit, defaultMateria }) => {
   const [alunos, setAlunos] = useState([]);
   const [notas, setNotas] = useState({});
   const [loading, setLoading] = useState(false);
-  const API_BASE_URL = "http://localhost:8000";
+  const API_BASE_URL = "https://classboard-back-aa9y.onrender.com";
 
   // Carrega dados quando modal é aberto
   useEffect(() => {
