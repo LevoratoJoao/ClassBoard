@@ -1,5 +1,5 @@
 // URL base da API
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = "https://classboard-back-aa9y.onrender.com";
 
 // Função para obter headers de autenticação
 const getAuthHeaders = () => {
