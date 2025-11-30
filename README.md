@@ -203,7 +203,7 @@ A API do ClassBoard é construída em **FastAPI** e fornece os dados que abastec
 
 ## Demonstracão
 
-[Slides](https://www.canva.com/design/DAG24xqtQ0M/7_ae-hd8f10SjqzLPgbiEg/view?utm_content=DAG24xqtQ0M&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h58df531d81)
+[Slides]([https://www.canva.com/design/DAG24xqtQ0M/7_ae-hd8f10SjqzLPgbiEg/view?utm_content=DAG24xqtQ0M&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h58df531d81](https://www.canva.com/design/DAG6GGgSurM/58BZgw-dgertquPA-r_M-g/view?utm_content=DAG6GGgSurM&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd739151728))
 
 https://github.com/user-attachments/assets/173bd27c-e6c1-4e43-be6e-b2c24745f540
 
