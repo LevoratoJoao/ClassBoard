@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = "https://classboard-back-aa9y.onrender.com";
 
 export const authService = {
     login: async (username, password) => {
