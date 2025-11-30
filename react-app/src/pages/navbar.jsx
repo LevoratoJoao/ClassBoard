@@ -9,6 +9,8 @@ import graficoIcon from "../assets/images/grafico.webp";
 import saidaIcon from "../assets/images/saida.webp";
 import BulkUploadNotaModal from "../components/BulkUploadNotaModal";
 
+const API_BASE_URL = "https://classboard-back-aa9y.onrender.com";
+
 const Navbar = ({ currentMateria }) => {
   const { user, logout } = useAuth();
   const { startDownload } = useDownload();
@@ -74,7 +76,7 @@ const Navbar = ({ currentMateria }) => {
     try {
       // Cria promessas para todas as notas
       const promises = notasData.map((formData) =>
-        fetch("https://classboard-back-aa9y.onrender.com/notas", {
+        fetch(`${API_BASE_URL}/notas`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -103,17 +105,14 @@ const Navbar = ({ currentMateria }) => {
   // Processa envio de novo aluno
   const handleAlunoModalSubmit = async (formData) => {
     try {
-      const response = await fetch(
-        "https://classboard-back-aa9y.onrender.com/alunos",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/alunos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (response.ok) {
         showToast("Aluno adicionado com sucesso!");
