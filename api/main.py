@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from routers import alunos, avaliacoes, notas, faltas, auth, materias, turma
 from fastapi.middleware.cors import CORSMiddleware
+from database.init_db import init_database
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -22,6 +23,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    init_database()
 
 app.include_router(auth.router)
 app.include_router(alunos.router)

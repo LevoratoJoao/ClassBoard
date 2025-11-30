@@ -4,8 +4,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from data.users import users_db, active_tokens
+from sqlalchemy.orm import Session
+from data.users import active_tokens
 from models.models import TokenData, User, UserInDB
+from database.models import UserTable
+from database.config import get_db
 
 # Configurações de segurança - ALTERAR EM PRODUÇÃO
 SECRET_KEY = "your-secret-key-change-in-production"
@@ -25,18 +28,31 @@ def verify_password(plain_password, stored_password):
         # Fallback para comparação simples (não seguro)
         return plain_password == stored_password
 
-def get_user(username: str):
+def get_user(username: str, db: Session = None):
     """Busca um usuário no banco de dados pelo nome de usuário."""
-    if username in users_db:
-        return users_db[username]
+    if db is None:
+        db = next(get_db())
+    
+    user_record = db.query(UserTable).filter(UserTable.username == username).first()
+    if user_record:
+        return UserInDB(
+            username=user_record.username,
+            hashed_password=user_record.hashed_password,
+            is_active=bool(user_record.is_active)
+        )
+    return None
 
 def authenticate_user(username: str, password: str):
     """Autentica um usuário verificando credenciais."""
-    user = get_user(username)
-    # Verifica se usuário existe e senha está correta
-    if not user or not verify_password(password, user.hashed_password):
-        return False
-    return user
+    db = next(get_db())
+    try:
+        user = get_user(username, db)
+        # Verifica se usuário existe e senha está correta
+        if not user or not verify_password(password, user.hashed_password):
+            return False
+        return user
+    finally:
+        db.close()
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Cria um token JWT de acesso com tempo de expiração."""
@@ -76,10 +92,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
     # Busca o usuário no banco de dados
-    user = get_user(username=token_data.username)
-    if user is None:
-        raise credentials_exception
-    return user
+    db = next(get_db())
+    try:
+        user = get_user(username=token_data.username, db=db)
+        if user is None:
+            raise credentials_exception
+        return user
+    finally:
+        db.close()
 
 def logout_token(token: str):
     """Remove um token da lista de tokens ativos (logout)."""
@@ -87,11 +107,21 @@ def logout_token(token: str):
 
 def create_user(username: str, password: str) -> UserInDB:
     """Cria um novo usuário com senha hasheada."""
-    new_user = UserInDB(
-        username=username,
-        hashed_password=pwd_context.hash(password),  # Hash seguro da senha
-        is_active=True
-    )
-    # Adiciona usuário ao banco de dados
-    users_db[username] = new_user
-    return new_user
+    db = next(get_db())
+    try:
+        new_user_record = UserTable(
+            username=username,
+            hashed_password=pwd_context.hash(password),  # Hash seguro da senha
+            is_active=1
+        )
+        db.add(new_user_record)
+        db.commit()
+        db.refresh(new_user_record)
+        
+        return UserInDB(
+            username=new_user_record.username,
+            hashed_password=new_user_record.hashed_password,
+            is_active=bool(new_user_record.is_active)
+        )
+    finally:
+        db.close()
