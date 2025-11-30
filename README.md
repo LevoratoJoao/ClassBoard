@@ -8,200 +8,192 @@ ClassBoard é uma plataforma de gestão educacional desenvolvida para auxiliar p
 
 - [Visão Geral](#visão-geral)
 - [Funcionalidades](#funcionalidades)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Como Executar](#como-executar)
+- [Arquitetura](#arquitetura)
+- [Deployment](#deployment)
+- [Desenvolvimento Local](#desenvolvimento-local)
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Doc API](./api/README.md)
-- [Demonstração](#demonstracão)
+- [Demonstração](#demonstração)
 
 ---
 
 ## Visão Geral
 
-O ClassBoard foi pensado para facilitar o acompanhamento pedagógico, trazendo gráficos interativos, filtros inteligentes e análises automáticas (IA) sobre o desempenho dos alunos. O projeto está dividido em duas implementações principais:
+O ClassBoard é uma aplicação full-stack que combina um frontend React interativo com uma API robusta em FastAPI. A plataforma está deployada em produção e oferece:
 
-* **Bootstrap**: Versão estática, ideal para prototipação rápida e visualização inicial.
-* **React**: Versão dinâmica, com componentes reutilizáveis e integração facilitada com novas funcionalidades.
-* **API (FastAPI)**: Fornece os dados para o frontend (alunos, faltas, matérias e turma), já agregando informações como **média por matéria** e **frequência por matéria** por aluno.
+- Interface responsiva e intuitiva
+- Gráficos interativos com Chart.js
+- Sistema de autenticação seguro
+- Análises automáticas por IA (Gemini AI)
+- Relatórios em PDF exportáveis
+- Gestão completa de alunos, notas e avaliações
+
+**Aplicação em Produção**: [https://classboard-front.vercel.app](https://classboard-front.vercel.app)  
+**API Backend**: [https://classboard-back-aa9y.onrender.com](https://classboard-back-aa9y.onrender.com)
 
 ---
 
 ## Funcionalidades
 
-* Visualização de notas por matéria, bimestre e tipo de avaliação
-* Evolução das notas ao longo dos períodos
-* Comparativo entre alunos e entre turmas
-* Filtros dinâmicos para análise personalizada
-* Análise automática de desempenho via IA
-* Relatórios exportáveis
+- **Gestão de Alunos**: Cadastro, visualização de perfis, upload em lote via Excel e filtros avançados
+- **Análise de Notas**: Dashboard com gráficos interativos, visualização por matéria/bimestre/tipo de avaliação
+- **Relatórios**: Geração de PDFs personalizáveis com análises detalhadas
+- **Análise por IA**: Insights automáticos sobre padrões de desempenho usando Gemini AI
+- **Sistema de Autenticação**: Login seguro com tokens JWT
+- **Interface Responsiva**: Design moderno adaptável a qualquer dispositivo
+- **Filtros Dinâmicos**: Análise personalizada por múltiplos critérios
 
 ---
 
-## Estrutura do Projeto
+## Arquitetura
 
 ```
 ClassBoard/
-├── Bootstrap/
+├── react-app/                   # Frontend React
 │   ├── src/
-│   │   ├── charts.js
-│   │   ├── aiAnalysis.js
-│   │   ├── services/
-│   │   └── data/
-│   ├── static/
-├── api/
-│   ├── data/
-│   ├── models/
-│   ├── routers/
-│   └── main.py
-├── react-app/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── assets/
-│   │   ├── hooks/
-│   ├── public/
-│   └── package.json
-└── README.md
+│   │   ├── components/          # Componentes reutilizáveis
+│   │   ├── pages/               # Páginas da aplicação
+│   │   ├── services/            # Comunicação com API
+│   │   ├── hooks/               # Hooks customizados
+│   │   ├── context/             # Contextos React
+│   │   └── utils/               # Utilitários
+│   └── build/                   # Build de produção
+├── api/                         # Backend FastAPI
+│   ├── routers/                 # Endpoints da API
+│   ├── models/                  # Modelos Pydantic
+│   ├── services/                # Lógica de negócio
+│   ├── database/                # Configuração BD
+│   ├── data/                    # Dados estáticos
+│   └── utils/                   # Utilitários backend
+└── Entregáveis/                 # Documentação do projeto
 ```
 
 ---
 
-## Como Executar (Frontend)
+## 🚀 Deployment
 
-Ambos projetos precisam do Node.js instalado (recomenda-se **Node 16+**).
+### 🌐 **Produção**
 
-### Bootstrap
+- **Frontend**: Deployado no **Vercel** - [https://classboard-front.vercel.app](https://classboard-front.vercel.app)
+- **Backend**: Deployado no **Render** - [https://classboard-back-aa9y.onrender.com](https://classboard-back-aa9y.onrender.com)
+- **Banco de Dados**: SQLite integrado
 
-1. Instale as dependências (se necessário):
+### 🔧 **Configurações de Deploy**
 
-   ```bash
-   cd Bootstrap
-   npm install
-   ```
-2. Suba um servidor estático:
+**Variáveis de Ambiente (Backend):**
 
-   ```bash
-   npx http-server ./static
-   # ou
-   python -m http.server 8080
-   ```
-3. Acesse `http://127.0.0.1:8080/Materias/listagem.html`.
+```bash
+CORS_ORIGINS=https://classboard-front.vercel.app
+SECRET_KEY=your-secret-key
+```
 
-### React
+**Variáveis de Ambiente (Frontend):**
 
-1. Instale as dependências:
-
-   ```bash
-   cd react-app
-   npm install
-   ```
-2. Execute o projeto:
-
-   ```bash
-   npm start
-   ```
-3. Acesse `http://localhost:3000`.
+```bash
+REACT_APP_GEMINI_API_KEY=your-gemini-api-key
+```
 
 ---
 
-## API (FastAPI)
+## 💻 Desenvolvimento Local
 
-A API do ClassBoard é construída em **FastAPI** e fornece os dados que abastecem o frontend (React e Bootstrap). Ela organiza o domínio escolar em **recursos** (alunos, avaliações, notas, faltas, matérias e turma), aplicando **validação com Pydantic**, **roteamento modular**, **CORS** e um fluxo simples de **autenticação**.
+### 📋 **Pré-requisitos**
 
-### Padrões de projeto
+- Node.js 16+
+- Python 3.8+
+- Git
 
-* **Dados estáticos** em `api/data/*`.
-* **Lógica de agregação/normalização** nos `routers`, nunca em `data`.
-* **Modelos Pydantic** como contrato de I/O.
-* **Enums** para domínios fechados.
-* **CORS** liberado para `http://localhost:3000`.
-* **Autenticação** (quando habilitada) baseada em token Bearer; o frontend redireciona a `/login` em `401`.
+### 🎨 **Frontend (React)**
 
-###  Endpoints
+1. **Clone e instale dependências:**
 
-* **Alunos**
+   ```bash
+   git clone https://github.com/LevoratoJoao/ClassBoard.git
+   cd ClassBoard/react-app
+   npm install
+   ```
 
-  * `GET /alunos` — lista alunos.
-  * `GET /alunos/{id}` — detalhe.
-  * `GET /alunos/filter?sexo=feminino` — filtro por sexo.
+2. **Configure variáveis de ambiente:**
 
-* **Avaliações**
+   ```bash
+   # Crie .env na pasta react-app
+   REACT_APP_GEMINI_API_KEY=your-api-key
+   ```
 
-  * `GET /avaliacoes` — lista.
-  * `GET /avaliacoes/filter?materia=Matematica&tipo=Prova&bimestre=1` — filtros combináveis.
+3. **Execute o projeto:**
+   ```bash
+   npm start
+   ```
+4. **Acesse:** `http://localhost:3000`
 
-* **Notas**
+### 🔧 **Backend (FastAPI)**
 
-  * `GET /notas` — lista.
-  * `GET /notas/{aluno_id}` — notas de um aluno.
-  * `GET /notas/filter?...` — filtros por matéria/tipo/bimestre/aluno.
-
-* **Faltas**
-
-  * `GET /faltas` — todas.
-  * `GET /faltas/{aluno_id}` — faltas de um aluno.
-  * `GET /faltas/{aluno_id}/total` — total de faltas do aluno.
-
-* **Matérias**
-
-  * `GET /materias` — `[{ id, label }]`.
-
-* **Turma**
-
-  * `GET /turma` — resumo (id, nome, turno).
-  * `GET /turma/{id}` — detalhe com `materias` e `alunos` **enriquecidos** (ex.: média por matéria, frequência por matéria, faltas).
-
-### Autenticação e CORS
-
-* O backend pode proteger endpoints com Bearer Token.
-* O **frontend** (`apiService`) injeta o header `Authorization: Bearer <token>` e, ao receber **401**, limpa o token e redireciona para `/login`.
-* **CORS** permite chamadas do `http://localhost:3000` (ajuste `allow_origins` para o domínio de produção).
-
-### Integração com o Frontend
-
-* O front centraliza chamadas em `src/services/apiService.js`.
-* Services por domínio chamam os endpoints (ex.: `alunosAPI`, `notasAPI`, `avaliacoesAPI`, `faltasAPI`, `materiasAPI`, `turmasAPI`).
-
-### Instalação e Execução
-
-1. Crie e ative um ambiente virtual:
+1. **Navegue para a pasta da API:**
 
    ```bash
    cd api
+   ```
+
+2. **Crie ambiente virtual:**
+
+   ```bash
    python -m venv .venv
-   # Windows:
+
+   # Windows
    .venv\Scripts\activate
-   # macOS/Linux:
+
+   # macOS/Linux
    source .venv/bin/activate
    ```
-2. Instale dependências:
+
+3. **Instale dependências:**
 
    ```bash
    pip install -r requirements.txt
    ```
-3. Rode a API:
+
+4. **Configure variáveis de ambiente:**
+
+   ```bash
+   # Crie .env na pasta api
+   CORS_ORIGINS=http://localhost:3000
+   SECRET_KEY=your-secret-key
+   ```
+
+5. **Execute a API:**
 
    ```bash
    uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
+6. **Acesse a documentação:** `http://localhost:8000/docs`
+
 ---
 
 ## Tecnologias Utilizadas
 
-* **FastAPI** (Python) — API
-* **Pydantic** — Modelagem e validação
-* **Uvicorn** — ASGI server
-* **Bootstrap 5** — Estilização
-* **React** — Interface dinâmica
-* **Chart.js & react-chartjs-2** — Gráficos interativos
-* **JavaScript (ES6+)**
-* **HTML5 & CSS3**
+### Frontend
+
+- **React** — Interface dinâmica
+- **Chart.js & react-chartjs-2** — Gráficos interativos
+- **JavaScript (ES6+)** — Linguagem principal
+- **CSS3** — Estilização
+- **Gemini AI** — Análises inteligentes
+
+### Backend
+
+- **FastAPI** (Python) — API REST
+- **Pydantic** — Modelagem e validação
+- **SQLite** — Banco de dados
+- **Uvicorn** — ASGI server
+
+### Deploy
+
+- **Vercel** — Hospedagem frontend
+- **Render** — Hospedagem backend
 
 ---
 
-## Demonstracão
+## Demonstração
 
 [Slides](https://www.canva.com/design/DAG6GGgSurM/58BZgw-dgertquPA-r_M-g/view?utm_content=DAG6GGgSurM&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd739151728)
 
@@ -209,6 +201,6 @@ https://github.com/user-attachments/assets/173bd27c-e6c1-4e43-be6e-b2c24745f540
 
 **Desenvolvido por**
 
-* [@LevoratoJoao](https://github.com/LevoratoJoao)
-* [@Sefora-Davanso](https://github.com/Sefora-Davanso)
-* [@ThiagoCristovao](https://github.com/ThiagoCristovao)
+- [@LevoratoJoao](https://github.com/LevoratoJoao)
+- [@Sefora-Davanso](https://github.com/Sefora-Davanso)
+- [@ThiagoCristovao](https://github.com/ThiagoCristovao)
